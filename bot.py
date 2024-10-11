@@ -130,7 +130,7 @@ UsersData = DataOperation.load_user_info("Users.json")
 RegCodeData = DataOperation.load_reg_code("RegCode.json")
 
 # 连接信息
-server_url = 'YOUR_SERVER_IP:PORT'
+server_url = 'http/https://YOUR_SERVER_IP:PORT'
 # account = 'Administrators Username'
 # password = 'Administrators Password'
 access_token = 'Your_Jellyfin_App_Token'
