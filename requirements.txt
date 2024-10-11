@@ -1,0 +1,2 @@
+python-telegram-bot~=21.0
+jellyfin-apiclient-python~=1.10.0

@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  python310:
+    build:
+      context: .
+    volumes:
+      - ./:/app/
+    container_name: Telegram-Jellyfin-Bot
+    network_mode: host
+    restart: always
