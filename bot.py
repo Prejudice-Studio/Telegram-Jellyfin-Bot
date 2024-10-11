@@ -133,7 +133,7 @@ RegCodeData = DataOperation.load_reg_code("RegCode.json")
 server_url = 'YOUR_SERVER_IP:PORT'
 # account = 'Administrators Username'
 # password = 'Administrators Password'
-access_token = 'Your_Jellyfin_Token'
+access_token = 'Your_Jellyfin_App_Token'
 
 # 连接服务器
 # 初始化 Jellyfin 客户端
