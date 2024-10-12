@@ -64,13 +64,13 @@ Developers:
 
 ## 4. Enter the folder , open bot.py and modify the following content:
 ```
-server_url =http/https://YOUR_SERVER_IP:PORT Replace with your Jellyfin server IP
-# account =Administrators Username Replace with your Jellyfin server administrator username
-# password =Administrators Password Replace with the corresponding password for your Jellyfin server administrator username
-access_token =Your_Jellyfin_App_Token Replace with your Jellyfin application key token (find the creation method yourself)
+server_url =http/https://YOUR_SERVER_IP:PORT   // Replace with your Jellyfin server IP
+# account =Administrators Username   //Replace with your Jellyfin server administrator username
+# password =Administrators Password   //Replace with the corresponding password for your Jellyfin server administrator username
+access_token =Your_Jellyfin_App_Token   //Replace with your Jellyfin application key token (find the creation method yourself)
 ```
 ```
-token("Your_Telegram_Bot_Api_Token") Replace with your Telegram Bot Api Token
+token("Your_Telegram_Bot_Api_Token")   //Replace with your Telegram Bot Api Token
 ```
 
 ## 5. Open the terminal, enter the project folder.
