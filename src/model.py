@@ -37,7 +37,7 @@ class UsersModel(BaseModel):
     
     def __init__(self, filename: str = "Users.json"):
         self.filename = ROOT_PATH / "data" / filename
-        if not os.path.exists(filename):
+        if not os.path.exists(self.filename):
             self.userList = []
             self.user_dict = {}
             return
@@ -101,7 +101,7 @@ class RegCodesModel(BaseModel):
     
     def __init__(self, filename: str = "RegCode.json"):
         self.filename = ROOT_PATH / "data" / filename
-        if not os.path.exists(filename):
+        if not os.path.exists(self.filename):
             self.regCodes = []
             self.reg_dict = {}
             return
