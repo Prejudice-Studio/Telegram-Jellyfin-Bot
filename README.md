@@ -58,3 +58,6 @@ docker run -d --name Telegram-Jellyfin-Bot --restart always \
 
 ### 5.运行`python bot.py`启动Bot
 
+# Star History
+![Star History](https://starchart.cc/MoYuanCN/telegram-Jellyfin-Bot.svg)
+
