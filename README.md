@@ -3,6 +3,8 @@ A Easy Telegram Jellyfin Bot
 
 Use Docker Python Jellyfin-ApiClient-Python Python-Telegram-Bot
 
+其他语言: [English](README_EN.md)
+
 # 功能如下
 
 ## /reg JellyfinUsername JellyfinPassword RegCode
