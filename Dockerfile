@@ -1,14 +1,17 @@
 FROM python:3.10-slim
 
+RUN apt-get update && apt-get install -y git
+
 WORKDIR /app/
 
-# 复制 requirements.txt 以确保可以安装依赖
-COPY requirements.txt .
+RUN git clone https://github.com/MoYuanCN/Telegram-Jellyfin-Bot.git /app
 
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
-# 复制所有源码到容器中
-COPY . .
+RUN echo '#!/bin/bash' > /app/start.sh && \
+    echo 'git pull' >> /app/start.sh && \
+    echo 'python bot.py' >> /app/start.sh && \
+    chmod +x /app/start.sh
 
-CMD ["python", "bot.py"]
+CMD ["/app/start.sh"]
