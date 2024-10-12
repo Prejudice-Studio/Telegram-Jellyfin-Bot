@@ -55,7 +55,7 @@ Use Docker Python Jellyfin-ApiClient-Python Python-Telegram-Bot
 
 ## 3.将Zip文件解压至任意空文件夹
 
-## 4.进入文件夹内，修改如下内容
+## 4.进入文件夹内，打开bot.py并修改如下内容
 ```
 server_url = 'http/https://YOUR_SERVER_IP:PORT' 替换为你的Jellyfin服务器IP
 # account = 'Administrators Username' 替换为你的Jellyfin服务器管理员用户名
