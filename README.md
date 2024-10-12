@@ -7,6 +7,7 @@ Use Docker Python Jellyfin-ApiClient-Python Python-Telegram-Bot
 
 开发者: 
 - [MoYuanCN](https://github.com/MoYuanCN/)
+- [Enlysure](https://github.com/Rovniced)
 
 # 功能如下
 
