@@ -37,6 +37,7 @@ class UsersModel(BaseModel):
         # load_user_info
         if not os.path.exists(filename):
             self.userList = []
+            self.user_dict = {}
             return
         with open(filename, "r") as f:
             data = json.load(f)
@@ -60,13 +61,9 @@ class UsersModel(BaseModel):
                 users.append(user_model)
         
         self.userList = users
-    
-    def __post_init__(self):
-        # 构建字典以便于查找
         self.user_dict = {user.TelegramID: user for user in self.userList}
     
     def get_user_by_id(self, telegram_id: int) -> Optional[UserModel]:
-        # 使用字典查找用户
         return self.user_dict.get(telegram_id)
     
     def save(self):
@@ -104,6 +101,7 @@ class RegCodesModel(BaseModel):
         self.filename = filename
         if not os.path.exists(filename):
             self.regCodes = []
+            self.reg_dict = {}
             return
         with open(filename, "r") as f:
             data = json.load(f)
@@ -117,8 +115,6 @@ class RegCodesModel(BaseModel):
                 )
                 reg_codes.append(reg_code)
         self.regCodes = reg_codes
-    
-    def __post_init__(self):
         self.reg_dict = {reg_data.code: reg_data for reg_data in self.regCodes}
     
     def get_code_data(self, code: str) -> Optional[RegCode]:
