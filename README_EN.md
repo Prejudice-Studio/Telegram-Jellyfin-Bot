@@ -6,7 +6,7 @@ An Easy Telegram Jellyfin Bot.
 
 Uses Docker, Python, Jellyfin-ApiClient-Python, and Python-Telegram-Bot.
 
-Other Language : [简体中文](README.md)
+其他语言 : [简体中文](README.md)
 
 Developers:
 - [MoYuanCN](https://github.com/MoYuanCN/)
