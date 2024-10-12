@@ -26,8 +26,10 @@ async def get_user_info(username: str):
     if username.isdigit():
         # 根据tg id 查询
         if user_info := UsersData.get_user_by_id(int(username)):
+            print("tg id")
             je_id = user_info.bind.ID
         elif user_info := next((u for u in UsersData.userList if username in u.TelegramFullName), None):
+            print("tg username")
             je_id = user_info.bind.ID
     if not je_id:
         try:
@@ -75,6 +77,7 @@ class AdminCommand:
     
     # 管理员查看用户信息
     @staticmethod
+    @check_admin
     async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(context.args) != 1:
             return await update.message.reply_text("Usage: /checkinfo <jellyfin_username>")
@@ -107,6 +110,7 @@ class AdminCommand:
     
     # 管理员删除 Jellyfin 用户
     @staticmethod
+    @check_admin
     async def deleteAccountBy(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(context.args) != 1:
             return await update.message.reply_text("Usage: /deleteAccountBy <jellyfin_username>")
