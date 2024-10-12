@@ -8,6 +8,10 @@ Uses Docker, Python, Jellyfin-ApiClient-Python, and Python-Telegram-Bot.
 
 Other Language : [简体中文](README.md)
 
+Developers:
+- [MoYuanCN](https://github.com/MoYuanCN/)
+- [Enlysure](https://github.com/Rovniced)
+
 # Features
 
 ## /reg JellyfinUsername JellyfinPassword RegCode
