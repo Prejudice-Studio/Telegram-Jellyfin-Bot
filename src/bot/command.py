@@ -330,7 +330,7 @@ class UserCommand:
                 "CurrentPw": user_info.bind.password,
                 "NewPw": new_password
             }
-            client.jellyfin.users("Password", "POST", p_data)
+            client.jellyfin.users("/Password", "POST", p_data)
             user_info.bind.password = new_password
             UsersData.save()
             return await update.message.reply_text("Password changed successfully.")
