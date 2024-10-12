@@ -37,7 +37,7 @@ Developers:
 ## /checkinfo [TelegramUserID/JellyfinUsername]
 - Check the relevant information (including password) for the corresponding TelegramUserID/JellyfinUsername.
 
-## deleteAccountBy [TelegramUserID/JellyfinUsername]
+## /deleteAccountBy [TelegramUserID/JellyfinUsername]
 - Delete the Jellyfin account corresponding to the TelegramUserID/JellyfinUsername.
 
 ## /regcodes
