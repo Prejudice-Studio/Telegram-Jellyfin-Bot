@@ -1,4 +1,5 @@
 import logging
+import os
 
 from telegram import Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler
@@ -8,6 +9,10 @@ from src.bot.command import AdminCommand, UserCommand
 from src.config import BotConfig, Config
 
 logging.basicConfig(level=Config.LOG_LEVE, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+if Config.PROXY and Config.PROXY != "":
+    os.environ['https_proxy'] = Config.PROXY
+    os.environ['http_proxy'] = Config.PROXY
 
 
 def run_bot():
@@ -20,6 +25,7 @@ def run_bot():
                    .get_updates_write_timeout(60)
                    .read_timeout(60)
                    .write_timeout(60)
+                   .base_url(BotConfig.BASE_URL)
                    .build())
     
     # 普通命令

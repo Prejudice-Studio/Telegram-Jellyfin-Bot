@@ -40,7 +40,7 @@ class BotConfig(BaseConfig):
     """
     ADMIN: int = 0  # 管理员账号
     BOT_TOKEN: str = ""  # 机器人 Token
-    BASE_URL: str = None  # 自定义URL
+    BASE_URL: str = "https://api.telegram.org/bot"  # 自定义URL
     TIMEOUT: int = 10  # bot请求/读取超时时间
 
 
