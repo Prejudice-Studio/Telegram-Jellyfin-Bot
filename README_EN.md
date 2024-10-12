@@ -68,7 +68,17 @@ docker run -d --name Telegram-Jellyfin-Bot --restart always \
 #### 5. Start the Bot by running `python bot.py`.
 
 # Star History
-![Star History](https://starchart.cc/MoYuanCN/telegram-Jellyfin-Bot.svg)
+<div align="center">
+
+<a href="https://star-history.com/#MoYuanCN/Telegram-Jellyfin-bot">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MoYuanCN/Telegram-Jellyfin-bot&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MoYuanCN/Telegram-Jellyfin-bot&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MoYuanCN/Telegram-Jellyfin-bot&type=Date" />
+  </picture>
+</a>
+
+</div>
 
 # Contributors
 ![Contributors](https://contrib.rocks/image?repo=MoYuanCN/telegram-Jellyfin-Bot)
