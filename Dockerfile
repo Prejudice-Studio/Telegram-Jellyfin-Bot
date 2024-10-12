@@ -11,6 +11,7 @@ RUN pip install --upgrade pip && \
 
 RUN echo '#!/bin/bash' > /app/start.sh && \
     echo 'git pull' >> /app/start.sh && \
+
     echo 'python bot.py' >> /app/start.sh && \
     chmod +x /app/start.sh
 
