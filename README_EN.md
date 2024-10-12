@@ -68,3 +68,6 @@ docker run -d --name Telegram-Jellyfin-Bot --restart always \
 
 # Star History
 ![Star History](https://starchart.cc/MoYuanCN/telegram-Jellyfin-Bot.svg)
+
+# Contributors
+![Contributors](https://contrib.rocks/image?repo=MoYuanCN/telegram-Jellyfin-Bot)
