@@ -138,3 +138,4 @@ dmypy.json
 *.json
 *__pycache__*
 !config.production.toml
+/data/*

@@ -1,7 +1,10 @@
 import json
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
+
+ROOT_PATH: Path = Path(__file__ + '/../..').resolve()
 
 
 @dataclass
@@ -33,8 +36,7 @@ class UsersModel(BaseModel):
     userList: list[UserModel]
     
     def __init__(self, filename: str = "Users.json"):
-        self.filename = filename
-        # load_user_info
+        self.filename = ROOT_PATH / "data" / filename
         if not os.path.exists(filename):
             self.userList = []
             self.user_dict = {}
@@ -98,7 +100,7 @@ class RegCodesModel(BaseModel):
     regCodes: list[RegCode]
     
     def __init__(self, filename: str = "RegCode.json"):
-        self.filename = filename
+        self.filename = ROOT_PATH / "data" / filename
         if not os.path.exists(filename):
             self.regCodes = []
             self.reg_dict = {}
