@@ -41,7 +41,7 @@ class UsersModel(BaseModel):
             self.userList = []
             self.user_dict = {}
             return
-        with open(filename, "r") as f:
+        with open(self.filename, "r") as f:
             data = json.load(f)
             data = data["userList"]
             users = []
@@ -105,7 +105,7 @@ class RegCodesModel(BaseModel):
             self.regCodes = []
             self.reg_dict = {}
             return
-        with open(filename, "r") as f:
+        with open(self.filename, "r") as f:
             data = json.load(f)
             data = data["regCodes"]
             reg_codes = []
