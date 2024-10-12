@@ -33,6 +33,7 @@ Other Language: [English](README_EN.md)
 
 # 使用方法
 
+## 零、由于Telegram不对中国大陆提供服务,故中国大陆的网络环境无法连接至Telegram,如果你的运行环境无法连接至Telegram,请在config.production.toml中配置代理或将运行环境切换至可以连接至Telegram的网络环境
 ## 一、Docker 一键部署
     
 ### 1.确保安装了Docker
