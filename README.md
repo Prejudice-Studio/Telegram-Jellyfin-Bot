@@ -36,11 +36,11 @@ Other Language: [English](README_EN.md)
 ## 零、由于Telegram不对中国大陆提供服务,故中国大陆的网络环境无法连接至Telegram,如果你的运行环境无法连接至Telegram,请在config.production.toml中配置代理或将运行环境切换至可以连接至Telegram的网络环境
 ## 一、Docker 一键部署
     
-### 1.确保安装了Docker
+#### 1.确保安装了Docker
 
-### 2.下载`config.production.toml`文件，修改文件名为`config.toml`，并修改其中配置项
+#### 2.下载`config.production.toml`文件，修改文件名为`config.toml`，并修改其中配置项
 
-### 3.在同目录下执行以下命令
+#### 3.在同目录下执行以下命令
 ```
 docker run -d --name Telegram-Jellyfin-Bot --restart always \
   -v $(pwd)/config.toml:/app/config.toml \
@@ -49,15 +49,15 @@ docker run -d --name Telegram-Jellyfin-Bot --restart always \
 
 ## 二、手动配置python环境执行
 
-### 1.安装Python3.10及以上版本
+#### 1.安装Python3.10及以上版本
 
-### 2.下载该项目的Zip文件并解压
+#### 2.下载该项目的Zip文件并解压
 
-### 3.运行`pip install -r requirements.txt`安装依赖
+#### 3.运行`pip install -r requirements.txt`安装依赖
 
-### 4.将`config.production.toml`文件，修改文件名为`config.toml`，并修改其中配置项
+#### 4.将`config.production.toml`文件，修改文件名为`config.toml`，并修改其中配置项
 
-### 5.运行`python bot.py`启动Bot
+#### 5.运行`python bot.py`启动Bot
 
 # Star History
 ![Star History](https://starchart.cc/MoYuanCN/telegram-Jellyfin-Bot.svg)

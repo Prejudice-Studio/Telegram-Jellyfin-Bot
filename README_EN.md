@@ -42,11 +42,11 @@ Developers:
 
 ## 1. Deploy with Docker (One-Click Setup)
 
-### 1. Ensure Docker is installed.
+#### 1. Ensure Docker is installed.
 
-### 2. Download the `config.production.toml` file, rename it to `config.toml`, and modify the configuration as needed.
+#### 2. Download the `config.production.toml` file, rename it to `config.toml`, and modify the configuration as needed.
 
-### 3. Run the following command in the same directory:
+#### 3. Run the following command in the same directory:
 ```
 docker run -d --name Telegram-Jellyfin-Bot --restart always \
   -v $(pwd)/config.toml:/app/config.toml \
@@ -56,15 +56,15 @@ docker run -d --name Telegram-Jellyfin-Bot --restart always \
 
 ## 2. Manual Python Environment Setup
 
-### 1. Install Python 3.10 or higher.
+#### 1. Install Python 3.10 or higher.
 
-### 2. Download the ZIP file of the project and extract it.
+#### 2. Download the ZIP file of the project and extract it.
 
-### 3. Run `pip install -r requirements.txt` to install dependencies.
+#### 3. Run `pip install -r requirements.txt` to install dependencies.
 
-### 4. Rename the `config.production.toml` file to `config.toml` and adjust the settings as needed.
+#### 4. Rename the `config.production.toml` file to `config.toml` and adjust the settings as needed.
 
-### 5. Start the Bot by running `python bot.py`.
+#### 5. Start the Bot by running `python bot.py`.
 
 # Star History
 ![Star History](https://starchart.cc/MoYuanCN/telegram-Jellyfin-Bot.svg)
