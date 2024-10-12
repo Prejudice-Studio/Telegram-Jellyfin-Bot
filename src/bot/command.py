@@ -1,6 +1,9 @@
 import logging
+import os
 import random
 import string
+import subprocess
+import sys
 from datetime import datetime
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -147,6 +150,17 @@ class AdminCommand:
                 ret_text += (f"Code <code>{code.code}</code> Usage limit: {code.usage_limit} Expired time: "
                              f"{code.expired_time if code.expired_time is not None else 'NoExpired'}\n")
         await update.message.reply_text("All registration codes:\n\n" + ret_text, parse_mode='HTML')
+    
+    @staticmethod
+    @check_admin
+    async def update(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        try:
+            subprocess.run(['git', 'pull'], check=True)
+            await update.message.reply_text("Git sync completed, the bot is restarting")
+            python = sys.executable
+            os.execl(python, python, *sys.argv)
+        except subprocess.CalledProcessError:
+            await update.message.reply_text("Update failed, please check the log")
 
 
 # noinspection PyUnusedLocal

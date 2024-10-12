@@ -12,14 +12,14 @@ Other Language: [English](README_EN.md)
 # 功能如下
 # 用户指令
 
-| 指令                                      | 描述                                               |
-|-----------------------------------------|--------------------------------------------------|
-| `/reg JellyfinUsername JellyfinPassword RegCode` | 注册新的Jellyfin账号并自动与当前Telegram账号绑定              |
-| `/info`                                 | 查看当前账号的基本信息                                    |
-| `/bind JellyfinUsername JellyfinPassword` | 将当前Telegram账号绑定至已有的Jellyfin账号                   |
-| `/unbind JellyfinUsername JellyfinPassword` | 将Telegram账号与当前绑定的Jellyfin账号解绑                  |
-| `/sign`                                 | 签到，随机获取1-10积分(分数范围可根据源码修改)，积分暂无用处，可自行添加 |
-| `/delete`                               | 删除当前Telegram账号绑定的Jellyfin账号                      |
+| 指令                                               | 描述                                      |
+|--------------------------------------------------|-----------------------------------------|
+| `/reg JellyfinUsername JellyfinPassword RegCode` | 注册新的Jellyfin账号并自动与当前Telegram账号绑定        |
+| `/info`                                          | 查看当前账号的基本信息                             |
+| `/bind JellyfinUsername JellyfinPassword`        | 将当前Telegram账号绑定至已有的Jellyfin账号           |
+| `/unbind JellyfinUsername JellyfinPassword`      | 将Telegram账号与当前绑定的Jellyfin账号解绑           |
+| `/sign`                                          | 签到，随机获取1-10积分(分数范围可根据源码修改)，积分暂无用处，可自行添加 |
+| `/delete`                                        | 删除当前Telegram账号绑定的Jellyfin账号             |
 
 # 管理员指令
 

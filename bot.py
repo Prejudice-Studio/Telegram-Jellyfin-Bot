@@ -34,7 +34,8 @@ def run_bot():
     application.add_handler(CommandHandler("checkinfo", AdminCommand.checkinfo))  # 管理员查看用户信息
     application.add_handler(CommandHandler("deleteAccountBy", AdminCommand.deleteAccountBy))  # 管理员删除用户
     application.add_handler(CommandHandler("op", AdminCommand.set_admin))  # 设置管理员
-    application.add_handler(CommandHandler("regcodes", AdminCommand.get_all_code))  #
+    application.add_handler(CommandHandler("regcodes", AdminCommand.get_all_code))
+    application.add_handler(CommandHandler("update", AdminCommand.update))
     # 按钮回调
     application.add_handler(CallbackQueryHandler(callback.confirm_delete, pattern='confirm_delete'))
     application.add_handler(CallbackQueryHandler(callback.confirm_unbind, pattern='confirm_unbind'))
