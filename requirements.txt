@@ -1,2 +1,4 @@
 python-telegram-bot~=21.0
 jellyfin-apiclient-python~=1.10.0
+aiofiles~=24.1.0
+toml~=0.10.2

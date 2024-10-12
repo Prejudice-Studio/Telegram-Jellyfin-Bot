@@ -1,0 +1,13 @@
+PROXY = ""  # 代理地址 示例：http://127.0.0.1:7890 一般用不到
+MAX_RETRY = 3  # 重试次数
+LOG_LEVE = 30  # 日志等级
+
+[Bot]
+ADMIN = 0  # 管理员账号 Telegram ID
+BOT_TOKEN = ""  # 机器人 Token 必要
+BASE_URL = ""  # 自定义TG URL 示例：http://127.0.0.1:8081/bot 一般用不到
+TIMEOUT = 10  # bot请求/读取超时时间
+
+[Jellyfin]
+BASE_URL = ""  # Jellyfin URL 必要
+API_KEY = ""  # Jellyfin API Key 必要
