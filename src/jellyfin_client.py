@@ -10,10 +10,6 @@ RegCodeData = RegCodesModel("RegCode.json")
 client = JellyfinClient()
 
 
-class JellyfinException(Exception):
-    pass
-
-
 def check_server_connectivity() -> bool:
     """
     检查服务器连接性
@@ -22,7 +18,7 @@ def check_server_connectivity() -> bool:
     try:
         client.jellyfin.get_system_info()
         return True
-    except JellyfinException:
+    except Exception:
         return False
 
 
@@ -32,9 +28,11 @@ def init_client():
     client.config.data["app.version"] = '0.0.1'
     client.auth.connect_to_address(JellyfinConfig.BASE_URL)
     auth_config = {"Servers": [{"AccessToken": JellyfinConfig.API_KEY, "address": JellyfinConfig.BASE_URL}]}
-    print(auth_config)
     client.authenticate(auth_config, discover=False)
-    client.start()
+    try:
+        client.start()
+    except Exception as e:
+        print(e)
 
 
 init_client()
