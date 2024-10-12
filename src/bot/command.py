@@ -13,6 +13,7 @@ from src.bot import check_admin, command_warp
 from src.config import BotConfig, JellyfinConfig
 from src.jellyfin_client import RegCodeData, UsersData, client
 from src.model import JellyfinModel, RegCode, UserModel
+from src.utils import convert_to_china_timezone
 
 
 async def get_user_info(username: str):
@@ -102,7 +103,7 @@ class AdminCommand:
                     f"Last Device: {device_name}\n"
                     f"----------Score----------\n"
                     f"Score: {user_info.score}\n"
-                    f"Last Sign-in: {user_info.last_sign_in}")
+                    f"Last Sign-in: {convert_to_china_timezone(user_info.last_sign_in)}")
     
     # 管理员删除 Jellyfin 用户
     @staticmethod
@@ -148,7 +149,7 @@ class AdminCommand:
         for code in code_list:
             if (code.expired_time is None or code.expired_time > datetime.now().timestamp()) and code.usage_limit > 0:
                 ret_text += (f"Code <code>{code.code}</code> Usage limit: {code.usage_limit} Expired time: "
-                             f"{code.expired_time if code.expired_time is not None else 'NoExpired'}\n")
+                             f"{convert_to_china_timezone(code.expired_time) if code.expired_time is not None else 'NoExpired'}\n")
         await update.message.reply_text("All registration codes:\n\n" + ret_text, parse_mode='HTML')
     
     @staticmethod
@@ -234,7 +235,7 @@ class UserCommand:
                 f"Last Device: {device_name}\n"
                 f"----------Score----------\n"
                 f"Score: {user_info.score}\n"
-                f"Last Sign-in: {user_info.last_sign_in}")
+                f"Last Sign-in: {convert_to_china_timezone(user_info.last_sign_in)}")
     
     # 删除账号
     @staticmethod
