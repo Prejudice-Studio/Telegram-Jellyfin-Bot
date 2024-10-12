@@ -58,7 +58,7 @@ Other Language : [简体中文](README.md)
 
 ## 3. Extract the Zip file to any empty folder.
 
-## 4. Enter the folder and modify the following content:
+## 4. Enter the folder , open bot.py and modify the following content:
 ```
 server_url =http/https://YOUR_SERVER_IP:PORT Replace with your Jellyfin server IP
 # account =Administrators Username Replace with your Jellyfin server administrator username
