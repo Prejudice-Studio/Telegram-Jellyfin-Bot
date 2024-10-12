@@ -34,7 +34,7 @@ Use Docker Python Jellyfin-ApiClient-Python Python-Telegram-Bot
 ## /checkinfo [TelegramUserID/JellyfinUsername]
 - 查询对应TelegramUserID/JellyfinUsername的相关信息(包含密码)
 
-## deleteAccountBy [TelegramUserID/JellyfinUsername]
+## /deleteAccountBy [TelegramUserID/JellyfinUsername]
 - 删除对应TelegramUserID/JellyfinUsername的Jellyfin账号
 
 ## /regcodes
