@@ -23,6 +23,7 @@ Developers:
 | `/unbind JellyfinUsername JellyfinPassword` | Unbind the current Telegram account from the bound Jellyfin account|
 | `/sign`                                     | Sign in and randomly gain 1-10 points (the point range can be modified in the source code). Currently, points have no specific use, but custom functionality can be added |
 | `/delete`                                   | Delete the Jellyfin account bound to the current Telegram account  |
+| `/delete`                                        | Change the password of the Jellyfin account bound to the current Telegram account          |
 
 ## Admin Commands
 
