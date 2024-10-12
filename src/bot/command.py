@@ -312,3 +312,36 @@ class UserCommand:
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.effective_user.send_message(f"Are you sure you want to unbind your Jellyfin account:{user_info.bind.username}?",
                                                  reply_markup=reply_markup)
+    
+    @staticmethod
+    @command_warp
+    async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user_info = UsersData.get_user_by_id(update.effective_user.id)
+        if not user_info or user_info.bind.username == "":
+            return await update.effective_user.send_message("This Telegram account is not bound to the specified Jellyfin account.")
+        if len(context.args) != 2:
+            return await update.message.reply_text("Usage: /changepassword <old_password> <new_password>")
+        old_pw, new_password = context.args[0], context.args[1]
+        if old_pw != user_info.bind.password:
+            return await update.message.reply_text("Old password error.")
+        try:
+            client.jellyfin.login(JellyfinConfig.BASE_URL, user_info.bind.username, user_info.bind.password)
+            p_data = {
+                "CurrentPw": user_info.bind.password,
+                "NewPw": new_password
+            }
+            client.jellyfin.users("Password", "POST", p_data)
+            user_info.bind.password = new_password
+            UsersData.save()
+            return await update.message.reply_text("Password changed successfully.")
+        except Exception as e:
+            logging.error(f"Error: {e}")
+            return await update.message.reply_text("[Server]Failed to change password.")
+    
+    @staticmethod
+    @command_warp
+    async def get_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user_info = UsersData.get_user_by_id(update.effective_user.id)
+        if not user_info or user_info.bind.username == "":
+            return await update.effective_user.send_message("This Telegram account is not bound to the specified Jellyfin account.")
+        await update.message.reply_text(f"Your password is: <code>{user_info.bind.password}</code>", parse_mode='HTML')

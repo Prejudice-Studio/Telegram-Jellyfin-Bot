@@ -29,6 +29,8 @@ def run_bot():
     application.add_handler(CommandHandler("sign", UserCommand.sign))
     application.add_handler(CommandHandler("bind", UserCommand.bind))
     application.add_handler(CommandHandler("unbind", UserCommand.unbind))
+    application.add_handler(CommandHandler("checkpassword", UserCommand.get_pw))
+    application.add_handler(CommandHandler("changepassword", UserCommand.reset_pw))
     # 管理员命令
     application.add_handler(CommandHandler("summon", AdminCommand.summon))  # 管理员生成注册码
     application.add_handler(CommandHandler("checkinfo", AdminCommand.checkinfo))  # 管理员查看用户信息
