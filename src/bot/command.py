@@ -24,13 +24,10 @@ async def get_user_info(username: str):
     """
     je_id = None
     if username.isdigit():
-        # 根据tg id 查询
         if user_info := UsersData.get_user_by_id(int(username)):
-            print("tg id")
             je_id = user_info.bind.ID
-        elif user_info := next((u for u in UsersData.userList if username in u.TelegramFullName), None):
-            print("tg username")
-            je_id = user_info.bind.ID
+    elif user_info := next((u for u in UsersData.userList if username in u.TelegramFullName), None):
+        je_id = user_info.bind.ID
     if not je_id:
         try:
             all_user = client.jellyfin.get_users()
