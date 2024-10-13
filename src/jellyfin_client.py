@@ -9,12 +9,16 @@ RegCodeData = RegCodesModel("RegCode.json")
 # 连接服务器
 client = JellyfinClient()
 
+is_connected = False
+
 
 def check_server_connectivity() -> bool:
     """
     检查服务器连接性
     :return: bool
     """
+    if not is_connected:
+        init_client()
     try:
         client.jellyfin.get_system_info()
         return True
@@ -23,6 +27,7 @@ def check_server_connectivity() -> bool:
 
 
 def init_client():
+    global is_connected
     client.config.data["auth.ssl"] = False
     client.config.data["app.name"] = 'telegram'
     client.config.data["app.version"] = '0.0.1'
@@ -31,6 +36,7 @@ def init_client():
     client.authenticate(auth_config, discover=False)
     try:
         client.start()
+        is_connected = True
     except Exception as e:
         print(e)
 
