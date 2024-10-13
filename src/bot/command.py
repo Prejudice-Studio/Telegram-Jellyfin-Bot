@@ -82,7 +82,7 @@ class AdminCommand:
         jellyfin_user, user_info = await get_user_info(username)
         if not jellyfin_user:
             return await update.message.reply_text("User not found.")
-        last_login = jellyfin_user.get("LastLoginDate", "N/A")
+        last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
         device_name = jellyfin_user.get("LastLoginDeviceName", "N/A")
         # 检查积分和签到信息
         if not user_info:
@@ -224,7 +224,7 @@ class UserCommand:
         if not jellyfin_user:
             return await update.message.reply_text("Jellyfin user not found.")
         
-        last_login = jellyfin_user.get("LastLoginDate", "N/A")
+        last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
         device_name = jellyfin_user.get("LastLoginDeviceName", "N/A")
         await update.message.reply_text(
                 f"----------Telegram----------\n"

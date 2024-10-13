@@ -5,7 +5,8 @@ import pytz
 
 
 def convert_to_china_timezone(time_data: Optional[int | str] = None) -> str:
-    china_timezone = pytz.timezone('Asia/Shanghai')
+    if not time_data or time_data == "N/A":
+        return "N/A"  # 或其他默认值
     if isinstance(time_data, (int, float)):
         utc_time = datetime.fromtimestamp(time_data, tz=timezone.utc)
     elif isinstance(time_data, str):
