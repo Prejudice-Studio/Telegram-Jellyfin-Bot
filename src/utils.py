@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -16,9 +17,8 @@ def convert_to_china_timezone(time_data: Optional[int | str] = None) -> str:
             utc_time = datetime.now().astimezone(timezone.utc)
         
         china_timezone = pytz.timezone('Asia/Shanghai')
-        
         china_time = utc_time.astimezone(china_timezone)
-        
         return china_time.strftime('%Y-%m-%d %H:%M:%S')
     except Exception as e:
+        logging.error(f"convert_to_china_timezone error: {e}")
         return time_data
