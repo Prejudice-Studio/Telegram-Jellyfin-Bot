@@ -49,8 +49,6 @@ async def get_user_info(username: str):
 
 # noinspection PyUnusedLocal
 class AdminCommand:
-    
-    # 管理员生成注册码
     @staticmethod
     @check_admin
     async def summon(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -72,7 +70,6 @@ class AdminCommand:
         RegCodeData.save()
         await update.message.reply_text(f"Generated {quantity} registration codes.\n\n" + "".join(f"{code}\n" for code in code_list))
     
-    # 管理员查看用户信息
     @staticmethod
     @check_admin
     async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -92,20 +89,28 @@ class AdminCommand:
                     f"Last Login: {last_login}\n"
                     f"Last Device: {device_name}")
         else:
-            await update.message.reply_text(
-                    f"----------Telegram----------\n"
-                    f"TelegramID: {user_info.TelegramID}\n"
-                    f"TelegramFullName: {user_info.TelegramFullName}\n"
-                    f"----------Jellyfin----------\n"
-                    f"Username: {jellyfin_user['Name']}\n"
-                    f"Password: {user_info.bind.password}\n"
-                    f"Last Login: {last_login}\n"
-                    f"Last Device: {device_name}\n"
-                    f"----------Score----------\n"
-                    f"Score: {user_info.score}\n"
-                    f"Last Sign-in: {convert_to_china_timezone(user_info.last_sign_in)}")
+            message = (
+                f"----------Telegram----------\n"
+                f"TelegramID: {user_info.TelegramID}\n"
+                f"TelegramFullName: {user_info.TelegramFullName}\n"
+                f"----------Jellyfin----------\n"
+                f"Username: {jellyfin_user['Name']}\n"
+                f"Last Login: {last_login}\n"
+                f"Last Device: {device_name}\n"
+                f"----------Score----------\n"
+                f"Score: {user_info.score}\n"
+                f"Last Sign-in: {convert_to_china_timezone(user_info.last_sign_in)}"
+            )
+            
+            if update.effective_chat.type == "private":
+                message = message.replace(
+                        f"Username: {jellyfin_user['Name']}",
+                        f"Username: {jellyfin_user['Name']}\n"
+                        f"Password: {user_info.bind.password}"
+                )
+            
+            await update.message.reply_text(message)
     
-    # 管理员删除 Jellyfin 用户
     @staticmethod
     @check_admin
     async def deleteAccountBy(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -126,7 +131,6 @@ class AdminCommand:
             UsersData.remove_user(user_info)
         await update.message.reply_text(f"Successfully deleted user {username} from Jellyfin and the system.")
     
-    # 设置管理员
     @staticmethod
     async def set_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_user.id != BotConfig.ADMIN:
@@ -167,7 +171,6 @@ class AdminCommand:
 
 # noinspection PyUnusedLocal
 class UserCommand:
-    # 注册用户
     @staticmethod
     @command_warp
     async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -208,7 +211,6 @@ class UserCommand:
             UsersData.add_user(user_info)
         await update.message.reply_text(f"Registration successful. Username: {username}")
     
-    # 查询用户信息
     @staticmethod
     @command_warp
     async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -238,7 +240,6 @@ class UserCommand:
                 f"Score: {user_info.score}\n"
                 f"Last Sign-in: {convert_to_china_timezone(user_info.last_sign_in)}")
     
-    # 删除账号
     @staticmethod
     @command_warp
     async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -251,7 +252,6 @@ class UserCommand:
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text("Are you sure you want to delete the account", reply_markup=reply_markup)
     
-    # 签到功能
     @staticmethod
     async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = UsersData.get_user_by_id(update.effective_user.id)
@@ -270,10 +270,11 @@ class UserCommand:
         UsersData.save()
         await update.message.reply_text(f"Sign-in successful! You earned {points} point(s). Current points: {user_info.score}.")
     
-    # 绑定已有 Jellyfin 账号
     @staticmethod
     @command_warp
     async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if update.effective_chat.type != "private":
+            return await update.message.reply_text("Please use this command in private chat.")
         if len(context.args) != 2:
             return await update.message.reply_text("Usage: /bind <username> <password>")
         username, password = context.args
@@ -301,26 +302,27 @@ class UserCommand:
             UsersData.add_user(user_info)
             await update.message.reply_text(f"Successful binding {username}.")
     
-    # 解绑 Jellyfin 账号
     @staticmethod
     @command_warp
     async def unbind(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = UsersData.get_user_by_id(update.effective_user.id)
         if not user_info or user_info.bind.username == "":
-            return await update.effective_user.send_message("This Telegram account is not bound to the specified Jellyfin account.")
+            return await update.effective_chat.send_message("This Telegram account is not bound to the specified Jellyfin account.")
         # 二次确认解绑
         keyboard = [[InlineKeyboardButton("Confirm", callback_data='confirm_unbind'),
                      InlineKeyboardButton("Cancel", callback_data='cancel')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.effective_user.send_message(f"Are you sure you want to unbind your Jellyfin account:{user_info.bind.username}?",
+        await update.effective_chat.send_message(f"Are you sure you want to unbind your Jellyfin account:{user_info.bind.username}?",
                                                  reply_markup=reply_markup)
     
     @staticmethod
     @command_warp
     async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if update.effective_chat.type != "private":
+            return await update.message.reply_text("Please use this command in private chat.")
         user_info = UsersData.get_user_by_id(update.effective_user.id)
         if not user_info or user_info.bind.username == "":
-            return await update.effective_user.send_message("This Telegram account is not bound to the specified Jellyfin account.")
+            return await update.effective_chat.send_message("This Telegram account is not bound to the specified Jellyfin account.")
         if len(context.args) != 2:
             return await update.message.reply_text("Usage: /changepassword <old_password> <new_password>")
         old_pw, new_password = context.args[0], context.args[1]
@@ -343,7 +345,9 @@ class UserCommand:
     @staticmethod
     @command_warp
     async def get_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if update.effective_chat.type != "private":
+            return await update.message.reply_text("Please use this command in private chat.")
         user_info = UsersData.get_user_by_id(update.effective_user.id)
         if not user_info or user_info.bind.username == "":
-            return await update.effective_user.send_message("This Telegram account is not bound to the specified Jellyfin account.")
+            return await update.effective_chat.send_message("This Telegram account is not bound to the specified Jellyfin account.")
         await update.message.reply_text(f"Your password is: <code>{user_info.bind.password}</code>", parse_mode='HTML')
