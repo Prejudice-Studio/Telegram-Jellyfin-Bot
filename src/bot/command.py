@@ -80,14 +80,12 @@ class AdminCommand:
         if not jellyfin_user:
             return await update.message.reply_text("User not found.")
         last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
-        device_name = jellyfin_user.get("LastLoginDeviceName", "N/A")
         # 检查积分和签到信息
         if not user_info:
             await update.message.reply_text(
                     f"User found in Jellyfin, but not bind Telegram.\n"
                     f"Username: {jellyfin_user['Name']}\n"
-                    f"Last Login: {last_login}\n"
-                    f"Last Device: {device_name}")
+                    f"Last Login: {last_login}\n")
         else:
             message = (
                 f"----------Telegram----------\n"
@@ -96,7 +94,6 @@ class AdminCommand:
                 f"----------Jellyfin----------\n"
                 f"Username: {jellyfin_user['Name']}\n"
                 f"Last Login: {last_login}\n"
-                f"Last Device: {device_name}\n"
                 f"----------Score----------\n"
                 f"Score: {user_info.score}\n"
                 f"Last Sign-in: {convert_to_china_timezone(user_info.last_sign_in)}"
@@ -227,7 +224,6 @@ class UserCommand:
             return await update.message.reply_text("Jellyfin user not found.")
         
         last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
-        device_name = jellyfin_user.get("LastLoginDeviceName", "N/A")
         await update.message.reply_text(
                 f"----------Telegram----------\n"
                 f"TelegramID: {user_info.TelegramID}\n"
@@ -235,7 +231,6 @@ class UserCommand:
                 f"----------Jellyfin----------\n"
                 f"Username: {jellyfin_user['Name']}\n"
                 f"Last Login: {last_login}\n"
-                f"Last Device: {device_name}\n"
                 f"----------Score----------\n"
                 f"Score: {user_info.score}\n"
                 f"Last Sign-in: {convert_to_china_timezone(user_info.last_sign_in)}")
