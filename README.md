@@ -20,7 +20,8 @@ Other Language Introduction: [English](README_EN.md)
 | `/unbind JellyfinUsername JellyfinPassword`      | 将Telegram账号与当前绑定的Jellyfin账号解绑           |
 | `/sign`                                          | 签到，随机获取1-10积分(分数范围可根据源码修改)，积分暂无用处，可自行添加 |
 | `/delete`                                        | 删除当前Telegram账号绑定的Jellyfin账号             |
-| `/changepassword JellyfinOldPassword JellyfinNewPassword`                                        | 修改当前Telegram账号绑定的Jellyfin账号的密码             |
+| `/changepassword JellyfinOldPassword JellyfinNewPassword`      | 修改当前Telegram账号绑定的Jellyfin账号的密码             |
+| `/checkpassword`                                        | 查看当前Telegram账号绑定的Jellyfin账号的密码             |
 
 # 管理员指令
 
