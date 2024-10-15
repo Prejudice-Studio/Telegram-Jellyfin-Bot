@@ -74,29 +74,29 @@ class AdminCommand:
     @check_admin
     async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(context.args) != 1:
-            return await update.message.reply_text("Usage: /checkinfo <jellyfin_username>")
+            return await update.message.reply_text("使用方法: /checkinfo <jellyfin用户名/Telegram用户ID>")
         username = context.args[0]
         jellyfin_user, user_info = await get_user_info(username)
         if not jellyfin_user:
-            return await update.message.reply_text("User not found.")
-        last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
+            return await update.message.reply_text("未发现用户.")
+        last_login = convert_to_china_timezone(jellyfin_user.get("上次登录时间", "N/A"))
         # 检查积分和签到信息
         if not user_info:
             await update.message.reply_text(
-                    f"User found in Jellyfin, but not bind Telegram.\n"
-                    f"Username: {jellyfin_user['Name']}\n"
-                    f"Last Login: {last_login}\n")
+                    f"发现Jellyfin用户，但未绑定Telegram.\n"
+                    f"用户名: {jellyfin_user['Name']}\n"
+                    f"上次登录: {last_login}\n")
         else:
             message = (
                 f"----------Telegram----------\n"
                 f"TelegramID: {user_info.TelegramID}\n"
-                f"TelegramFullName: {user_info.TelegramFullName}\n"
+                f"Telegram昵称: {user_info.TelegramFullName}\n"
                 f"----------Jellyfin----------\n"
-                f"Username: {jellyfin_user['Name']}\n"
-                f"Last Login: {last_login}\n"
+                f"用户名: {jellyfin_user['Name']}\n"
+                f"上次登录: {last_login}\n"
                 f"----------Score----------\n"
-                f"Score: {user_info.score}\n"
-                f"Last Sign-in: {convert_to_china_timezone(user_info.last_sign_in)}"
+                f"积分: {user_info.score}\n"
+                f"上次签到时间: {convert_to_china_timezone(user_info.last_sign_in)}"
             )
             
             if update.effective_chat.type == "private":
@@ -175,20 +175,20 @@ class UserCommand:
             return await update.message.reply_text("Usage: /reg <username> <password> <reg_code>")
         username, password, reg_code = context.args
         if not username.isalnum() or not password.isalnum():
-            return await update.message.reply_text("The username and password must be alphanumeric.")
+            return await update.message.reply_text("用户名与密码不合法.")
         
         reg_code_info = RegCodeData.get_code_data(reg_code)
         if not reg_code_info:
-            return await update.message.reply_text("Unavailable registration code")
+            return await update.message.reply_text("注册码不可用")
         if reg_code_info.usage_limit <= 0:
-            return await update.message.reply_text("The registration code has been used up")
+            return await update.message.reply_text("注册码已被使用")
         if reg_code_info.expired_time and reg_code_info.expired_time < datetime.now().timestamp():
-            return await update.message.reply_text("The registration code has expired")
+            return await update.message.reply_text("注册码已过期")
         # 检查 Jellyfin 是否已有该用户
         try:
             existing_users = client.jellyfin.get_users()
             if any(user['Name'] == username for user in existing_users):
-                return await update.message.reply_text("The username already exists.")
+                return await update.message.reply_text("用户名已存在.")
             ret_user = client.jellyfin.new_user(username, password)
         except Exception as e:
             logging.error(f"Error: {e}")
@@ -206,14 +206,14 @@ class UserCommand:
             user_info = UserModel(TelegramID=update.effective_user.id, TelegramFullName=update.effective_user.full_name,
                                   bind=JellyfinModel(username=username, password=password, ID=ret_user["Id"]))
             UsersData.add_user(user_info)
-        await update.message.reply_text(f"Registration successful. Username: {username}")
+        await update.message.reply_text(f"注册成功，自动与Telegram绑定. 用户名: {username}")
     
     @staticmethod
     @command_warp
     async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = UsersData.get_user_by_id(update.effective_user.id)
         if not user_info or user_info.bind.username == "":
-            return await update.message.reply_text("No Jellyfin account is bound to this Telegram account.")
+            return await update.message.reply_text("无Jellyfin账号与该Telegram账号绑定.")
         try:
             jellyfin_user = client.jellyfin.get_user(user_info.bind.ID)
         except Exception as e:
@@ -221,31 +221,31 @@ class UserCommand:
             return await update.message.reply_text("[Server]Failed to connect to Jellyfin.")
         logging.info(f"Jellyfin user: {jellyfin_user}")
         if not jellyfin_user:
-            return await update.message.reply_text("Jellyfin user not found.")
+            return await update.message.reply_text("用户未找到.")
         
-        last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
+        last_login = convert_to_china_timezone(jellyfin_user.get("上次登录时间", "N/A"))
         await update.message.reply_text(
                 f"----------Telegram----------\n"
                 f"TelegramID: {user_info.TelegramID}\n"
-                f"TelegramFullName: {user_info.TelegramFullName}\n"
+                f"Telegram昵称: {user_info.TelegramFullName}\n"
                 f"----------Jellyfin----------\n"
-                f"Username: {jellyfin_user['Name']}\n"
-                f"Last Login: {last_login}\n"
+                f"用户名: {jellyfin_user['Name']}\n"
+                f"上次登录: {last_login}\n"
                 f"----------Score----------\n"
-                f"Score: {user_info.score}\n"
-                f"Last Sign-in: {convert_to_china_timezone(user_info.last_sign_in)}")
+                f"积分: {user_info.score}\n"
+                f"上次签到: {convert_to_china_timezone(user_info.last_sign_in)}")
     
     @staticmethod
     @command_warp
     async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = UsersData.get_user_by_id(update.effective_user.id)
         if not user_info or user_info.bind.username == "":
-            return await update.message.reply_text("No Jellyfin account is bound to this Telegram account.")
+            return await update.message.reply_text("无Jellyfin账号与该Telegram账号绑定.")
         # 二次确认
-        keyboard = [[InlineKeyboardButton("Confirm", callback_data='confirm_delete'),
-                     InlineKeyboardButton("Cancel", callback_data='cancel')]]
+        keyboard = [[InlineKeyboardButton("确认", callback_data='confirm_delete'),
+                     InlineKeyboardButton("取消", callback_data='cancel')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_text("Are you sure you want to delete the account", reply_markup=reply_markup)
+        await update.message.reply_text("你确定要删除账号吗？", reply_markup=reply_markup)
     
     @staticmethod
     async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -257,21 +257,21 @@ class UserCommand:
         
         today = datetime.now().date().strftime("%Y-%m-%d")
         if user_info.last_sign_in == today:
-            return await update.message.reply_text("You have already signed in today.")
+            return await update.message.reply_text("你今日已签到.")
         
         points = random.randint(1, 10)
         user_info.score += points
         user_info.last_sign_in = today
         UsersData.save()
-        await update.message.reply_text(f"Sign-in successful! You earned {points} point(s). Current points: {user_info.score}.")
+        await update.message.reply_text(f"签到成功! 你获得了 {points} 积分. 当前积分: {user_info.score}.")
     
     @staticmethod
     @command_warp
     async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_chat.type != "private":
-            return await update.message.reply_text("Please use this command in private chat.")
+            return await update.message.reply_text("请在私聊中使用.")
         if len(context.args) != 2:
-            return await update.message.reply_text("Usage: /bind <username> <password>")
+            return await update.message.reply_text("使用方法: /bind 用户名 密码")
         username, password = context.args
         try:
             jellyfin_user = client.jellyfin.login(JellyfinConfig.BASE_URL, username, password)
@@ -279,50 +279,50 @@ class UserCommand:
             logging.error(f"Error: {e}")
             return await update.message.reply_text("[Server]Failed to connect to Jellyfin.")
         if not jellyfin_user:
-            return await update.message.reply_text("username or password error.")
-        logging.info(f"Jellyfin user: {jellyfin_user}")
+            return await update.message.reply_text("用户名或密码错误.")
+        logging.info(f"Jellyfin用户: {jellyfin_user}")
         # 绑定 Telegram 账号
         user_info = UsersData.get_user_by_id(update.effective_user.id)
         if user_info:
             if user_info.bind.username == "":
                 user_info.bind = JellyfinModel(username=username, password=password, ID=jellyfin_user["User"]["Id"])
                 user_info.TelegramFullName = update.effective_user.full_name
-                await update.message.reply_text(f"Successful binding {username}.")
+                await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
                 UsersData.save()
             else:
-                await update.message.reply_text("You have already bound a Jellyfin account.")
+                await update.message.reply_text("你已绑定一个Jellyfin账号.")
         else:
             user_info = UserModel(TelegramID=update.effective_user.id, TelegramFullName=update.effective_user.full_name,
                                   bind=JellyfinModel(username=username, password=password, ID=jellyfin_user["User"]["Id"]))
             UsersData.add_user(user_info)
-            await update.message.reply_text(f"Successful binding {username}.")
+            await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
     
     @staticmethod
     @command_warp
     async def unbind(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = UsersData.get_user_by_id(update.effective_user.id)
         if not user_info or user_info.bind.username == "":
-            return await update.effective_chat.send_message("This Telegram account is not bound to the specified Jellyfin account.")
+            return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
         # 二次确认解绑
-        keyboard = [[InlineKeyboardButton("Confirm", callback_data='confirm_unbind'),
-                     InlineKeyboardButton("Cancel", callback_data='cancel')]]
+        keyboard = [[InlineKeyboardButton("确认", callback_data='confirm_unbind'),
+                     InlineKeyboardButton("取消", callback_data='cancel')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.effective_chat.send_message(f"Are you sure you want to unbind your Jellyfin account:{user_info.bind.username}?",
+        await update.effective_chat.send_message(f"你确定与Jellyfin用户:{user_info.bind.username}解绑吗?",
                                                  reply_markup=reply_markup)
     
     @staticmethod
     @command_warp
     async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_chat.type != "private":
-            return await update.message.reply_text("Please use this command in private chat.")
+            return await update.message.reply_text("请在私聊中使用.")
         user_info = UsersData.get_user_by_id(update.effective_user.id)
         if not user_info or user_info.bind.username == "":
-            return await update.effective_chat.send_message("This Telegram account is not bound to the specified Jellyfin account.")
+            return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
         if len(context.args) != 2:
-            return await update.message.reply_text("Usage: /changepassword <old_password> <new_password>")
+            return await update.message.reply_text("使用方法: /changepassword 原密码 新密码")
         old_pw, new_password = context.args[0], context.args[1]
         if old_pw != user_info.bind.password:
-            return await update.message.reply_text("Old password error.")
+            return await update.message.reply_text("原密码错误.")
         try:
             client.jellyfin.login(JellyfinConfig.BASE_URL, user_info.bind.username, user_info.bind.password)
             p_data = {
@@ -332,7 +332,7 @@ class UserCommand:
             client.jellyfin.users("/Password", "POST", p_data)
             user_info.bind.password = new_password
             UsersData.save()
-            return await update.message.reply_text("Password changed successfully.")
+            return await update.message.reply_text("密码修改成功.")
         except Exception as e:
             logging.error(f"Error: {e}")
             return await update.message.reply_text("[Server]Failed to change password.")
@@ -341,8 +341,8 @@ class UserCommand:
     @command_warp
     async def get_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_chat.type != "private":
-            return await update.message.reply_text("Please use this command in private chat.")
+            return await update.message.reply_text("请在私聊中使用.")
         user_info = UsersData.get_user_by_id(update.effective_user.id)
         if not user_info or user_info.bind.username == "":
-            return await update.effective_chat.send_message("This Telegram account is not bound to the specified Jellyfin account.")
-        await update.message.reply_text(f"Your password is: <code>{user_info.bind.password}</code>", parse_mode='HTML')
+            return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
+        await update.message.reply_text(f"你的密码是: <code>{user_info.bind.password}</code>", parse_mode='HTML')
