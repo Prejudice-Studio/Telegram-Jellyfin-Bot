@@ -66,9 +66,9 @@ docker run -d --name Telegram-Jellyfin-Bot --restart always \
 
 <a href="https://star-history.com/#MoYuanCN/Telegram-Jellyfin-bot&month">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MoYuanCN/Telegram-Jellyfin-bot&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MoYuanCN/Telegram-Jellyfin-bot" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MoYuanCN/Telegram-Jellyfin-bot" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Prejudice-Studio/Telegram-Jellyfin-bot&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Prejudice-Studio/Telegram-Jellyfin-bot" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Prejudice-Studio/Telegram-Jellyfin-bot" />
   </picture>
 </a>
 
