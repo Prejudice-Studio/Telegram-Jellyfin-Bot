@@ -5,6 +5,7 @@ import string
 import subprocess
 import sys
 from datetime import datetime
+from io import BytesIO
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
@@ -68,7 +69,16 @@ class AdminCommand:
             RegCodeData.regCodes.append(code_data)
             RegCodeData.reg_dict[code] = code_data
         RegCodeData.save()
-        await update.message.reply_text(f"Generated {quantity} registration codes.\n\n" + "".join(f"{code}\n" for code in code_list))
+        text = f"Generated {quantity} registration codes.\n\n" + "".join(f"{code}\n" for code in code_list)
+        
+        if len(text) > 4096:
+            file_buffer = BytesIO()
+            file_buffer.write(text.encode('utf-8'))
+            file_buffer.seek(0)
+            await update.message.reply_document(document=file_buffer, filename="registration_codes.txt")
+        else:
+            # Send as a text message
+            await update.message.reply_text(text)
     
     @staticmethod
     @check_admin
@@ -324,11 +334,13 @@ class UserCommand:
         if old_pw != user_info.bind.password:
             return await update.message.reply_text("原密码错误.")
         try:
-            client.jellyfin.login(JellyfinConfig.BASE_URL, user_info.bind.username, user_info.bind.password)
+            ret = client.jellyfin.login(JellyfinConfig.BASE_URL, user_info.bind.username, user_info.bind.password)
+            print(ret)
             p_data = {
                 "CurrentPw": user_info.bind.password,
                 "NewPw": new_password
             }
+            print(client.jellyfin.get_user_settings())
             client.jellyfin.users("/Password", "POST", p_data)
             user_info.bind.password = new_password
             UsersData.save()
