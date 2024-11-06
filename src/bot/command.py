@@ -162,7 +162,15 @@ class AdminCommand:
             if (code.expired_time is None or code.expired_time > datetime.now().timestamp()) and code.usage_limit > 0:
                 ret_text += (f"Code <code>{code.code}</code> Usage limit: {code.usage_limit} Expired time: "
                              f"{convert_to_china_timezone(code.expired_time) if code.expired_time is not None else 'NoExpired'}\n")
-        await update.message.reply_text("All registration codes:\n\n" + ret_text, parse_mode='HTML')
+                
+        text = "All registration codes:\n\n" + ret_text
+        if len(text) > 4096:
+            file_buffer = BytesIO()
+            file_buffer.write(text.encode('utf-8'))
+            file_buffer.seek(0)
+            await update.message.reply_document(document=file_buffer, filename="codes.txt")
+        else:
+            await update.message.reply_text(text)
     
     @staticmethod
     @check_admin
