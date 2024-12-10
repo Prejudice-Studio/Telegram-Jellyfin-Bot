@@ -32,6 +32,7 @@ class Config(BaseConfig):
     PROXY: str = None  # 代理
     MAX_RETRY: int = 3  # 重试次数
     LOG_LEVE: int = 20  # 日志等级
+    DATABASES_DIR: Path = ROOT_PATH / 'database'  # 数据库路径
 
 
 class BotConfig(BaseConfig):
