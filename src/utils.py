@@ -1,8 +1,11 @@
+import hashlib
 import logging
 from datetime import datetime, timezone
 from typing import Optional
 
 import pytz
+
+from src.config import Config
 
 
 def convert_to_china_timezone(time_data: Optional[int | str] = None) -> str:
@@ -22,3 +25,10 @@ def convert_to_china_timezone(time_data: Optional[int | str] = None) -> str:
     except Exception as e:
         logging.error(f"convert_to_china_timezone error: {e}")
         return time_data
+
+
+def get_password_hash(password: str) -> str:
+    sha256_hash = hashlib.sha256()
+    pw_string = password + Config.SALT
+    sha256_hash.update(pw_string.encode('utf-8'))
+    return sha256_hash.hexdigest()

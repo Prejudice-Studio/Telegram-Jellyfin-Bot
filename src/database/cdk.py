@@ -37,7 +37,6 @@ class CdkOperate:
         async with CdkSessionFactory() as session:
             async with session.begin():
                 session.add(cdk_data)
-            await session.commit()
     
     @staticmethod
     async def get_cdk(cdk: str) -> CdkModel | None:
@@ -60,7 +59,6 @@ class CdkOperate:
         async with CdkSessionFactory() as session:
             async with session.begin():
                 await session.merge(cdk_data)
-            await session.commit()
     
     @staticmethod
     async def delete_cdk(cdk: str):
@@ -71,4 +69,3 @@ class CdkOperate:
         async with CdkSessionFactory() as session:
             async with session.begin():
                 await session.execute(delete(CdkModel).where(CdkModel.cdk == cdk))
-            await session.commit()

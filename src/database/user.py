@@ -29,6 +29,7 @@ class UserModel(UsersDatabaseModel):
     config: Mapped[str] = mapped_column(nullable=True)  # 用户配置 后期预留，可能塞json进去
     account: Mapped[str] = mapped_column(nullable=True)  # 账户
     password: Mapped[str] = mapped_column(nullable=True)  # 密码 hash
+    bind_id: Mapped[str] = mapped_column(nullable=True)  # 绑定的jellyfin账户ID
     data: Mapped[str] = mapped_column(nullable=True)  # 预留的其他配置
 
 
@@ -48,7 +49,6 @@ class UsersOperate:
         async with UsersSessionFactory() as session:
             async with session.begin():
                 session.add(user_data)
-            await session.commit()
     
     @staticmethod
     async def get_user(telegram_id: int) -> UserModel | None:
@@ -70,5 +70,4 @@ class UsersOperate:
         async with UsersSessionFactory() as session:
             async with session.begin():
                 await session.merge(user_data)
-            await session.commit()
             

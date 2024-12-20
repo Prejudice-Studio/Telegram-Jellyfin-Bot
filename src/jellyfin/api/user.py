@@ -6,7 +6,7 @@ from src.jellyfin.api import JellyfinRequest
 class Users:
     def __init__(self, client: JellyfinRequest):
         self.client = client
-        
+    
     async def get_user(self, user_id: Optional[str] = None):
         """
         获取用户信息
@@ -19,5 +19,10 @@ class Users:
         user_url = f'/Users/{user_id}'
         return await self.client.get(user_url)
     
+    async def get_users(self):
+        """
+        获取所有用户
+        :return:
+        """
+        return await self.client.get("Users")
     
-        

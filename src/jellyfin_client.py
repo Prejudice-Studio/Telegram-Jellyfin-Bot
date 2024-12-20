@@ -2,10 +2,6 @@ from jellyfin_apiclient_python import JellyfinClient
 
 from src.config import JellyfinConfig
 from src.jellyfin.api import Jellyfin
-from src.model import RegCodesModel, UsersModel
-
-UsersData = UsersModel("Users.json")
-RegCodeData = RegCodesModel("RegCode.json")
 
 # 连接服务器
 client = JellyfinClient()

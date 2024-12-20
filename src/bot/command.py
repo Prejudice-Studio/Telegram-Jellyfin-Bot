@@ -7,14 +7,16 @@ import sys
 from datetime import datetime
 from io import BytesIO
 
+from sqlalchemy.orm import UserDefinedOption
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from src.bot import check_admin, check_banned, command_warp
 from src.config import BotConfig, JellyfinConfig
-from src.jellyfin_client import RegCodeData, UsersData, client
-from src.model import JellyfinModel, RegCode, UserModel
-from src.utils import convert_to_china_timezone
+from src.database.cdk import CdkOperate
+from src.database.user import UserModel, UsersOperate
+from src.jellyfin_client import client, new_client
+from src.utils import convert_to_china_timezone, get_password_hash
 
 
 async def get_user_info(username: str):
@@ -162,7 +164,7 @@ class AdminCommand:
             if (code.expired_time is None or code.expired_time > datetime.now().timestamp()) and code.usage_limit > 0:
                 ret_text += (f"Code <code>{code.code}</code> Usage limit: {code.usage_limit} Expired time: "
                              f"{convert_to_china_timezone(code.expired_time) if code.expired_time is not None else 'NoExpired'}\n")
-                
+        
         text = "All registration codes:\n\n" + ret_text
         if len(text) > 4096:
             file_buffer = BytesIO()
@@ -193,16 +195,16 @@ class UserCommand:
         if len(context.args) != 3:
             return await update.message.reply_text("Usage: /reg <username> <password> <reg_code>")
         username, password, reg_code = context.args
+        eff_user = update.effective_user
         if not username.isalnum() or not password.isalnum():
             return await update.message.reply_text("用户名与密码不合法.")
         
-        
-        reg_code_info = RegCodeData.get_code_data(reg_code)
-        if not reg_code_info:
+        cdk_info = await CdkOperate.get_cdk(reg_code)
+        if not cdk_info:
             return await update.message.reply_text("注册码不可用")
-        if reg_code_info.usage_limit <= 0:
+        if cdk_info.limit <= 0:
             return await update.message.reply_text("注册码已被使用")
-        if reg_code_info.expired_time and reg_code_info.expired_time < datetime.now().timestamp():
+        if cdk_info.expired_time and cdk_info.expired_time < datetime.now().timestamp():
             return await update.message.reply_text("注册码已过期")
         # 检查 Jellyfin 是否已有该用户
         try:
@@ -213,30 +215,34 @@ class UserCommand:
         except Exception as e:
             logging.error(f"Error: {e}")
             return await update.message.reply_text("[Server]Failed to create user.")
-        reg_code_info.usage_limit -= 1
-        RegCodeData.save()
+        cdk_info.limit -= 1
+        await CdkOperate.update_cdk(cdk_info)
         
         # 绑定 Telegram 和 Jellyfin 账号
-        user_info = UsersData.get_user_by_id(update.effective_user.id)
+        user_info = await UsersOperate.get_user(eff_user.id)
+        password_hash = get_password_hash(password)
         if user_info:
-            user_info.bind = JellyfinModel(username=username, password=password, ID=ret_user["Id"])
-            user_info.TelegramFullName = update.effective_user.full_name
-            UsersData.save()
+            user_info.fullname = eff_user.full_name
+            user_info.username = eff_user.username
+            user_info.account = username
+            user_info.password = password_hash
+            user_info.bind_id = ret_user["Id"]
+            await UsersOperate.update_user(user_info)
         else:
-            user_info = UserModel(TelegramID=update.effective_user.id, TelegramFullName=update.effective_user.full_name,
-                                  bind=JellyfinModel(username=username, password=password, ID=ret_user["Id"]))
-            UsersData.add_user(user_info)
-        await update.message.reply_text(f"注册成功，自动与Telegram绑定. 用户名: {username}")
-    
+            user_info = UserModel(telegram_id=eff_user.id, username=eff_user.username, fullname=eff_user.full_name,
+                                  account=username, password=password_hash, bind_id=ret_user["Id"])
+            await UsersOperate.add_user(user_info)
+        return await update.message.reply_text(f"注册成功，自动与Telegram绑定. 用户名: {username}")
+            
     @staticmethod
     @check_banned
     @command_warp
     async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user_info = UsersData.get_user_by_id(update.effective_user.id)
-        if not user_info or user_info.bind.username == "":
+        user_info = await UsersOperate.get_user(update.effective_user.id)
+        if not user_info or user_info.account == "":
             return await update.message.reply_text("无Jellyfin账号与该Telegram账号绑定.")
         try:
-            jellyfin_user = client.jellyfin.get_user(user_info.bind.ID)
+            jellyfin_user = client.jellyfin.get_user(user_info.bind_id)
         except Exception as e:
             logging.error(f"Error: {e}")
             return await update.message.reply_text("[Server]Failed to connect to Jellyfin.")
@@ -244,11 +250,12 @@ class UserCommand:
         if not jellyfin_user:
             return await update.message.reply_text("用户未找到.")
         
-        last_login = convert_to_china_timezone(jellyfin_user.get("上次登录时间", "N/A"))
+        last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
+        score_data = await ScoreOperate.get_score(update.effective_user.id)
         await update.message.reply_text(
                 f"----------Telegram----------\n"
-                f"TelegramID: {user_info.TelegramID}\n"
-                f"Telegram昵称: {user_info.TelegramFullName}\n"
+                f"TelegramID: {user_info.telegram_id}\n"
+                f"Telegram昵称: {user_info.fullname}\n"
                 f"----------Jellyfin----------\n"
                 f"用户名: {jellyfin_user['Name']}\n"
                 f"上次登录: {last_login}\n"
