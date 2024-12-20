@@ -10,7 +10,7 @@ from io import BytesIO
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
-from src.bot import check_admin, command_warp
+from src.bot import check_admin, check_banned, command_warp
 from src.config import BotConfig, JellyfinConfig
 from src.jellyfin_client import RegCodeData, UsersData, client
 from src.model import JellyfinModel, RegCode, UserModel
@@ -187,6 +187,7 @@ class AdminCommand:
 # noinspection PyUnusedLocal
 class UserCommand:
     @staticmethod
+    @check_banned
     @command_warp
     async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(context.args) != 3:
@@ -194,6 +195,7 @@ class UserCommand:
         username, password, reg_code = context.args
         if not username.isalnum() or not password.isalnum():
             return await update.message.reply_text("用户名与密码不合法.")
+        
         
         reg_code_info = RegCodeData.get_code_data(reg_code)
         if not reg_code_info:
@@ -227,6 +229,7 @@ class UserCommand:
         await update.message.reply_text(f"注册成功，自动与Telegram绑定. 用户名: {username}")
     
     @staticmethod
+    @check_banned
     @command_warp
     async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = UsersData.get_user_by_id(update.effective_user.id)
@@ -254,6 +257,7 @@ class UserCommand:
                 f"上次签到: {convert_to_china_timezone(user_info.last_sign_in)}")
     
     @staticmethod
+    @check_banned
     @command_warp
     async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = UsersData.get_user_by_id(update.effective_user.id)
@@ -266,6 +270,7 @@ class UserCommand:
         await update.message.reply_text("你确定要删除账号吗？", reply_markup=reply_markup)
     
     @staticmethod
+    @check_banned
     async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = UsersData.get_user_by_id(update.effective_user.id)
         if not user_info:
@@ -284,6 +289,7 @@ class UserCommand:
         await update.message.reply_text(f"签到成功! 你获得了 {points} 积分. 当前积分: {user_info.score}.")
     
     @staticmethod
+    @check_banned
     @command_warp
     async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_chat.type != "private":
@@ -316,6 +322,7 @@ class UserCommand:
             await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
     
     @staticmethod
+    @check_banned
     @command_warp
     async def unbind(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = UsersData.get_user_by_id(update.effective_user.id)
@@ -329,6 +336,7 @@ class UserCommand:
                                                  reply_markup=reply_markup)
     
     @staticmethod
+    @check_banned
     @command_warp
     async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_chat.type != "private":
@@ -358,6 +366,7 @@ class UserCommand:
             return await update.message.reply_text("[Server]Failed to change password.")
     
     @staticmethod
+    @check_banned
     @command_warp
     async def get_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_chat.type != "private":
