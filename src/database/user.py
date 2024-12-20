@@ -1,5 +1,6 @@
 from enum import Enum
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -40,4 +41,34 @@ UsersSessionFactory = async_sessionmaker(bind=ENGINE, expire_on_commit=False)
 class UsersOperate:
     @staticmethod
     async def add_user(user_data: UserModel):
-        pass
+        """
+        添加用户到数据库
+        :param user_data: 用户数据
+        """
+        async with UsersSessionFactory() as session:
+            async with session.begin():
+                session.add(user_data)
+            await session.commit()
+    
+    @staticmethod
+    async def get_user(telegram_id: int) -> UserModel | None:
+        """
+        获取用户
+        :param telegram_id: Telegram ID
+        :return: 用户
+        """
+        async with UsersSessionFactory() as session:
+            scalar = await session.execute(select(UserModel).filter_by(telegram_id=telegram_id).limit(1))
+            return scalar.scalar_one_or_none()
+    
+    @staticmethod
+    async def update_user(user_data: UserModel):
+        """
+        更新用户数据
+        :param user_data: 用户数据
+        """
+        async with UsersSessionFactory() as session:
+            async with session.begin():
+                await session.merge(user_data)
+            await session.commit()
+            

@@ -1,3 +1,4 @@
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -24,3 +25,50 @@ create_database("cdk", CdkDatabaseModel)
 DATABASE_URL = f'sqlite+aiosqlite:///{Config.DATABASES_DIR / "cdk.db"}'
 ENGINE = create_async_engine(DATABASE_URL, echo=Config.SQLALCHEMY_LOG)
 CdkSessionFactory = async_sessionmaker(bind=ENGINE, expire_on_commit=False)
+
+
+class CdkOperate:
+    @staticmethod
+    async def add_cdk(cdk_data: CdkModel):
+        """
+        添加cdk到数据库
+        :param cdk_data: cdk数据
+        """
+        async with CdkSessionFactory() as session:
+            async with session.begin():
+                session.add(cdk_data)
+            await session.commit()
+    
+    @staticmethod
+    async def get_cdk(cdk: str) -> CdkModel | None:
+        """
+        获取cdk
+        :param cdk: cdk
+        :return: cdk
+        """
+        async with CdkSessionFactory() as session:
+            async with session.begin():
+                scalar = await session.execute(select(CdkModel).filter(CdkModel.cdk == cdk).limit(1))
+                return scalar.scalar_one_or_none()
+    
+    @staticmethod
+    async def update_cdk(cdk_data: CdkModel):
+        """
+        更新cdk
+        :param cdk_data: cdk数据
+        """
+        async with CdkSessionFactory() as session:
+            async with session.begin():
+                await session.merge(cdk_data)
+            await session.commit()
+    
+    @staticmethod
+    async def delete_cdk(cdk: str):
+        """
+        删除cdk
+        :param cdk: cdk
+        """
+        async with CdkSessionFactory() as session:
+            async with session.begin():
+                await session.execute(delete(CdkModel).where(CdkModel.cdk == cdk))
+            await session.commit()
