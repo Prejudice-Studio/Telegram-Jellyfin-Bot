@@ -40,7 +40,7 @@ ScoreSessionFactory = async_sessionmaker(bind=ENGINE, expire_on_commit=False)
 
 class ScoreOperate:
     @staticmethod
-    async def add_score(score_data: ScoreModel):
+    async def add_score(score_data: ScoreModel) -> ScoreModel:
         """
         添加积分到数据库
         :param score_data: 积分数据
@@ -48,7 +48,7 @@ class ScoreOperate:
         async with ScoreSessionFactory() as session:
             async with session.begin():
                 session.add(score_data)
-            await session.commit()
+        return score_data
     
     @staticmethod
     async def get_score(telegram_id: int) -> ScoreModel | None:

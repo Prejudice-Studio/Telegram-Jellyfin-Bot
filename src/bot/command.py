@@ -14,6 +14,7 @@ from telegram.ext import ContextTypes
 from src.bot import check_admin, check_banned, command_warp
 from src.config import BotConfig, JellyfinConfig
 from src.database.cdk import CdkOperate
+from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import UserModel, UsersOperate
 from src.jellyfin_client import client, new_client
 from src.utils import convert_to_china_timezone, get_password_hash
@@ -252,6 +253,8 @@ class UserCommand:
         
         last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
         score_data = await ScoreOperate.get_score(update.effective_user.id)
+        checkin_time = score_data.checkin_time
+        checkin_time_v = checkin_time if checkin_time is not None else 0
         await update.message.reply_text(
                 f"----------Telegram----------\n"
                 f"TelegramID: {user_info.telegram_id}\n"
@@ -260,15 +263,15 @@ class UserCommand:
                 f"用户名: {jellyfin_user['Name']}\n"
                 f"上次登录: {last_login}\n"
                 f"----------Score----------\n"
-                f"积分: {user_info.score}\n"
-                f"上次签到: {convert_to_china_timezone(user_info.last_sign_in)}")
+                f"积分: {score_data.score}\n"
+                f"上次签到: {convert_to_china_timezone(checkin_time_v)}")
     
     @staticmethod
     @check_banned
     @command_warp
     async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user_info = UsersData.get_user_by_id(update.effective_user.id)
-        if not user_info or user_info.bind.username == "":
+        user_info = await UsersOperate.get_user(update.effective_user.id)
+        if not user_info or user_info.account == "":
             return await update.message.reply_text("无Jellyfin账号与该Telegram账号绑定.")
         # 二次确认
         keyboard = [[InlineKeyboardButton("确认", callback_data='confirm_delete'),
@@ -279,21 +282,18 @@ class UserCommand:
     @staticmethod
     @check_banned
     async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user_info = UsersData.get_user_by_id(update.effective_user.id)
-        if not user_info:
-            user_info = UserModel(TelegramID=update.effective_user.id, TelegramFullName=update.effective_user.full_name,
-                                  bind=JellyfinModel(username="", password="", ID=""))
-            UsersData.add_user(user_info)
-        
-        today = datetime.now().date().strftime("%Y-%m-%d")
-        if user_info.last_sign_in == today:
-            return await update.message.reply_text("你今日已签到.")
-        
+        score_info = await ScoreOperate.get_score(update.effective_user.id)
+        if not score_info:
+            score_info = ScoreModel(telegram_id=update.effective_user.id)
+            score_info = await ScoreOperate.add_score(score_info)
+        last_sign_date = datetime.fromtimestamp(score_info.checkin_time).date()
+        if last_sign_date == datetime.now().date():
+            return await update.message.reply_text("今天已经签到过了.")
         points = random.randint(1, 10)
-        user_info.score += points
-        user_info.last_sign_in = today
-        UsersData.save()
-        await update.message.reply_text(f"签到成功! 你获得了 {points} 积分. 当前积分: {user_info.score}.")
+        score_info.score += points
+        score_info.checkin_time = int(datetime.now().timestamp())
+        await ScoreOperate.update_score(score_info)
+        await update.message.reply_text(f"签到成功! 你获得了 {points} 积分. 当前积分: {score_info.score}.")
     
     @staticmethod
     @check_banned
