@@ -12,3 +12,4 @@ def create_database(database_name: str, model):
     model.metadata.create_all(engine)
     connection = engine.connect()
     connection.execute(text('PRAGMA journal_mode = WAL'))
+    connection.close()

@@ -1,6 +1,7 @@
 from jellyfin_apiclient_python import JellyfinClient
 
 from src.config import JellyfinConfig
+from src.jellyfin.api import Jellyfin
 from src.model import RegCodesModel, UsersModel
 
 UsersData = UsersModel("Users.json")
@@ -40,5 +41,7 @@ def init_client():
     except Exception as e:
         print(e)
 
+
+new_client = Jellyfin(JellyfinConfig.BASE_URL, 1, JellyfinConfig.API_KEY)
 
 init_client()
