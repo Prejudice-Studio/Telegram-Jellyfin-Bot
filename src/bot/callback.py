@@ -16,7 +16,7 @@ async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if user_info and user_info.bind_id:
         try:
-            ret = client.jellyfin.delete_user(user_info.bind_id)
+            ret = await client.Users.delete_user(user_info.bind_id)
             logging.info(f"[Server]Delete user: {ret}")
         except Exception as e:
             logging.error(e)

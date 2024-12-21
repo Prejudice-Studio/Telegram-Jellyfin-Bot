@@ -1,9 +1,21 @@
+from functools import wraps
 from typing import Any, Dict, Optional
 
 import httpx
-from httpx import Response
 
 from src.logger import je_logger
+
+
+def http_warp(func):
+    @wraps(func)
+    async def wrapper(self, path: str, *args, **kwargs):
+        if isinstance(path, str) and "{UserID}" in path:
+            if self.user_id is None:
+                raise ValueError("No user_id")
+            path = path.format(UserID=self.user_id)
+        return await func(path, *args, **kwargs)
+    
+    return wrapper
 
 
 class JellyfinRequest:
@@ -55,12 +67,14 @@ class JellyfinRequest:
         else:
             raise ValueError(f"Login failed, status code: {response.status_code}, response: {response.text}")
     
+    @http_warp
     async def get(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None, **kwargs) -> dict:
         response = await self.client.get(path, params=params, headers=headers, **kwargs)
         response.raise_for_status()
         je_logger.info(f"GET {path} {response.status_code}")
         return response.json()
     
+    @http_warp
     async def post(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
                    json: Optional[Dict[str, Any]] = None, **kwargs) -> dict:
         response = await self.client.post(path, params=params, headers=headers, json=json, **kwargs)
@@ -68,6 +82,7 @@ class JellyfinRequest:
         je_logger.info(f"POST {path} {response.status_code}")
         return response.json()
     
+    @http_warp
     async def put(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
                   json: Optional[Dict[str, Any]] = None, **kwargs) -> dict:
         response = await self.client.put(path, params=params, headers=headers, json=json, **kwargs)
@@ -75,6 +90,7 @@ class JellyfinRequest:
         je_logger.info(f"PUT {path} {response.status_code}")
         return response.json()
     
+    @http_warp
     async def delete(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
                      **kwargs) -> dict:
         response = await self.client.delete(path, params=params, headers=headers, **kwargs)

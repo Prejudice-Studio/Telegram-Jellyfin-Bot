@@ -328,7 +328,6 @@ class UserCommand:
         user_client = JellyfinAPI(JellyfinConfig.BASE_URL, 2)
         try:
             jellyfin_user = await user_client.JellyfinReq.login(username, password)
-            # jellyfin_user = client.jellyfin.login(JellyfinConfig.BASE_URL, username, password)
         except Exception as e:
             logging.error(f"Error: {e}")
             return await update.message.reply_text("[Server]Failed to connect to Jellyfin.")
@@ -375,16 +374,17 @@ class UserCommand:
     async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_chat.type != "private":
             return await update.message.reply_text("请在私聊中使用.")
-        user_info = UsersData.get_user_by_id(update.effective_user.id)
-        if not user_info or user_info.bind.username == "":
+        user_info = await UsersOperate.get_user(update.effective_user.id)
+        if not user_info or not user_info.bind_id:
             return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
         if len(context.args) != 2:
             return await update.message.reply_text("使用方法: /changepassword 原密码 新密码")
         old_pw, new_password = context.args[0], context.args[1]
-        if old_pw != user_info.bind.password:
+        old_pw_hash = get_password_hash(old_pw)
+        if old_pw_hash != user_info.password:
             return await update.message.reply_text("原密码错误.")
         try:
-            ret = await client.Users.login(JellyfinConfig.BASE_URL, user_info.bind.username, user_info.bind.password)
+            ret = await client.Users.login(JellyfinConfig.BASE_URL, user_info., user_info.bind.password)
             print(ret)
             p_data = {
                 "CurrentPw": user_info.bind.password,
