@@ -48,7 +48,7 @@ async def get_user_info(username: str | int):
             je_id = user_info.bind_id
     if not je_id:
         try:
-            all_user = client.jellyfin.get_users()
+            all_user = client.Users.get_users()
             je_data = next((u for u in all_user if u["Name"] == username), None)
             je_id = je_data["Id"] if je_data else None
         except Exception as e:
@@ -56,7 +56,7 @@ async def get_user_info(username: str | int):
             return None, None
     if je_id is not None:
         try:
-            jellyfin_user = client.jellyfin.get_user(je_id)
+            jellyfin_user = client.Users.get_user(je_id)
             async with UsersSessionFactory() as session:
                 user_scalars = await session.execute(select(UserModel).filter_by(bind_id=je_id).limit(1))
                 user_info = user_scalars.scalar_one_or_none()
@@ -224,7 +224,7 @@ class UserCommand:
             return await update.message.reply_text("注册码已过期")
         # 检查 Jellyfin 是否已有该用户
         try:
-            existing_users = client.jellyfin.get_users()
+            existing_users = client.Users.get_users()
             if any(user['Name'] == username for user in existing_users):
                 return await update.message.reply_text("用户名已存在.")
             ret_user = client.jellyfin.new_user(username, password)
