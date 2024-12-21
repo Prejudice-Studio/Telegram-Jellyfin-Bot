@@ -5,7 +5,7 @@ from telegram.ext import ContextTypes
 
 from src.config import BotConfig
 from src.database.user import UserModel, UsersOperate
-from src.jellyfin_client import UsersData, check_server_connectivity
+from src.jellyfin_client import check_server_connectivity
 
 
 def check_admin(func):
@@ -38,6 +38,7 @@ def check_banned(func):
             return await func(update, context, *args, **kwargs)
         if user_data.role == 0:
             return
+        return await func(update, context, *args, **kwargs)
     
     return wrapper
 

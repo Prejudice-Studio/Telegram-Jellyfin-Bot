@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 from io import BytesIO
 
-from sqlalchemy.orm import UserDefinedOption
+from sqlalchemy import or_, select
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
@@ -15,40 +15,54 @@ from src.bot import check_admin, check_banned, command_warp
 from src.config import BotConfig, JellyfinConfig
 from src.database.cdk import CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
-from src.database.user import UserModel, UsersOperate
-from src.jellyfin_client import client, new_client
+from src.database.user import UserModel, UsersOperate, UsersSessionFactory
+from src.jellyfin_client import client
 from src.utils import convert_to_china_timezone, get_password_hash
 
 
-async def get_user_info(username: str):
+async def get_user_info(username: str | int):
     """
     获取 Jellyfin 用户信息
     :param username: Telegram ID/Fullname or Jellyfin username
     :return:
     """
     je_id = None
+    
+    async def fetch_user_id(f_username: str):
+        async with UsersSessionFactory() as f_session:
+            scalars = await f_session.execute(select(UserModel).filter(
+                    or_(
+                            UserModel.fullname.like(f"%{f_username}%"),
+                            UserModel.username.like(f"%{f_username}%")
+                    )
+            ).limit(1))
+            return scalars.scalar_one_or_none()
+    
     if username.isdigit():
-        if user_info := UsersData.get_user_by_id(int(username)):
-            je_id = user_info.bind.ID
-    elif user_info := next((u for u in UsersData.userList if username in u.TelegramFullName), None):
-        je_id = user_info.bind.ID
+        user_info = await UsersOperate.get_user(int(username))
+        je_id = user_info.bind_id if user_info else None
+    else:
+        user_info = await fetch_user_id(username)
+        if user_info:
+            je_id = user_info.bind_id
     if not je_id:
         try:
             all_user = client.jellyfin.get_users()
+            je_data = next((u for u in all_user if u["Name"] == username), None)
+            je_id = je_data["Id"] if je_data else None
         except Exception as e:
             logging.error(f"Error: {e}")
             return None, None
-        je_data = next((u for u in all_user if u["Name"] == username), None)
-        if not je_data:
-            return None, None
-        je_id = je_data["Id"]
-    try:
-        jellyfin_user = client.jellyfin.get_user(je_id)
-        user_info = next((u for u in UsersData.userList if u.bind.ID == je_id), None)
-        return jellyfin_user, user_info
-    except Exception as e:
-        logging.error(f"Error: {e}")
-        return None, None
+    if je_id is not None:
+        try:
+            jellyfin_user = client.jellyfin.get_user(je_id)
+            async with UsersSessionFactory() as session:
+                user_scalars = await session.execute(select(UserModel).filter_by(bind_id=je_id).limit(1))
+                user_info = user_scalars.scalar_one_or_none()
+            return jellyfin_user, user_info
+        except Exception as e:
+            logging.error(f"Error: {e}")
+    return None, None
 
 
 # noinspection PyUnusedLocal
@@ -234,13 +248,13 @@ class UserCommand:
                                   account=username, password=password_hash, bind_id=ret_user["Id"])
             await UsersOperate.add_user(user_info)
         return await update.message.reply_text(f"注册成功，自动与Telegram绑定. 用户名: {username}")
-            
+    
     @staticmethod
     @check_banned
     @command_warp
     async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = await UsersOperate.get_user(update.effective_user.id)
-        if not user_info or user_info.account == "":
+        if not user_info or not user_info.bind_id:
             return await update.message.reply_text("无Jellyfin账号与该Telegram账号绑定.")
         try:
             jellyfin_user = client.jellyfin.get_user(user_info.bind_id)

@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from src.bot import command_warp
-from src.jellyfin_client import UsersData, client
+from src.jellyfin_client import client
 
 
 # noinspection PyUnusedLocal
