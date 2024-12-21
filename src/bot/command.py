@@ -325,35 +325,39 @@ class UserCommand:
             return await update.message.reply_text("[Server]Failed to connect to Jellyfin.")
         if not jellyfin_user:
             return await update.message.reply_text("用户名或密码错误.")
-        logging.info(f"Jellyfin用户: {jellyfin_user}")
+        # logging.info(f"Jellyfin用户: {jellyfin_user}")
+        eff_user = update.effective_user
         # 绑定 Telegram 账号
-        user_info = UsersData.get_user_by_id(update.effective_user.id)
+        user_info = await UsersOperate.get_user(eff_user.id)
+        password_hash = get_password_hash(password)
         if user_info:
-            if user_info.bind.username == "":
-                user_info.bind = JellyfinModel(username=username, password=password, ID=jellyfin_user["User"]["Id"])
-                user_info.TelegramFullName = update.effective_user.full_name
-                await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
-                UsersData.save()
-            else:
-                await update.message.reply_text("你已绑定一个Jellyfin账号.")
+            if user_info.bind_id:
+                return await update.message.reply_text("你已绑定一个Jellyfin账号。请先解绑")
+            user_info.fullname = eff_user.full_name
+            user_info.username = eff_user.username
+            user_info.bind_id = jellyfin_user["User"]["Id"]
+            user_info.account = username
+            user_info.password = password_hash
+            await UsersOperate.update_user(user_info)
+            await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
         else:
-            user_info = UserModel(TelegramID=update.effective_user.id, TelegramFullName=update.effective_user.full_name,
-                                  bind=JellyfinModel(username=username, password=password, ID=jellyfin_user["User"]["Id"]))
-            UsersData.add_user(user_info)
+            user_info = UserModel(telegram_id=eff_user.id, username=eff_user.username, fullname=eff_user.full_name,
+                                  account=username, password=password_hash, bind_id=jellyfin_user["User"]["Id"])
+            await UsersOperate.add_user(user_info)
             await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
     
     @staticmethod
     @check_banned
     @command_warp
     async def unbind(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user_info = UsersData.get_user_by_id(update.effective_user.id)
-        if not user_info or user_info.bind.username == "":
+        user_info = await UsersOperate.get_user(update.effective_user.id)
+        if not user_info or user_info.bind_id:
             return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
         # 二次确认解绑
         keyboard = [[InlineKeyboardButton("确认", callback_data='confirm_unbind'),
                      InlineKeyboardButton("取消", callback_data='cancel')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.effective_chat.send_message(f"你确定与Jellyfin用户:{user_info.bind.username}解绑吗?",
+        await update.effective_chat.send_message(f"你确定与Jellyfin用户:{user_info.account}解绑吗?",
                                                  reply_markup=reply_markup)
     
     @staticmethod

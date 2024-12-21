@@ -11,12 +11,13 @@ from src.jellyfin_client import check_server_connectivity
 def check_admin(func):
     @wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        tg_id = update.effective_user.id
-        user_info = UsersData.get_user_by_id(tg_id)
-        if not user_info:
-            return await update.message.reply_text("Unauthorized")
-        if user_info.role != 1 and tg_id != BotConfig.ADMIN:
-            return await update.message.reply_text("Unauthorized")
+        if not (update and update.effective_user):
+            return
+        user_data = await UsersOperate.get_user(update.effective_user.id)
+        if not user_data:
+            return
+        if user_data.role != 2 and update.effective_user.id != BotConfig.ADMIN:
+            return
         return await func(update, context, *args, **kwargs)
     
     return wrapper

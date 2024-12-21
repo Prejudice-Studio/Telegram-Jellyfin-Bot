@@ -1,4 +1,3 @@
-import logging
 import os
 
 from telegram import Update
@@ -7,8 +6,7 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler
 from src.bot import callback
 from src.bot.command import AdminCommand, UserCommand
 from src.config import BotConfig, Config
-
-logging.basicConfig(level=Config.LOG_LEVE, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+from src.logger import bot_logger
 
 if Config.PROXY and Config.PROXY != "":
     os.environ['https_proxy'] = Config.PROXY
@@ -48,7 +46,7 @@ def run_bot():
     application.add_handler(CallbackQueryHandler(callback.confirm_delete, pattern='confirm_delete'))
     application.add_handler(CallbackQueryHandler(callback.confirm_unbind, pattern='confirm_unbind'))
     application.add_handler(CallbackQueryHandler(callback.cancel, pattern='cancel'))
-    logging.info("Bot started")
+    bot_logger.info("Bot started")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
