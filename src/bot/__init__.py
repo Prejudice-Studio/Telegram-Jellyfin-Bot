@@ -7,6 +7,9 @@ from src.config import BotConfig
 from src.database.user import UserModel, UsersOperate
 from src.jellyfin_client import check_server_connectivity
 
+last_check_time = 0
+server_close = False
+
 
 def check_admin(func):
     @wraps(func)
@@ -47,7 +50,15 @@ def check_banned(func):
 def command_warp(func):
     @wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        if not check_server_connectivity():
+        global last_check_time, server_close
+        if last_check_time + 60 < update.message.date.timestamp():
+            last_check_time = update.message.date.timestamp()
+            if not await check_server_connectivity():
+                server_close = True
+                return await update.message.reply_text("Server is closed, please try again later.")
+            else:
+                server_close = False
+        if server_close:
             return await update.message.reply_text("Server is closed, please try again later.")
         return await func(update, context, *args, **kwargs)
     

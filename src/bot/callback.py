@@ -4,6 +4,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from src.bot import command_warp
+from src.database.user import UsersOperate
 from src.jellyfin_client import client
 
 
@@ -12,15 +13,15 @@ from src.jellyfin_client import client
 async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    user_info = UsersData.get_user_by_id(update.effective_user.id)
-    if user_info:
+    user_info = await UsersOperate.get_user(update.effective_user.id)
+    if user_info and user_info.bind_id:
         try:
-            ret = client.jellyfin.delete_user(user_info.bind.ID)
+            ret = client.jellyfin.delete_user(user_info.bind_id)
             logging.info(f"[Server]Delete user: {ret}")
         except Exception as e:
             logging.error(e)
             await update.effective_user.send_message("Delete failed.")
-        UsersData.remove_user_bind_info(user_info)
+        await UsersOperate.clear_bind(update.effective_user.id)
         await update.effective_user.send_message("Account deleted successful.")
     else:
         await update.effective_user.send_message("Can't find the account.")
@@ -32,9 +33,9 @@ async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def confirm_unbind(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    user_info = UsersData.get_user_by_id(update.effective_user.id)
+    user_info = await UsersOperate.get_user(update.effective_user.id)
     if user_info:
-        UsersData.remove_user_bind_info(user_info)
+        await UsersOperate.clear_bind(update.effective_user.id)
         await update.effective_user.send_message("Unbind successful.")
     else:
         await update.effective_user.send_message("No bound Jellyfin account found.")

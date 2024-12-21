@@ -16,6 +16,7 @@ from src.config import BotConfig, JellyfinConfig
 from src.database.cdk import CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import UserModel, UsersOperate, UsersSessionFactory
+from src.jellyfin.api import JellyfinAPI
 from src.jellyfin_client import client
 from src.utils import convert_to_china_timezone, get_password_hash
 
@@ -318,8 +319,10 @@ class UserCommand:
         if len(context.args) != 2:
             return await update.message.reply_text("使用方法: /bind 用户名 密码")
         username, password = context.args
+        user_client = JellyfinAPI(JellyfinConfig.BASE_URL, 2)
         try:
-            jellyfin_user = client.jellyfin.login(JellyfinConfig.BASE_URL, username, password)
+            jellyfin_user = await user_client.JellyfinReq.login(username, password)
+            # jellyfin_user = client.jellyfin.login(JellyfinConfig.BASE_URL, username, password)
         except Exception as e:
             logging.error(f"Error: {e}")
             return await update.message.reply_text("[Server]Failed to connect to Jellyfin.")
@@ -351,7 +354,7 @@ class UserCommand:
     @command_warp
     async def unbind(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = await UsersOperate.get_user(update.effective_user.id)
-        if not user_info or user_info.bind_id:
+        if not user_info or not user_info.bind_id:
             return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
         # 二次确认解绑
         keyboard = [[InlineKeyboardButton("确认", callback_data='confirm_unbind'),

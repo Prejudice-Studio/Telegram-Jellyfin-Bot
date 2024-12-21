@@ -1,6 +1,6 @@
 from enum import Enum
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -70,4 +70,14 @@ class UsersOperate:
         async with UsersSessionFactory() as session:
             async with session.begin():
                 await session.merge(user_data)
-            
+    
+    @staticmethod
+    async def clear_bind(telegram_id: int):
+        """
+        解绑用户
+        :param telegram_id: 用户
+        """
+        async with UsersSessionFactory() as session:
+            async with session.begin():
+                await session.execute(update(UserModel).filter_by(telegram_id=telegram_id).
+                                      values(account=None, password=None, bind_id=None))
