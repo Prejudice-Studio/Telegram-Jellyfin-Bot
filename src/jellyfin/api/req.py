@@ -55,32 +55,32 @@ class JellyfinRequest:
         else:
             raise ValueError(f"Login failed, status code: {response.status_code}, response: {response.text}")
     
-    async def get(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None, **kwargs) -> Response:
+    async def get(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None, **kwargs) -> dict:
         response = await self.client.get(path, params=params, headers=headers, **kwargs)
         response.raise_for_status()
         je_logger.info(f"GET {path} {response.status_code}")
-        return response
+        return response.json()
     
     async def post(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
-                   json: Optional[Dict[str, Any]] = None, **kwargs) -> Response:
+                   json: Optional[Dict[str, Any]] = None, **kwargs) -> dict:
         response = await self.client.post(path, params=params, headers=headers, json=json, **kwargs)
         response.raise_for_status()
         je_logger.info(f"POST {path} {response.status_code}")
-        return response
+        return response.json()
     
     async def put(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
-                  json: Optional[Dict[str, Any]] = None, **kwargs) -> Response:
+                  json: Optional[Dict[str, Any]] = None, **kwargs) -> dict:
         response = await self.client.put(path, params=params, headers=headers, json=json, **kwargs)
         response.raise_for_status()
         je_logger.info(f"PUT {path} {response.status_code}")
-        return response
+        return response.json()
     
     async def delete(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
-                     **kwargs) -> Response:
+                     **kwargs) -> dict:
         response = await self.client.delete(path, params=params, headers=headers, **kwargs)
         response.raise_for_status()
         je_logger.info(f"DELETE {path} {response.status_code}")
-        return response
+        return response.json()
     
     async def close(self):
         await self.client.aclose()

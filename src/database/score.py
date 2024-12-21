@@ -15,7 +15,7 @@ class ScoreModel(ScoreDatabaseModel):
     __tablename__ = 'score'
     telegram_id: Mapped[int] = mapped_column(primary_key=True, index=True)  # Telegram ID
     score: Mapped[int] = mapped_column(default=0)  # 积分
-    checkin_time: Mapped[int] = mapped_column(nullable=True)  # 签到时间
+    checkin_time: Mapped[int] = mapped_column(default=0)  # 签到时间
     data: Mapped[str] = mapped_column(nullable=True)  # 预留的其他配置
 
 

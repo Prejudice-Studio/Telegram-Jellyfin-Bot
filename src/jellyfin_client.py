@@ -15,7 +15,7 @@ async def check_server_connectivity() -> bool:
     """
     try:
         info = await client.System.info()
-        if info.status_code == 200:
+        if info:
             return True
         else:
             return False

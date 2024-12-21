@@ -7,7 +7,7 @@ class System():
     def __init__(self, client: JellyfinRequest):
         self.client = client
     
-    async def info(self) -> Response:
+    async def info(self) -> dict:
         """
         获取系统信息
         :return:

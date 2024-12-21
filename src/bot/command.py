@@ -48,7 +48,7 @@ async def get_user_info(username: str | int):
             je_id = user_info.bind_id
     if not je_id:
         try:
-            all_user = client.Users.get_users()
+            all_user = await client.Users.get_users()
             je_data = next((u for u in all_user if u["Name"] == username), None)
             je_id = je_data["Id"] if je_data else None
         except Exception as e:
@@ -56,7 +56,7 @@ async def get_user_info(username: str | int):
             return None, None
     if je_id is not None:
         try:
-            jellyfin_user = client.Users.get_user(je_id)
+            jellyfin_user = await client.Users.get_user(je_id)
             async with UsersSessionFactory() as session:
                 user_scalars = await session.execute(select(UserModel).filter_by(bind_id=je_id).limit(1))
                 user_info = user_scalars.scalar_one_or_none()
@@ -224,10 +224,10 @@ class UserCommand:
             return await update.message.reply_text("注册码已过期")
         # 检查 Jellyfin 是否已有该用户
         try:
-            existing_users = client.Users.get_users()
+            existing_users = await client.Users.get_users()
             if any(user['Name'] == username for user in existing_users):
                 return await update.message.reply_text("用户名已存在.")
-            ret_user = client.jellyfin.new_user(username, password)
+            ret_user = await client.Users.new_user(username, password)
         except Exception as e:
             logging.error(f"Error: {e}")
             return await update.message.reply_text("[Server]Failed to create user.")
@@ -258,7 +258,7 @@ class UserCommand:
         if not user_info or not user_info.bind_id:
             return await update.message.reply_text("无Jellyfin账号与该Telegram账号绑定.")
         try:
-            jellyfin_user = client.jellyfin.get_user(user_info.bind_id)
+            jellyfin_user = await client.Users.get_user(user_info.bind_id)
         except Exception as e:
             logging.error(f"Error: {e}")
             return await update.message.reply_text("[Server]Failed to connect to Jellyfin.")
@@ -268,7 +268,12 @@ class UserCommand:
         
         last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
         score_data = await ScoreOperate.get_score(update.effective_user.id)
-        checkin_time = score_data.checkin_time
+        if not score_data:
+            score = 0
+            checkin_time = "N/A"
+        else:
+            score = score_data.score
+            checkin_time = score_data.checkin_time
         checkin_time_v = checkin_time if checkin_time is not None else 0
         await update.message.reply_text(
                 f"----------Telegram----------\n"
@@ -278,7 +283,7 @@ class UserCommand:
                 f"用户名: {jellyfin_user['Name']}\n"
                 f"上次登录: {last_login}\n"
                 f"----------Score----------\n"
-                f"积分: {score_data.score}\n"
+                f"积分: {score}\n"
                 f"上次签到: {convert_to_china_timezone(checkin_time_v)}")
     
     @staticmethod
@@ -301,6 +306,7 @@ class UserCommand:
         if not score_info:
             score_info = ScoreModel(telegram_id=update.effective_user.id)
             score_info = await ScoreOperate.add_score(score_info)
+            score_info.checkin_time = 0
         last_sign_date = datetime.fromtimestamp(score_info.checkin_time).date()
         if last_sign_date == datetime.now().date():
             return await update.message.reply_text("今天已经签到过了.")
@@ -378,7 +384,7 @@ class UserCommand:
         if old_pw != user_info.bind.password:
             return await update.message.reply_text("原密码错误.")
         try:
-            ret = client.jellyfin.login(JellyfinConfig.BASE_URL, user_info.bind.username, user_info.bind.password)
+            ret = await client.Users.login(JellyfinConfig.BASE_URL, user_info.bind.username, user_info.bind.password)
             print(ret)
             p_data = {
                 "CurrentPw": user_info.bind.password,

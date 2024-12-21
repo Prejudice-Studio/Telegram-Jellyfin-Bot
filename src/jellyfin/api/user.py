@@ -78,3 +78,9 @@ class Users:
         return await self.client.get(f'Users/{user_id}/Items', params={
             "fields": fields
         })
+    
+    async def new_user(self, name, password):
+        return self.client.post("Users/New", {
+            "name": name,
+            "Password": password
+        })
