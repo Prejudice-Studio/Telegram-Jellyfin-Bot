@@ -13,7 +13,7 @@ def http_warp(func):
             if self.user_id is None:
                 raise ValueError("No user_id")
             path = path.format(UserID=self.user_id)
-        return await func(path, *args, **kwargs)
+        return await func(self, path, *args, **kwargs)
     
     return wrapper
 
