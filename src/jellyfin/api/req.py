@@ -80,13 +80,13 @@ class JellyfinRequest:
         response = await self.client.post(login_url, json=login_data)
         je_logger.info(f"Login {response.status_code} {response.text}")
         if response.status_code == 200:
-            json_response = response.json()
-            if token := json_response.get('AccessToken'):
+            json_resp = response.json()
+            if token := json_resp.get('AccessToken'):
                 auth = auth + f', Token="{token}"'
                 self.client.headers['Authorization'] = auth
-                self.user_data = json_response
-                self.user_id = json_response['User']['Id']
-                return json_response
+                self.user_data = json_resp
+                self.user_id = json_resp['User']['Id']
+                return json_resp
             else:
                 raise ValueError("Login failed, no token")
         else:

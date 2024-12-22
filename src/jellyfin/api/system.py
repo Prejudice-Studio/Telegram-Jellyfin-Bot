@@ -4,7 +4,7 @@ from src.jellyfin.api import JellyfinRequest
 from src.jellyfin.api.req import json_response
 
 
-class System():
+class System:
     def __init__(self, client: JellyfinRequest):
         self.client = client
     

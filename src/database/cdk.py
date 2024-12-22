@@ -16,8 +16,8 @@ class CdkModel(CdkDatabaseModel):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, index=True)
     cdk: Mapped[str] = mapped_column(index=True, nullable=False)  # cdk
     limit: Mapped[int] = mapped_column(default=1)  # 使用次数
-    expired_time: Mapped[int] = mapped_column(nullable=True)  # 过期时间
-    used_history: Mapped[str] = mapped_column(nullable=True)  # 使用历史 可能考虑往里面塞一个json
+    expired_time: Mapped[int] = mapped_column(default=0)  # 过期时间
+    used_history: Mapped[str] = mapped_column(default="")  # 使用历史 可能考虑往里面塞一个json
     other: Mapped[str] = mapped_column(nullable=True)  # 预留的其他配置
 
 
@@ -69,3 +69,14 @@ class CdkOperate:
         async with CdkSessionFactory() as session:
             async with session.begin():
                 await session.execute(delete(CdkModel).where(CdkModel.cdk == cdk))
+    
+    @staticmethod
+    async def get_all_cdk():
+        """
+        获取所有cdk
+        :return:
+        """
+        async with CdkSessionFactory() as session:
+            async with session.begin():
+                scalar = await session.execute(select(CdkModel))
+                return scalar.scalars().all()

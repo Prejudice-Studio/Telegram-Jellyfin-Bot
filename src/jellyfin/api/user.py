@@ -54,7 +54,7 @@ class Users:
         })
     
     @bool_response
-    async def delete_user(self, user_id: Optional[str] = "{UserID}"):
+    async def delete_user(self, user_id: Optional[str] = "{UserID}") -> bool:
         """
         删除用户
         :param user_id: 用户ID

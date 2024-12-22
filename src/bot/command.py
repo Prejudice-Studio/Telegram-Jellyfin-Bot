@@ -8,12 +8,13 @@ from datetime import datetime
 from io import BytesIO
 
 from sqlalchemy import or_, select
+from sqlalchemy.util import await_only
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from src.bot import check_admin, check_banned, command_warp
 from src.config import JellyfinConfig
-from src.database.cdk import CdkOperate
+from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import UserModel, UsersOperate, UsersSessionFactory
 from src.jellyfin.api import JellyfinAPI
@@ -80,22 +81,18 @@ class AdminCommand:
         code_list = []
         for _ in range(quantity):
             code = f"reg_{''.join(random.choices(string.ascii_letters + string.digits, k=16))}_prej"
-            code_data = RegCode(code=code, usage_limit=usage_limit, expired_time=validity_hours)
+            code_data = CdkModel(cdk=code, limit=usage_limit, expired_time=0)
             code_list.append(code)
             if validity_hours:
-                code_data.expired_time = datetime.now().timestamp() + validity_hours * 3600
-            RegCodeData.regCodes.append(code_data)
-            RegCodeData.reg_dict[code] = code_data
-        RegCodeData.save()
+                code_data.expired_time = int(datetime.now().timestamp()) + validity_hours * 3600
+            await CdkOperate.add_cdk(code_data)
         text = f"Generated {quantity} registration codes.\n\n" + "".join(f"{code}\n" for code in code_list)
-        
         if len(text) > 4096:
             file_buffer = BytesIO()
             file_buffer.write(text.encode('utf-8'))
             file_buffer.seek(0)
             await update.message.reply_document(document=file_buffer, filename="registration_codes.txt")
         else:
-            # Send as a text message
             await update.message.reply_text(text)
     
     @staticmethod
@@ -154,13 +151,11 @@ class AdminCommand:
             return await update.message.reply_text("User not found.")
         je_id = jellyfin_user["Id"]
         try:
-            client.jellyfin.delete_user(je_id)
+            if not await client.Users.delete_user(je_id):
+                return await update.message.reply_text("[Server]Failed to delete user.")
         except Exception as e:
             logging.error(f"Error: {e}")
             return await update.message.reply_text("[Server]Failed to delete user.")
-        # 删除 UserInfo.json 中的用户信息
-        if user_info:
-            UsersData.remove_user(user_info)
         await update.message.reply_text(f"Successfully deleted user {username} from Jellyfin and the system.")
     
     @staticmethod
@@ -171,7 +166,7 @@ class AdminCommand:
         user_info = await UsersOperate.get_user(tg_id)
         if not user_info:
             return await update.message.reply_text("User not found.")
-        user_info.role = 1
+        user_info.role = 2
         await UsersOperate.update_user(user_info)
         await update.message.reply_text(f"Successfully set {user_info.fullname} as an administrator.")
     
@@ -179,10 +174,10 @@ class AdminCommand:
     @staticmethod
     @check_admin
     async def get_all_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        code_list = RegCodeData.regCodes
+        code_list = await CdkOperate.get_all_cdk()
         ret_text = ""
         for code in code_list:
-            if (code.expired_time is None or code.expired_time > datetime.now().timestamp()) and code.usage_limit > 0:
+            if (code.expired_time == 0 or code.expired_time > datetime.now().timestamp()) and code.usage_limit > 0:
                 ret_text += (f"Code <code>{code.code}</code> Usage limit: {code.usage_limit} Expired time: "
                              f"{convert_to_china_timezone(code.expired_time) if code.expired_time is not None else 'NoExpired'}\n")
         
@@ -226,7 +221,7 @@ class UserCommand:
             return await update.message.reply_text("注册码不可用")
         if cdk_info.limit <= 0:
             return await update.message.reply_text("注册码已被使用")
-        if cdk_info.expired_time and cdk_info.expired_time < datetime.now().timestamp():
+        if cdk_info.expired_time != 0 and cdk_info.expired_time < datetime.now().timestamp():
             return await update.message.reply_text("注册码已过期")
         # 检查 Jellyfin 是否已有该用户
         try:
@@ -238,6 +233,7 @@ class UserCommand:
             logging.error(f"Error: {e}")
             return await update.message.reply_text("[Server]Failed to create user.")
         cdk_info.limit -= 1
+        cdk_info.used_history += f",{str(eff_user.id)}"
         await CdkOperate.update_cdk(cdk_info)
         
         # 绑定 Telegram 和 Jellyfin 账号
