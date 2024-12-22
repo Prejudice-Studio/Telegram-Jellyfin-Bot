@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import wraps
 
 from telegram import Update
@@ -51,8 +52,8 @@ def command_warp(func):
     @wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
         global last_check_time, server_close
-        if last_check_time + 60 < update.message.date.timestamp():
-            last_check_time = update.message.date.timestamp()
+        if last_check_time + 60 < datetime.now().timestamp():
+            last_check_time = datetime.now().timestamp()
             if not await check_server_connectivity():
                 server_close = True
                 return await update.message.reply_text("Server is closed, please try again later.")

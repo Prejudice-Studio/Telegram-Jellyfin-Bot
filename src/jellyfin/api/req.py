@@ -12,7 +12,7 @@ def json_response(func):
     async def wrapper(*args, **kwargs):
         response = await func(*args, **kwargs)
         if response.status_code == 204 or response.status_code == 200:
-            return response.json()  # 自动调用 json() 方法
+            return response.json()
         else:
             raise ValueError(f"Request failed, status code: {response.status_code}, response: {response.text}")
     

@@ -176,8 +176,8 @@ class AdminCommand:
         code_list = await CdkOperate.get_all_cdk()
         ret_text = ""
         for code in code_list:
-            if (code.expired_time == 0 or code.expired_time > datetime.now().timestamp()) and code.usage_limit > 0:
-                ret_text += (f"Code <code>{code.code}</code> Usage limit: {code.usage_limit} Expired time: "
+            if (code.expired_time == 0 or code.expired_time > datetime.now().timestamp()) and code.limit > 0:
+                ret_text += (f"Code <code>{code.cdk}</code> Usage limit: {code.limit} Expired time: "
                              f"{convert_to_china_timezone(code.expired_time) if code.expired_time is not None else 'NoExpired'}\n")
         
         text = "All registration codes:\n\n" + ret_text
@@ -222,15 +222,11 @@ class UserCommand:
             return await update.message.reply_text("注册码已被使用")
         if cdk_info.expired_time != 0 and cdk_info.expired_time < datetime.now().timestamp():
             return await update.message.reply_text("注册码已过期")
-        # 检查 Jellyfin 是否已有该用户
         try:
-            existing_users = await client.Users.get_users()
-            if any(user['Name'] == username for user in existing_users):
-                return await update.message.reply_text("用户名已存在.")
             ret_user = await client.Users.new_user(username, password)
         except Exception as e:
             logging.error(f"Error: {e}")
-            return await update.message.reply_text("[Server]Failed to create user.")
+            return await update.message.reply_text("[Server]创建用户失败(服务器故障或已经存在相同用户)")
         cdk_info.limit -= 1
         cdk_info.used_history += f",{str(eff_user.id)}"
         await CdkOperate.update_cdk(cdk_info)

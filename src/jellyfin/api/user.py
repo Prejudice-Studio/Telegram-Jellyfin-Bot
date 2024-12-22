@@ -91,7 +91,7 @@ class Users:
         :param password:
         :return:
         """
-        return self.client.post("Users/New", {
+        return await self.client.post("Users/New", json={
             "name": name,
             "Password": password
         })
@@ -110,7 +110,7 @@ class Users:
     
     @json_response
     async def get_items(self, item_ids: list, user_id: Optional[str] = "{UserID}"):
-        return self.client.get(f"Users/{user_id}/Items", params={
+        return await self.client.get(f"Users/{user_id}/Items", params={
             'Ids': ','.join(str(x) for x in item_ids),
             'Fields': info()
         })
