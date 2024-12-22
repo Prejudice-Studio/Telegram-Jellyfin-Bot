@@ -13,7 +13,7 @@ from src.database.score import RedPacketModel, ScoreModel, ScoreOperate
 from src.database.user import Role, UserModel, UsersOperate
 from src.jellyfin.api import JellyfinAPI
 from src.jellyfin_client import client
-from src.utils import convert_to_china_timezone, get_password_hash, is_password_strong
+from src.utils import ROLE_MAP, convert_to_china_timezone, get_password_hash, is_password_strong
 
 
 @check_banned
@@ -46,37 +46,44 @@ async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @command_warp
 @check_private
 async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if len(context.args) != 3:
+    if len(context.args) < 2:
         return await update.message.reply_text("Usage: /reg <username> <password> <reg_code>")
-    username, password, reg_code = context.args
+    username, password, reg_code = context.args[0], context.args[1], None
+    if len(context.args) == 3:
+        reg_code = context.args[2]
     eff_user = update.effective_user
     if not username.isalnum() or not password.isalnum():
         return await update.message.reply_text("用户名与密码不合法.")
     if not is_password_strong(password):
-        return await update.message.reply_text("密码强度不够(需要至少8位字符，且包含至少一个小写字母和大写字母).")
-    cdk_info = await CdkOperate.get_cdk(reg_code)
-    if not cdk_info:
-        return await update.message.reply_text("注册码不可用")
-    if cdk_info.limit <= 0:
-        return await update.message.reply_text("注册码已被使用")
-    if cdk_info.expired_time != 0 and cdk_info.expired_time < datetime.now().timestamp():
-        return await update.message.reply_text("注册码已过期")
+        return await update.message.reply_text("密码强度不够(需要至少8位字符，且包含至少一个小写字母和大写字母)。")
+    user_info = await UsersOperate.get_user(eff_user.id)
+    if user_info.bind_id:
+        return await update.message.reply_text("你已绑定一个Jellyfin账号，无法注册。")
+    cdk_info = None
+    if not (user_info and user_info.role == Role.ORDINARY.value):
+        # 非ORDINARY用户需要验证注册码
+        cdk_info = await CdkOperate.get_cdk(reg_code)
+        if not cdk_info:
+            return await update.message.reply_text("注册码不可用")
+        if cdk_info.limit <= 0:
+            return await update.message.reply_text("注册码已被使用")
+        if cdk_info.expired_time != 0 and cdk_info.expired_time < datetime.now().timestamp():
+            return await update.message.reply_text("注册码已过期")
     try:
         ret_user = await client.Users.new_user(username, password)
     except Exception as e:
         logging.error(f"Error: {e}")
-        return await update.message.reply_text("[Server]创建用户失败(服务器故障或已经存在相同用户)")
-    cdk_info.limit -= 1
-    cdk_info.used_history += f"{str(eff_user.id)},"
-    await CdkOperate.update_cdk(cdk_info)
+        return await update.message.reply_text("[Server]创建用户失败(服务器故障或已经存在相同用户)。")
+    if cdk_info:
+        cdk_info.limit -= 1
+        cdk_info.used_history += f"{str(eff_user.id)},"
+        await CdkOperate.update_cdk(cdk_info)
     
     # 绑定 Telegram 和 Jellyfin 账号
-    user_info = await UsersOperate.get_user(eff_user.id)
+    
     password_hash = get_password_hash(password)
     if user_info:
-        user_info.account = username
-        user_info.password = password_hash
-        user_info.bind_id = ret_user["Id"]
+        user_info.account, user_info.password, user_info.bind_id = username, password_hash, ret_user["Id"]
         await UsersOperate.update_user(user_info)
     else:
         user_info = UserModel(telegram_id=eff_user.id, username=eff_user.username, fullname=eff_user.full_name,
@@ -107,21 +114,14 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         score = 0
         checkin_time = "N/A"
     else:
-        score = score_data.score
-        checkin_time = score_data.checkin_time
+        score, checkin_time = score_data.score, score_data.checkin_time
     checkin_time_v = checkin_time if checkin_time is not None else 0
-    limits = "无用户组"
-    if user_info.role == 0:
-        limits = "封禁"
-    elif user_info.role == 1:
-        limits = "普通用户"
-    elif user_info.role == 2:
-        limits = "管理员"
+    limits = next((role for role, value in ROLE_MAP.items() if user_info.role == value), "无用户组")
     await update.message.reply_text(
             f"----------Telegram----------\n"
             f"TelegramID: {user_info.telegram_id}\n"
             f"Telegram昵称: {user_info.fullname}\n"
-            f"用户权限: {limits}\n"
+            f"用户组: {limits}\n"
             f"----------Jellyfin----------\n"
             f"用户名: {jellyfin_user['Name']}\n"
             f"上次登录: {last_login}\n"
@@ -187,10 +187,8 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_info:
         if user_info.bind_id:
             return await update.message.reply_text("你已绑定一个Jellyfin账号。请先解绑")
-        user_info.bind_id = jellyfin_user["User"]["Id"]
-        user_info.account = username
-        user_info.password = password_hash
-        user_info.role = Role.ORDINARY.value
+        user_info.account, user_info.password, user_info.bind_id, user_info.role = username, password_hash, jellyfin_user["User"][
+            "Id"], Role.ORDINARY.value
         await UsersOperate.update_user(user_info)
         await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
     else:
@@ -232,8 +230,7 @@ async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await user_client.JellyfinReq.login(user_info.account, old_pw)
         await client.Users.change_password(old_pw, new_password, user_info.bind_id)
-        new_password_hash = get_password_hash(new_password)
-        user_info.password = new_password_hash
+        user_info.password = get_password_hash(new_password)
         await UsersOperate.update_user(user_info)
         return await update.message.reply_text("密码修改成功.")
     except Exception as e:

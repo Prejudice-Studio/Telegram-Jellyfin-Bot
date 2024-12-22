@@ -8,6 +8,7 @@ from telegram.ext import ContextTypes
 from src.config import BotConfig
 from src.database.user import UserModel, UsersOperate
 from src.jellyfin_client import check_server_connectivity
+from src.logger import bot_logger
 
 last_check_time = 0
 server_close = False
@@ -59,6 +60,7 @@ def command_warp(func):
         global last_check_time, server_close
         if last_check_time + 60 < datetime.now().timestamp():
             last_check_time = datetime.now().timestamp()
+            bot_logger.info(f"Server check")
             if not await check_server_connectivity():
                 server_close = True
                 return await update.message.reply_text("服务器已经关闭，请稍后再试。")

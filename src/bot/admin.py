@@ -14,9 +14,9 @@ from src.bot import check_admin
 from src.config import JellyfinConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
-from src.database.user import Role, UsersOperate
+from src.database.user import UsersOperate
 from src.jellyfin_client import client
-from src.utils import convert_to_china_timezone, get_user_info
+from src.utils import ROLE_MAP, convert_to_china_timezone, get_user_info
 
 
 @check_admin
@@ -124,12 +124,17 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             score = score_data.score
             checkin_time = score_data.checkin_time
         checkin_time_v = checkin_time if checkin_time is not None else 0
+        limits = next((role for role, value in ROLE_MAP.items() if user_info.role == value), "无用户组")
         message = (
             f"----------Telegram----------\n"
-            f"TelegramID: {user_info.telegram_id}\n"
+            f"Telegram ID: {user_info.telegram_id}\n"
+            f"Telegram NAME: {user_info.username}\n"
             f"Telegram昵称: {user_info.fullname}\n"
+            f"用户组: {limits}\n"
             f"----------Jellyfin----------\n"
+            f"账户: {user_info.account}\n"
             f"用户名: {jellyfin_user['Name']}\n"
+            f"账户ID: {user_info.bind_id}\n"
             f"上次登录: {last_login}\n"
             f"----------Score----------\n"
             f"积分: {score}\n"
@@ -171,16 +176,9 @@ async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     _, user_info = await get_user_info(u_name)
     if not user_info:
         return await update.message.reply_text("用户未找到")
-    role_map = {
-        "ADMIN": Role.ADMIN.value,
-        "BANNED": Role.BANNED.value,
-        "SEA": Role.SEA.value,
-        "ORDINARY": Role.ORDINARY.value,
-        "STAR": Role.STAR.value
-    }
-    if group not in role_map:
+    if group not in ROLE_MAP:
         return await update.message.reply_text("无效的用户组")
-    user_info.role = role_map[group]
+    user_info.role = ROLE_MAP[group]
     await UsersOperate.update_user(user_info)
     await update.message.reply_text(f"成功设置 {user_info.fullname} 为管理员")
 

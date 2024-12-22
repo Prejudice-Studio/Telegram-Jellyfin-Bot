@@ -7,10 +7,7 @@ client = JellyfinAPI(JellyfinConfig.BASE_URL, 1, JellyfinConfig.API_KEY)
 ban_client = BangumiAPI(Config.BANGUMI_TOKEN)
 
 
-class ConnectError(Exception):
-    pass
-
-
+# noinspection PyBroadException
 async def check_server_connectivity() -> bool:
     """
     检查服务器连接性
@@ -22,5 +19,5 @@ async def check_server_connectivity() -> bool:
             return True
         else:
             return False
-    except ConnectError:
+    except Exception:
         return False

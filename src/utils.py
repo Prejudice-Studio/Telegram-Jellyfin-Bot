@@ -9,8 +9,16 @@ import pytz
 from sqlalchemy import or_, select
 
 from src.config import Config
-from src.database.user import UserModel, UsersOperate, UsersSessionFactory
+from src.database.user import Role, UserModel, UsersOperate, UsersSessionFactory
 from src.jellyfin_client import client
+
+ROLE_MAP = {
+    "ADMIN": Role.ADMIN.value,
+    "BANNED": Role.BANNED.value,
+    "SEA": Role.SEA.value,
+    "ORDINARY": Role.ORDINARY.value,
+    "STAR": Role.STAR.value
+}
 
 
 def convert_to_china_timezone(time_data: Optional[int | str] = None) -> str:
