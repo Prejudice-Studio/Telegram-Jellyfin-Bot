@@ -1,8 +1,10 @@
+from src.bangumi import BangumiAPI
 from src.config import JellyfinConfig
 from src.jellyfin.api import JellyfinAPI
 
 client = JellyfinAPI(JellyfinConfig.BASE_URL, 1, JellyfinConfig.API_KEY)
 
+ban_client = BangumiAPI()
 
 class ConnectError(Exception):
     pass

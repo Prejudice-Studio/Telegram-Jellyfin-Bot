@@ -44,14 +44,12 @@ class BaseConfig:
                 toml.dump(config, f)
         except Exception as err:
             logging.error(f'Error occurred while saving config file: {err}')
-        
 
 
 class Config(BaseConfig):
     """
     全局配置
     """
-    
     LOGGING: bool = True  # 是否开启日志输出本地
     LOG_LEVE: int = 20  # 日志等级
     SQLALCHEMY_LOG = False  # 是否开启SQLAlchemy日志
@@ -59,6 +57,7 @@ class Config(BaseConfig):
     MAX_RETRY: int = 3  # 重试次数
     DATABASES_DIR: Path = ROOT_PATH / 'database'  # 数据库路径
     SALT = 'jellyfin'  # 加密盐
+    BANGUMI_TOKEN: str = ""  # Bangumi Token
 
 
 class BotConfig(BaseConfig):
