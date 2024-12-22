@@ -34,6 +34,7 @@ def run_bot():
     application.add_handler(CommandHandler("bind", UserCommand.bind))
     application.add_handler(CommandHandler("unbind", UserCommand.unbind))
     application.add_handler(CommandHandler("changepassword", UserCommand.reset_pw))
+    application.add_handler(CommandHandler("generateRegCode", UserCommand.gen_cdk))
     
     # 管理员命令
     application.add_handler(CommandHandler("summon", AdminCommand.summon))  # 管理员生成注册码
@@ -43,6 +44,9 @@ def run_bot():
             chat_id=BotConfig.ADMIN)))  # 设置管理员
     application.add_handler(CommandHandler("regcodes", AdminCommand.get_all_code))
     application.add_handler(CommandHandler("update", AdminCommand.update))
+    application.add_handler(CommandHandler("setScore", AdminCommand.set_score))
+    application.add_handler(CommandHandler("setRegCodeGenerateStatus", AdminCommand.set_gen_cdk))
+    
     # 按钮回调
     application.add_handler(CallbackQueryHandler(callback.confirm_delete, pattern='confirm_delete'))
     application.add_handler(CallbackQueryHandler(callback.confirm_unbind, pattern='confirm_unbind'))

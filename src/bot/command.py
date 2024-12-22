@@ -37,6 +37,7 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
                             UserModel.username.like(f"%{f_username}%")
                     )
             ).limit(1))
+            logging.info(f"fetch_user_id: {scalars}")
             return scalars.scalar_one_or_none()
     
     if username.isdigit():
@@ -63,6 +64,8 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
             return jellyfin_user, user_info
         except Exception as e:
             logging.error(f"Error: {e}")
+    if user_info:
+        return None, user_info
     return None, None
 
 
@@ -70,10 +73,20 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
 class AdminCommand:
     @staticmethod
     @check_admin
+    async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if len(context.args) != 1:
+            return await update.message.reply_text("Usage: /setgencdk <true/false>")
+        if context.args[0] not in ["true", "false"]:
+            return await update.message.reply_text("Usage: /setgencdk <true/false>")
+        JellyfinConfig.USER_GEN_CDK = context.args[0] == "true"
+        JellyfinConfig.save_to_toml()
+        await update.message.reply_text(f"Successfully set the registration code generation to {context.args[0]}.")
+    
+    @staticmethod
+    @check_admin
     async def summon(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(context.args) < 2:
             return await update.message.reply_text("Usage: /summon <usage_limit> <quantity> [validity_hours]")
-        
         usage_limit = int(context.args[0])
         quantity = int(context.args[1])
         validity_hours = int(context.args[2]) if len(context.args) > 2 else None
@@ -199,10 +212,54 @@ class AdminCommand:
             os.execl(python, python, *sys.argv)
         except subprocess.CalledProcessError:
             await update.message.reply_text("Update failed, please check the log")
+    
+    @staticmethod
+    @check_admin
+    async def set_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if len(context.args) != 2:
+            return await update.message.reply_text("Usage: /setscore <id/username> <score>")
+        u_name = context.args[0]
+        score = int(context.args[1])
+        _, user_info = await get_user_info(u_name)
+        if not user_info:
+            return await update.message.reply_text("User not found.")
+        score_data = await ScoreOperate.get_score(user_info.telegram_id)
+        if not score_data:
+            score_data = ScoreModel(telegram_id=user_info.telegram_id, score=score)
+            score_data = await ScoreOperate.add_score(score_data)
+            return await update.message.reply_text(f"Successfully set the score of user {u_name} to {score}.")
+        score_data.score = score
+        await ScoreOperate.update_score(score_data)
+        await update.message.reply_text(f"Successfully set the score of user {user_info.fullname} to {score}.")
 
 
 # noinspection PyUnusedLocal
 class UserCommand:
+    @staticmethod
+    @check_banned
+    @command_warp
+    async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not JellyfinConfig.USER_GEN_CDK:
+            return await update.message.reply_text("Registration code generation is disabled.")
+        score_data = await ScoreOperate.get_score(update.effective_user.id)
+        if score_data is None or score_data.score < 200:
+            return await update.message.reply_text("Insufficient points (200 points required).")
+        quantity = 1
+        if len(context.args) == 1:
+            quantity = int(context.args[0])
+        if quantity * 200 > score_data.score:
+            return await update.message.reply_text(f"Insufficient points. Current points: {score_data.score}")
+        code_list = []
+        for _ in range(quantity):
+            code = f"reg_{''.join(random.choices(string.ascii_letters + string.digits, k=16))}_prej"
+            code_data = CdkModel(cdk=code, limit=1, expired_time=0)
+            code_list.append(code)
+            await CdkOperate.add_cdk(code_data)
+        text = f"Generated {quantity} registration codes.\n\n" + "".join(f"{code}\n" for code in code_list)
+        score_data.score -= quantity * 200
+        await ScoreOperate.update_score(score_data)
+        await update.message.reply_text(text)
+    
     @staticmethod
     @check_banned
     @command_warp
