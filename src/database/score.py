@@ -29,7 +29,7 @@ class RedPacketModel(ScoreDatabaseModel):
     current_amount: Mapped[int] = mapped_column(nullable=False)  # 当前剩余金额
     status: Mapped[int] = mapped_column(default=0)  # 状态 0 未领取 1 已领完
     type: Mapped[int] = mapped_column(default=0)  # 类型 0 随机红包 1 均分
-    history: Mapped[str] = mapped_column(nullable=True)  # 领取历史
+    history: Mapped[str] = mapped_column(default="")  # 领取历史
     create_time: Mapped[int] = mapped_column(nullable=True)  # 创建时间
     data: Mapped[str] = mapped_column(nullable=True)  # 预留的其他配置
 

@@ -1,5 +1,6 @@
 import logging
 import random
+from asyncio import sleep
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -8,7 +9,7 @@ from src.bot import command_warp
 from src.database.score import ScoreOperate
 from src.database.user import UsersOperate
 from src.jellyfin_client import client
-from src.utils import base64_encode
+from src.utils import base64_decode, base64_encode
 
 
 # noinspection PyUnusedLocal
@@ -23,11 +24,11 @@ async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logging.info(f"[Server]Delete user: {ret}")
         except Exception as e:
             logging.error(e)
-            await update.effective_user.send_message("Delete failed.")
+            await update.effective_user.send_message("账户删除失败")
         await UsersOperate.clear_bind(update.effective_user.id)
-        await update.effective_user.send_message("Account deleted successful.")
+        await update.effective_user.send_message("账户删除成")
     else:
-        await update.effective_user.send_message("Can't find the account.")
+        await update.effective_user.send_message("无法找到账户")
     await query.delete_message()
 
 
@@ -39,16 +40,16 @@ async def confirm_unbind(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if user_info:
         await UsersOperate.clear_bind(update.effective_user.id)
-        await update.effective_user.send_message("Unbind successful.")
+        await update.effective_user.send_message("解绑成功")
     else:
-        await update.effective_user.send_message("No bound Jellyfin account found.")
+        await update.effective_user.send_message("未绑定账户")
     await query.delete_message()
 
 
 # noinspection PyUnusedLocal
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer("Operation canceled.")
+    await query.answer("操作取消")
     await query.delete_message()
 
 
@@ -59,12 +60,10 @@ async def receive_red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE)
     packet_data = await ScoreOperate.get_red_packet(packet_id)
     if packet_data:
         if packet_data.status == 1:
-            return await query.answer("The red packet has been received.")
-        if query.from_user.id == packet_data.telegram_id:
-            return await query.answer("You can't receive the red packet that you sent.")
+            return await query.answer("红包已经被领完")
         history = packet_data.history.split(",") if packet_data.history else []
-        if query.from_user.id in history:
-            return await query.answer("You have received the red packet.")
+        if any(query.from_user.id == int(entry.split('#')[0]) for entry in history[:-1]):
+            return await query.answer("您已经领过这个红包了")
         rec_count = len(history) - 1 if len(history) != 0 else 0
         e_score = 0  # 领取的金额
         if packet_data.type == 0:
@@ -74,7 +73,6 @@ async def receive_red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 e_score = packet_data.current_amount
         elif packet_data.type == 1:
             e_score = packet_data.amount // packet_data.count
-        
         # 红包领取部分
         await ScoreOperate.change_score(query.from_user.id, e_score)
         packet_data.current_amount -= e_score
@@ -82,9 +80,9 @@ async def receive_red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if rec_count + 1 == packet_data.count:  # 领完
             packet_data.status = 1
         await ScoreOperate.update_red_packet(packet_data)
-        await query.answer("Received successfully.")
+        await query.answer(f"您收到了 {e_score} 积分")
     else:
-        await query.answer("The red packet has not found.")
+        await query.answer("红包未找到")
 
 
 async def red_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -94,16 +92,20 @@ async def red_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if packet_data:
         history = packet_data.history.split(",") if packet_data.history else []
         his_t = ""
-        for i in range(len(history)):
-            his_t += f"{history[i].split('#')[1]}: {history[i].split('#')[2]}\n"
-        ret_message = f"Red packet information:\n" \
-                      f"Amount: {packet_data.amount}\n" \
-                      f"Count: {packet_data.count}\n" \
-                      f"Current amount: {packet_data.current_amount}\n" \
-                      f"Type: {'Random' if packet_data.type == 0 else 'Average'}\n" \
-                      f"Status: {'Received' if packet_data.status == 1 else 'Not received'}"
+        for i in range(len(history)-1):
+            print(history[i].split('#'))
+            his_t += f"{base64_decode(history[i].split('#')[1])}: {history[i].split('#')[2]}\n"
+        ret_message = f"红包信息\n" \
+                      f"总金额: {packet_data.amount}\n" \
+                      f"总份数: {packet_data.count}\n" \
+                      f"剩余金额: {packet_data.current_amount}\n" \
+                      f"类型: {'随机' if packet_data.type == 0 else '平均'}\n" \
+                      f"状态: {'已领完' if packet_data.status == 1 else '未领完'}"
         if his_t != "":
             ret_message += f"\nHistory:\n{his_t}"
-        await update.effective_message.reply_text(ret_message)
+        rep = await update.effective_message.reply_text(ret_message)
+        await query.answer()
+        await sleep(10)
+        await rep.delete()
     else:
-        await query.answer("The red packet has not found.")
+        await query.answer("红包未找到")

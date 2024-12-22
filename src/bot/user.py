@@ -241,13 +241,12 @@ async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 @check_banned
-@command_warp
 async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
     score_data = await ScoreOperate.get_score(update.effective_user.id)
     if len(context.args) < 2:
         return await update.message.reply_text("使用方法: /red {TotalScore} {Count} {Mode} 不填与0为随机，1为均分")
     total, count = context.args[0], context.args[1]
-    mode = 0
+    mode = "0"
     if len(context.args) == 3:
         mode = context.args[2]
     if not total.isdigit() or not count.isdigit() or not mode.isdigit():
@@ -255,9 +254,9 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
     total, count, mode = int(total), int(count), int(mode)
     if total < 1 or count < 1:
         return await update.message.reply_text("请确保输入数字大于0.")
-    if score_data.score < total:
+    if not score_data or score_data.score < total:
         return await update.message.reply_text("积分不足.")
-    if count < total:
+    if count > total:
         return await update.message.reply_text("请确保红包数量大于红包总积分.")
     if mode == 1 and total % count != 0:
         return await update.message.reply_text("均分模式下请确保总积分能被红包数量整除.")
