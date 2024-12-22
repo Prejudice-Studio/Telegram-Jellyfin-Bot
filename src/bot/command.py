@@ -21,7 +21,7 @@ from src.jellyfin_client import client
 from src.utils import convert_to_china_timezone, get_password_hash
 
 
-async def get_user_info(username: str | int):
+async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | None]:
     """
     获取 Jellyfin 用户信息
     :param username: Telegram ID/Fullname or Jellyfin username
@@ -107,7 +107,7 @@ class AdminCommand:
         jellyfin_user, user_info = await get_user_info(username)
         if not jellyfin_user:
             return await update.message.reply_text("未发现用户.")
-        last_login = convert_to_china_timezone(jellyfin_user.get("上次登录时间", "N/A"))
+        last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
         # 检查积分和签到信息
         if not user_info:
             await update.message.reply_text(
@@ -115,23 +115,30 @@ class AdminCommand:
                     f"用户名: {jellyfin_user['Name']}\n"
                     f"上次登录: {last_login}\n")
         else:
+            score_data = await ScoreOperate.get_score(update.effective_user.id)
+            if not score_data:
+                score = 0
+                checkin_time = "N/A"
+            else:
+                score = score_data.score
+                checkin_time = score_data.checkin_time
+            checkin_time_v = checkin_time if checkin_time is not None else 0
             message = (
                 f"----------Telegram----------\n"
-                f"TelegramID: {user_info.TelegramID}\n"
-                f"Telegram昵称: {user_info.TelegramFullName}\n"
+                f"TelegramID: {user_info.telegram_id}\n"
+                f"Telegram昵称: {user_info.fullname}\n"
                 f"----------Jellyfin----------\n"
                 f"用户名: {jellyfin_user['Name']}\n"
                 f"上次登录: {last_login}\n"
                 f"----------Score----------\n"
-                f"积分: {user_info.score}\n"
-                f"上次签到时间: {convert_to_china_timezone(user_info.last_sign_in)}"
+                f"积分: {score}\n"
+                f"上次签到时间: {convert_to_china_timezone(checkin_time_v)}"
             )
             
             if update.effective_chat.type == "private":
                 message = message.replace(
                         f"Username: {jellyfin_user['Name']}",
                         f"Username: {jellyfin_user['Name']}\n"
-                        f"Password: {user_info.bind.password}"
                 )
             
             await update.message.reply_text(message)
@@ -384,16 +391,10 @@ class UserCommand:
         if old_pw_hash != user_info.password:
             return await update.message.reply_text("原密码错误.")
         try:
-            ret = await client.Users.login(JellyfinConfig.BASE_URL, user_info., user_info.bind.password)
-            print(ret)
-            p_data = {
-                "CurrentPw": user_info.bind.password,
-                "NewPw": new_password
-            }
-            print(client.jellyfin.get_user_settings())
-            client.jellyfin.users("/Password", "POST", p_data)
-            user_info.bind.password = new_password
-            UsersData.save()
+            await client.Users.reset_password(old_pw, new_password, user_info.bind_id)
+            new_password_hash = get_password_hash(new_password)
+            user_info.password = new_password_hash
+            await UsersOperate.update_user(user_info)
             return await update.message.reply_text("密码修改成功.")
         except Exception as e:
             logging.error(f"Error: {e}")
@@ -405,7 +406,7 @@ class UserCommand:
     async def get_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_chat.type != "private":
             return await update.message.reply_text("请在私聊中使用.")
-        user_info = UsersData.get_user_by_id(update.effective_user.id)
-        if not user_info or user_info.bind.username == "":
+        user_info = await UsersOperate.get_user(update.effective_user.id)
+        if not user_info or not user_info.account:
             return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
-        await update.message.reply_text(f"你的密码是: <code>{user_info.bind.password}</code>", parse_mode='HTML')
+        await update.message.reply_text(f"你的密码是: <code>{user_info.password}</code>", parse_mode='HTML')
