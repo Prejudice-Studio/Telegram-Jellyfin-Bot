@@ -4,7 +4,7 @@ from src.jellyfin.api import JellyfinAPI
 
 client = JellyfinAPI(JellyfinConfig.BASE_URL, 1, JellyfinConfig.API_KEY)
 
-ban_client = BangumiAPI(Config.BANGUMI_TOKEN)
+Bangumi_client = BangumiAPI(Config.BANGUMI_TOKEN)
 
 
 # noinspection PyBroadException

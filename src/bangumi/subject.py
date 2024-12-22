@@ -14,3 +14,11 @@ class Subject:
         """
         return await self.client.get(f"search/subject/{keyword}", params={
             "type": s_type, "responseGroup": responseGroup, "start": start, "max_results": max_results})
+    
+    @json_response
+    async def get_subject(self, subject_id: int):
+        """
+        获取番剧信息
+        :return:
+        """
+        return await self.client.get(f"v0/subjects/{subject_id}")

@@ -1,6 +1,5 @@
 import base64
 import hashlib
-import logging
 import re
 from datetime import datetime, timezone
 from typing import Optional
@@ -11,6 +10,7 @@ from sqlalchemy import or_, select
 from src.config import Config
 from src.database.user import Role, UserModel, UsersOperate, UsersSessionFactory
 from src.jellyfin_client import client
+from src.logger import bot_logger
 
 ROLE_MAP = {
     "ADMIN": Role.ADMIN.value,
@@ -36,7 +36,7 @@ def convert_to_china_timezone(time_data: Optional[int | str] = None) -> str:
         china_time = utc_time.astimezone(china_timezone)
         return china_time.strftime('%Y-%m-%d %H:%M:%S')
     except Exception as e:
-        logging.error(f"convert_to_china_timezone error: {e}")
+        bot_logger.error(f"convert_to_china_timezone error: {e}")
         return time_data
 
 
@@ -81,7 +81,7 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
                             UserModel.username.like(f"%{f_username}%")
                     )
             ).limit(1))
-            logging.info(f"fetch_user_id: {scalars}")
+            bot_logger.info(f"fetch_user_id: {scalars}")
             return scalars.scalar_one_or_none()
     
     if username.isdigit():
@@ -97,7 +97,7 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
             je_data = next((u for u in all_user if u["Name"] == username), None)
             je_id = je_data["Id"] if je_data else None
         except Exception as e:
-            logging.error(f"Error: {e}")
+            bot_logger.error(f"Error: {e}")
             return None, None
     if je_id is not None:
         try:
@@ -107,7 +107,7 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
                 user_info = user_scalars.scalar_one_or_none()
             return jellyfin_user, user_info
         except Exception as e:
-            logging.error(f"Error: {e}")
+            bot_logger.error(f"Error: {e}")
     if user_info:
         return None, user_info
     return None, None

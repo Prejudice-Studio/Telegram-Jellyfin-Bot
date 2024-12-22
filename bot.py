@@ -5,6 +5,7 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, filt
 
 import src.bot.admin as AdminCommand
 import src.bot.user as UserCommand
+import src.bot.require as Require
 from src.bot import callback
 from src.config import BotConfig, Config
 from src.logger import bot_logger
@@ -37,6 +38,7 @@ def run_bot():
     application.add_handler(CommandHandler("changepassword", UserCommand.reset_pw))
     application.add_handler(CommandHandler("generateRegCode", UserCommand.gen_cdk))
     application.add_handler(CommandHandler("red", UserCommand.red_packet))
+    application.add_handler(CommandHandler("require", Require.require))
     
     # 管理员命令
     application.add_handler(CommandHandler("summon", AdminCommand.summon))  # 管理员生成注册码
@@ -59,6 +61,8 @@ def run_bot():
     application.add_handler(CallbackQueryHandler(callback.receive_red_packet, pattern='red_'))
     application.add_handler(CallbackQueryHandler(callback.red_info, pattern='redinfo_'))
     application.add_handler(CallbackQueryHandler(callback.withdraw_red, pattern='withdraw_'))
+    application.add_handler(CallbackQueryHandler(Require.require_choose, pattern='reqb_'))
+    application.add_handler(CallbackQueryHandler(Require.require_submit, pattern='req_'))
     bot_logger.info("Bot started")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 

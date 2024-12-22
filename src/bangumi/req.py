@@ -30,7 +30,7 @@ class BangumiRequest:
         self.client.headers = {
             'accept': 'application/json',
             'content-type': 'application/json',
-            'Authorization': access_token,
+            'Authorization': f"Bearer {access_token}",
             'User-Agent': 'enlysure/telegram-jellyfin-bot (https://github.com/Prejudice-Studio/Telegram-Jellyfin-Bot)'
         }
     

@@ -1,4 +1,3 @@
-import logging
 import random
 from asyncio import sleep
 
@@ -9,6 +8,7 @@ from src.bot import command_warp
 from src.database.score import ScoreOperate
 from src.database.user import Role, UsersOperate
 from src.jellyfin_client import client
+from src.logger import bot_logger
 from src.utils import base64_decode, base64_encode
 
 
@@ -21,9 +21,9 @@ async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_info and user_info.bind_id:
         try:
             ret = await client.Users.delete_user(user_info.bind_id)
-            logging.info(f"[Server]Delete user: {ret}")
+            bot_logger.info(f"[Server]Delete user: {ret}")
         except Exception as e:
-            logging.error(e)
+            bot_logger.error(e)
             await update.effective_user.send_message("账户删除失败")
         user_info.role = Role.SEA.value
         await UsersOperate.update_user(user_info)

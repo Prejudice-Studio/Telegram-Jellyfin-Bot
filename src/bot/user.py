@@ -1,4 +1,3 @@
-import logging
 import random
 import string
 from datetime import datetime
@@ -13,6 +12,7 @@ from src.database.score import RedPacketModel, ScoreModel, ScoreOperate
 from src.database.user import Role, UserModel, UsersOperate
 from src.jellyfin.api import JellyfinAPI
 from src.jellyfin_client import client
+from src.logger import bot_logger
 from src.utils import ROLE_MAP, convert_to_china_timezone, get_password_hash, is_password_strong
 
 
@@ -72,7 +72,7 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         ret_user = await client.Users.new_user(username, password)
     except Exception as e:
-        logging.error(f"Error: {e}")
+        bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]创建用户失败(服务器故障或已经存在相同用户)。")
     if cdk_info:
         cdk_info.limit -= 1
@@ -102,9 +102,9 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         jellyfin_user = await client.Users.get_user(user_info.bind_id)
     except Exception as e:
-        logging.error(f"Error: {e}")
+        bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]服务器发生错误，请检查日志")
-    logging.info(f"Jellyfin user: {jellyfin_user}")
+    bot_logger.info(f"Jellyfin user: {jellyfin_user}")
     if not jellyfin_user:
         return await update.message.reply_text("用户未找到.")
     
@@ -175,11 +175,10 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         jellyfin_user = await user_client.JellyfinReq.login(username, password)
     except Exception as e:
-        logging.error(f"Error: {e}")
+        bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]Failed to connect to Jellyfin.")
     if not jellyfin_user:
         return await update.message.reply_text("用户名或密码错误.")
-    # logging.info(f"Jellyfin用户: {jellyfin_user}")
     eff_user = update.effective_user
     # 绑定 Telegram 账号
     user_info = await UsersOperate.get_user(eff_user.id)
@@ -234,7 +233,7 @@ async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await UsersOperate.update_user(user_info)
         return await update.message.reply_text("密码修改成功.")
     except Exception as e:
-        logging.error(f"Error: {e}")
+        bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]密码更改失败，请检查原密码是否正确.")
 
 

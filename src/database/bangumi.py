@@ -1,4 +1,7 @@
-from sqlalchemy import Enum
+from enum import Enum
+from typing import Type
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -33,7 +36,7 @@ class BangumiRequireModel(BangumiDatabaseModel):
     id: Mapped[int] = mapped_column(primary_key=True, index=True, autoincrement=True)  # 请求ID
     telegram_id: Mapped[int] = mapped_column(index=True)  # 发起者Telegram ID
     bangumi_id: Mapped[int] = mapped_column(index=True)  # 番剧ID
-    status: Mapped[int] = mapped_column(default=0)  # 请求状态
+    status: Mapped[int] = mapped_column(default=ReqStatue.UNHANDLED.value)  # 请求状态
     timestamp: Mapped[int] = mapped_column()  # 发起时间戳
 
 
@@ -41,3 +44,25 @@ create_database("bangumi", BangumiDatabaseModel)
 DATABASE_URL = f'sqlite+aiosqlite:///{Config.DATABASES_DIR / "bangumi.db"}'
 ENGINE = create_async_engine(DATABASE_URL, echo=Config.SQLALCHEMY_LOG)
 BangumiSessionFactory = async_sessionmaker(bind=ENGINE, expire_on_commit=False)
+
+
+class BangumiOperate:
+    @staticmethod
+    async def add_req_bgm(data: BangumiRequireModel):
+        async with BangumiSessionFactory() as session:
+            async with session.begin():
+                session.add(data)
+    
+    @staticmethod
+    async def get_req_bgm(req_id: int):
+        async with BangumiSessionFactory() as session:
+            async with session.begin():
+                scalar = await session.execute(select(BangumiRequireModel).filter(BangumiRequireModel.id == req_id).limit(1))
+                return scalar.scalar_one_or_none()
+    
+    @staticmethod
+    async def update_req_bgm(data: BangumiRequireModel):
+        async with BangumiSessionFactory() as session:
+            async with session.begin():
+                await session.merge(data)
+                

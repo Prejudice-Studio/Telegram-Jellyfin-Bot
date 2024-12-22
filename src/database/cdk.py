@@ -37,6 +37,7 @@ class CdkOperate:
         async with CdkSessionFactory() as session:
             async with session.begin():
                 session.add(cdk_data)
+                session.delete()
     
     @staticmethod
     async def get_cdk(cdk: str) -> CdkModel | None:

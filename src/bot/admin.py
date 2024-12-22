@@ -1,4 +1,3 @@
-import logging
 import os
 import random
 import string
@@ -16,6 +15,7 @@ from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import UsersOperate
 from src.jellyfin_client import client
+from src.logger import bot_logger
 from src.utils import ROLE_MAP, convert_to_china_timezone, get_user_info
 
 
@@ -163,7 +163,7 @@ async def deleteAccountBy(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not await client.Users.delete_user(je_id):
             return await update.message.reply_text("[Server]删除用户失败[2]")
     except Exception as e:
-        logging.error(f"Error: {e}")
+        bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]删除用户失败[1]")
     await update.message.reply_text(f"成功删除用户 {username}")
 
