@@ -73,6 +73,37 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
 class AdminCommand:
     @staticmethod
     @check_admin
+    async def set_code_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if len(context.args) != 2:
+            return await update.message.reply_text("Usage: /setRegCodeUsageLimit <cdk> <limit>")
+        cdk = context.args[0]
+        limit = int(context.args[1])
+        cdk_info = await CdkOperate.get_cdk(cdk)
+        if not cdk_info:
+            return await update.message.reply_text("Registration code not found.")
+        cdk_info.limit += limit
+        await CdkOperate.update_cdk(cdk_info)
+        await update.message.reply_text(f"Successfully set the usage limit of registration code {cdk} to {cdk_info.limit}.")
+    
+    @staticmethod
+    @check_admin
+    async def set_code_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if len(context.args) != 2:
+            return await update.message.reply_text("Usage: /setRegCodeTime <cdk> <hours>")
+        cdk = context.args[0]
+        hours = int(context.args[1])
+        cdk_info = await CdkOperate.get_cdk(cdk)
+        if not cdk_info:
+            return await update.message.reply_text("Registration code not found.")
+        if cdk_info.expired_time == 0:
+            return await update.message.reply_text("The registration code does not have an expiration time.")
+        cdk_info.expired_time = cdk_info.expired_time + hours * 3600
+        await CdkOperate.update_cdk(cdk_info)
+        await update.message.reply_text(f"Successfully set the expiration time of registration code {cdk} "
+                                        f"to {convert_to_china_timezone(cdk_info.expired_time)} hours.")
+    
+    @staticmethod
+    @check_admin
     async def del_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(context.args) != 1:
             return await update.message.reply_text("Usage: /deleteRegCode <cdk>")
@@ -300,7 +331,7 @@ class UserCommand:
             logging.error(f"Error: {e}")
             return await update.message.reply_text("[Server]创建用户失败(服务器故障或已经存在相同用户)")
         cdk_info.limit -= 1
-        cdk_info.used_history += f",{str(eff_user.id)}"
+        cdk_info.used_history += f"{str(eff_user.id)},"
         await CdkOperate.update_cdk(cdk_info)
         
         # 绑定 Telegram 和 Jellyfin 账号
