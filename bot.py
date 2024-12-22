@@ -3,8 +3,9 @@ import os
 from telegram import Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, filters
 
+import src.bot.admin as AdminCommand
+import src.bot.user as UserCommand
 from src.bot import callback
-from src.bot.command import AdminCommand, UserCommand
 from src.config import BotConfig, Config
 from src.logger import bot_logger
 
@@ -49,7 +50,6 @@ def run_bot():
     application.add_handler(CommandHandler("deleteRegCode", AdminCommand.del_cdk))
     application.add_handler(CommandHandler("setRegCodeUsageLimit", AdminCommand.set_code_limit))
     application.add_handler(CommandHandler("setRegCodeTime", AdminCommand.set_code_time))
-    
     
     # 按钮回调
     application.add_handler(CallbackQueryHandler(callback.confirm_delete, pattern='confirm_delete'))
