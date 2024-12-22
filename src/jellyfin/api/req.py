@@ -46,7 +46,6 @@ def http_warp(func):
 class JellyfinRequest:
     
     def __init__(self, url: str, auth: int, api_key: Optional[str] = None):
-        self.rclone_root_url = url
         self.client = httpx.AsyncClient(base_url=url)
         self.api_key = api_key
         self.user_data = None
