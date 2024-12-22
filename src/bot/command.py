@@ -73,11 +73,26 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
 class AdminCommand:
     @staticmethod
     @check_admin
+    async def del_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if len(context.args) != 1:
+            return await update.message.reply_text("Usage: /deleteRegCode <cdk>")
+        cdk = context.args[0]
+        if cdk == "all":
+            await CdkOperate.delete_all_cdk()
+            return await update.message.reply_text("Successfully deleted all registration codes.")
+        cdk_info = await CdkOperate.get_cdk(cdk)
+        if not cdk_info:
+            return await update.message.reply_text("Registration code not found.")
+        await CdkOperate.delete_cdk(cdk)
+        await update.message.reply_text(f"Successfully deleted registration code {cdk}.")
+    
+    @staticmethod
+    @check_admin
     async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(context.args) != 1:
-            return await update.message.reply_text("Usage: /setgencdk <true/false>")
+            return await update.message.reply_text("Usage: /setRegCodeGenerateStatus <true/false>")
         if context.args[0] not in ["true", "false"]:
-            return await update.message.reply_text("Usage: /setgencdk <true/false>")
+            return await update.message.reply_text("Usage: /setRegCodeGenerateStatus <true/false>")
         JellyfinConfig.USER_GEN_CDK = context.args[0] == "true"
         JellyfinConfig.save_to_toml()
         await update.message.reply_text(f"Successfully set the registration code generation to {context.args[0]}.")

@@ -80,3 +80,12 @@ class CdkOperate:
             async with session.begin():
                 scalar = await session.execute(select(CdkModel))
                 return scalar.scalars().all()
+    
+    @staticmethod
+    async def delete_all_cdk():
+        """
+        删除所有cdk
+        """
+        async with CdkSessionFactory() as session:
+            async with session.begin():
+                await session.execute(delete(CdkModel))

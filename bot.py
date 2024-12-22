@@ -46,6 +46,7 @@ def run_bot():
     application.add_handler(CommandHandler("update", AdminCommand.update))
     application.add_handler(CommandHandler("setScore", AdminCommand.set_score))
     application.add_handler(CommandHandler("setRegCodeGenerateStatus", AdminCommand.set_gen_cdk))
+    application.add_handler(CommandHandler("deleteRegCode", AdminCommand.del_cdk))
     
     # 按钮回调
     application.add_handler(CallbackQueryHandler(callback.confirm_delete, pattern='confirm_delete'))
