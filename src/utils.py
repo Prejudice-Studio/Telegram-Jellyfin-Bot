@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import logging
 import re
@@ -102,3 +103,11 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
     if user_info:
         return None, user_info
     return None, None
+
+
+def base64_encode(ori_str: str) -> str:
+    return base64.b64encode(ori_str.encode('utf-8')).decode('utf-8')
+
+
+def base64_decode(encode_str: str) -> str:
+    return base64.b64decode(encode_str.encode('utf-8')).decode('utf-8')

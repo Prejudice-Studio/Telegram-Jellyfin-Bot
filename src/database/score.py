@@ -25,10 +25,12 @@ class RedPacketModel(ScoreDatabaseModel):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, index=True)
     telegram_id: Mapped[int] = mapped_column(index=True)  # Telegram ID 发出红包者
     amount: Mapped[int] = mapped_column(nullable=False)  # 红包金额
+    count: Mapped[int] = mapped_column(nullable=False)  # 红包个数
+    current_amount: Mapped[int] = mapped_column(nullable=False)  # 当前剩余金额
     status: Mapped[int] = mapped_column(default=0)  # 状态 0 未领取 1 已领完
-    type: Mapped[int] = mapped_column(default=0)  # 类型 0 普通红包 1 拼手气红包
+    type: Mapped[int] = mapped_column(default=0)  # 类型 0 随机红包 1 均分
+    history: Mapped[str] = mapped_column(nullable=True)  # 领取历史
     create_time: Mapped[int] = mapped_column(nullable=True)  # 创建时间
-    expired_time: Mapped[int] = mapped_column(nullable=True)  # 过期时间
     data: Mapped[str] = mapped_column(nullable=True)  # 预留的其他配置
 
 
@@ -93,3 +95,26 @@ class ScoreOperate:
         async with ScoreSessionFactory() as session:
             async with session.begin():
                 session.add(red_packet_data)
+            
+    @staticmethod
+    async def get_red_packet(red_packet_id: int) -> RedPacketModel | None:
+        """
+        获取红包信息
+        :param red_packet_id: 红包 ID
+        :return: 红包
+        """
+        async with ScoreSessionFactory() as session:
+            async with session.begin():
+                scalar = await session.execute(select(RedPacketModel).filter(RedPacketModel.id == red_packet_id).limit(1))
+                return scalar.scalar_one_or_none()
+            
+    @staticmethod
+    async def update_red_packet(red_packet_data: RedPacketModel):
+        """
+        更新红包数据
+        :param red_packet_data: 红包数据
+        """
+        async with ScoreSessionFactory() as session:
+            async with session.begin():
+                await session.merge(red_packet_data)
+                

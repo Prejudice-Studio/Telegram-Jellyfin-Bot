@@ -36,6 +36,7 @@ def run_bot():
     application.add_handler(CommandHandler("unbind", UserCommand.unbind))
     application.add_handler(CommandHandler("changepassword", UserCommand.reset_pw))
     application.add_handler(CommandHandler("generateRegCode", UserCommand.gen_cdk))
+    application.add_handler(CommandHandler("red", UserCommand.red_packet))
     
     # 管理员命令
     application.add_handler(CommandHandler("summon", AdminCommand.summon))  # 管理员生成注册码
@@ -55,6 +56,8 @@ def run_bot():
     application.add_handler(CallbackQueryHandler(callback.confirm_delete, pattern='confirm_delete'))
     application.add_handler(CallbackQueryHandler(callback.confirm_unbind, pattern='confirm_unbind'))
     application.add_handler(CallbackQueryHandler(callback.cancel, pattern='cancel'))
+    application.add_handler(CallbackQueryHandler(callback.receive_red_packet, pattern='red_'))
+    application.add_handler(CallbackQueryHandler(callback.red_info, pattern='redinfo_'))
     bot_logger.info("Bot started")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 

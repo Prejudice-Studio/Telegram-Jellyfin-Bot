@@ -9,7 +9,7 @@ from telegram.ext import ContextTypes
 from src.bot import check_banned, check_private, command_warp
 from src.config import JellyfinConfig
 from src.database.cdk import CdkModel, CdkOperate
-from src.database.score import ScoreModel, ScoreOperate
+from src.database.score import RedPacketModel, ScoreModel, ScoreOperate
 from src.database.user import UserModel, UsersOperate
 from src.jellyfin.api import JellyfinAPI
 from src.jellyfin_client import client
@@ -238,3 +238,36 @@ async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error: {e}")
         return await update.message.reply_text("[Server]密码更改失败，请检查原密码是否正确.")
+
+
+@check_banned
+@command_warp
+async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    score_data = await ScoreOperate.get_score(update.effective_user.id)
+    if len(context.args) < 2:
+        return await update.message.reply_text("使用方法: /red {TotalScore} {Count} {Mode} 不填与0为随机，1为均分")
+    total, count = context.args[0], context.args[1]
+    mode = 0
+    if len(context.args) == 3:
+        mode = context.args[2]
+    if not total.isdigit() or not count.isdigit() or not mode.isdigit():
+        return await update.message.reply_text("请确保输入数字.")
+    total, count, mode = int(total), int(count), int(mode)
+    if total < 1 or count < 1:
+        return await update.message.reply_text("请确保输入数字大于0.")
+    if score_data.score < total:
+        return await update.message.reply_text("积分不足.")
+    if count < total:
+        return await update.message.reply_text("请确保红包数量大于红包总积分.")
+    if mode == 1 and total % count != 0:
+        return await update.message.reply_text("均分模式下请确保总积分能被红包数量整除.")
+    new_packet = RedPacketModel(telegram_id=update.effective_user.id, amount=total, count=count, type=mode, current_amount=total,
+                                create_time=int(datetime.now().timestamp()))
+    await ScoreOperate.add_red_packet(new_packet)
+    await ScoreOperate.update_score(score_data)
+    keyboard = [[InlineKeyboardButton("点击领取红包", callback_data=f'red_{new_packet.id}')],
+                [InlineKeyboardButton("查看红包详情", callback_data=f'redinfo_{new_packet.id}')],
+                [InlineKeyboardButton("撤回红包", callback_data=f'withdraw_{new_packet.id}')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.effective_chat.send_message(f"用户{update.effective_user.username}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
+                                             reply_markup=reply_markup)
