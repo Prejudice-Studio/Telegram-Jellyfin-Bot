@@ -102,7 +102,7 @@ async def red_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
                       f"类型: {'随机' if packet_data.type == 0 else '平均'}\n" \
                       f"状态: {'已领完' if packet_data.status == 1 else '未领完'}"
         if his_t != "":
-            ret_message += f"\nHistory:\n{his_t}"
+            ret_message += f"\n领取历史:\n{his_t}"
         rep = await update.effective_message.reply_text(ret_message)
         await query.answer()
         await sleep(10)

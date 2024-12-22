@@ -27,10 +27,10 @@ async def set_code_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     limit = int(context.args[1])
     cdk_info = await CdkOperate.get_cdk(cdk)
     if not cdk_info:
-        return await update.message.reply_text("Registration code not found.")
+        return await update.message.reply_text("注册码未找到")
     cdk_info.limit += limit
     await CdkOperate.update_cdk(cdk_info)
-    await update.message.reply_text(f"Successfully set the usage limit of registration code {cdk} to {cdk_info.limit}.")
+    await update.message.reply_text(f"成功设置 {cdk} 的 limit 为 {cdk_info.limit}.")
 
 
 @check_admin
@@ -41,13 +41,12 @@ async def set_code_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
     hours = int(context.args[1])
     cdk_info = await CdkOperate.get_cdk(cdk)
     if not cdk_info:
-        return await update.message.reply_text("Registration code not found.")
+        return await update.message.reply_text("注册码未找到")
     if cdk_info.expired_time == 0:
-        return await update.message.reply_text("The registration code does not have an expiration time.")
+        return await update.message.reply_text("此注册码永久有效")
     cdk_info.expired_time = cdk_info.expired_time + hours * 3600
     await CdkOperate.update_cdk(cdk_info)
-    await update.message.reply_text(f"Successfully set the expiration time of registration code {cdk} "
-                                    f"to {convert_to_china_timezone(cdk_info.expired_time)} hours.")
+    await update.message.reply_text(f"成功设置 {cdk} 为 {convert_to_china_timezone(cdk_info.expired_time)} 小时.")
 
 
 @check_admin
@@ -57,12 +56,12 @@ async def del_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cdk = context.args[0]
     if cdk == "all":
         await CdkOperate.delete_all_cdk()
-        return await update.message.reply_text("Successfully deleted all registration codes.")
+        return await update.message.reply_text("已成功删除所有注册码")
     cdk_info = await CdkOperate.get_cdk(cdk)
     if not cdk_info:
-        return await update.message.reply_text("Registration code not found.")
+        return await update.message.reply_text("注册码未找到")
     await CdkOperate.delete_cdk(cdk)
-    await update.message.reply_text(f"Successfully deleted registration code {cdk}.")
+    await update.message.reply_text(f"已成功删除 {cdk}")
 
 
 @check_admin
@@ -73,7 +72,7 @@ async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("Usage: /setRegCodeGenerateStatus <true/false>")
     JellyfinConfig.USER_GEN_CDK = context.args[0] == "true"
     JellyfinConfig.save_to_toml()
-    await update.message.reply_text(f"Successfully set the registration code generation to {context.args[0]}.")
+    await update.message.reply_text(f"已成功生成注册码\n {context.args[0]}.")
 
 
 @check_admin
@@ -91,7 +90,7 @@ async def summon(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if validity_hours:
             code_data.expired_time = int(datetime.now().timestamp()) + validity_hours * 3600
         await CdkOperate.add_cdk(code_data)
-    text = f"Generated {quantity} registration codes.\n\n" + "".join(f"{code}\n" for code in code_list)
+    text = f"总共生成了 {quantity} 个激活码 \n\n" + "".join(f"{code}\n" for code in code_list)
     if len(text) > 4096:
         file_buffer = BytesIO()
         file_buffer.write(text.encode('utf-8'))
@@ -108,12 +107,12 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = context.args[0]
     jellyfin_user, user_info = await get_user_info(username)
     if not jellyfin_user:
-        return await update.message.reply_text("未发现用户.")
+        return await update.message.reply_text("未找到用户")
     last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
     # 检查积分和签到信息
     if not user_info:
         await update.message.reply_text(
-                f"发现Jellyfin用户，但未绑定Telegram.\n"
+                f"找到Jellyfin用户，但未绑定Telegram.\n"
                 f"用户名: {jellyfin_user['Name']}\n"
                 f"上次登录: {last_login}\n")
     else:
@@ -157,11 +156,11 @@ async def deleteAccountBy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     je_id = jellyfin_user["Id"]
     try:
         if not await client.Users.delete_user(je_id):
-            return await update.message.reply_text("[Server]Failed to delete user.")
+            return await update.message.reply_text("[Server]删除用户失败[2]")
     except Exception as e:
         logging.error(f"Error: {e}")
-        return await update.message.reply_text("[Server]Failed to delete user.")
-    await update.message.reply_text(f"Successfully deleted user {username} from Jellyfin and the system.")
+        return await update.message.reply_text("[Server]删除用户失败[1]")
+    await update.message.reply_text(f"成功删除用户 {username}")
 
 
 async def set_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -170,10 +169,10 @@ async def set_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tg_id = int(context.args[0])
     user_info = await UsersOperate.get_user(tg_id)
     if not user_info:
-        return await update.message.reply_text("User not found.")
+        return await update.message.reply_text("用户未找到")
     user_info.role = 2
     await UsersOperate.update_user(user_info)
-    await update.message.reply_text(f"Successfully set {user_info.fullname} as an administrator.")
+    await update.message.reply_text(f"成功设置 {user_info.fullname} 为管理员")
 
 
 # noinspection PyUnusedLocal
@@ -183,10 +182,10 @@ async def get_all_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ret_text = ""
     for code in code_list:
         if (code.expired_time == 0 or code.expired_time > datetime.now().timestamp()) and code.limit > 0:
-            ret_text += (f"Code <code>{code.cdk}</code> Usage limit: {code.limit} Expired time: "
-                         f"{convert_to_china_timezone(code.expired_time) if code.expired_time is not None else 'NoExpired'}\n")
+            ret_text += (f"注册码<code>{code.cdk}</code> 使用次数: {code.limit} 到期时间: "
+                         f"{convert_to_china_timezone(code.expired_time) if code.expired_time is not None else '永久'}\n")
     
-    text = "All registration codes:\n\n" + ret_text
+    text = "全部注册码:\n\n" + ret_text
     if len(text) > 4096:
         file_buffer = BytesIO()
         file_buffer.write(text.encode('utf-8'))
@@ -201,11 +200,11 @@ async def get_all_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         subprocess.run(['git', 'pull'], check=True)
-        await update.message.reply_text("Git sync completed, the bot is restarting")
+        await update.message.reply_text("Git 同步完成，正在重启")
         python = sys.executable
         os.execl(python, python, *sys.argv)
     except subprocess.CalledProcessError:
-        await update.message.reply_text("Update failed, please check the log")
+        await update.message.reply_text("更新失败，请检查日志")
 
 
 @check_admin
@@ -216,12 +215,12 @@ async def set_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
     score = int(context.args[1])
     _, user_info = await get_user_info(u_name)
     if not user_info:
-        return await update.message.reply_text("User not found.")
+        return await update.message.reply_text("用户未找到")
     score_data = await ScoreOperate.get_score(user_info.telegram_id)
     if not score_data:
         score_data = ScoreModel(telegram_id=user_info.telegram_id, score=score)
         await ScoreOperate.add_score(score_data)
-        return await update.message.reply_text(f"Successfully set the score of user {u_name} to {score}.")
+        return await update.message.reply_text(f"成功设置用户 {u_name} 积分为 {score}.")
     score_data.score = score
     await ScoreOperate.update_score(score_data)
-    await update.message.reply_text(f"Successfully set the score of user {user_info.fullname} to {score}.")
+    await update.message.reply_text(f"成功设置用户 {user_info.fullname} 积分为{score}.")
