@@ -104,7 +104,7 @@ class Users:
             'Fields': info()
         })
     
-    async def reset_password(self, old_pw: str, new_pw: str, user_id: Optional[str] = "{UserID}"):
+    async def change_password(self, old_pw: str = "", new_pw: str = "", user_id: Optional[str] = "{UserID}"):
         """
         重置密码
         :param old_pw:
@@ -112,7 +112,9 @@ class Users:
         :param user_id:
         :return:
         """
-        return await self.client.post(f'Users/{user_id}/PasswordReset', {
-            "CurrentPassword": old_pw,
-            "NewPassword": new_pw
+        if new_pw == "":
+            return await self.client.post(f'Users/{user_id}/Password', json={"resetPassword": True})
+        return await self.client.post(f'Users/{user_id}/Password', json={
+            "CurrentPw": old_pw,
+            "NewPw": new_pw
         })

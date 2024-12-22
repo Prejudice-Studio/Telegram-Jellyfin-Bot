@@ -391,7 +391,7 @@ class UserCommand:
         if old_pw_hash != user_info.password:
             return await update.message.reply_text("原密码错误.")
         try:
-            await client.Users.reset_password(old_pw, new_password, user_info.bind_id)
+            await client.Users.change_password(old_pw, new_password, user_info.bind_id)
             new_password_hash = get_password_hash(new_password)
             user_info.password = new_password_hash
             await UsersOperate.update_user(user_info)
