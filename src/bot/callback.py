@@ -59,7 +59,7 @@ async def receive_red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE)
     packet_id = int(query.data.split("_")[1])
     packet_data = await ScoreOperate.get_red_packet(packet_id)
     if packet_data:
-        if packet_data.status == 1:
+        if packet_data.status != 0:
             return await query.answer("红包已经被领完")
         history = packet_data.history.split(",") if packet_data.history else []
         if any(query.from_user.id == int(entry.split('#')[0]) for entry in history[:-1]):
@@ -92,7 +92,7 @@ async def red_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if packet_data:
         history = packet_data.history.split(",") if packet_data.history else []
         his_t = ""
-        for i in range(len(history)-1):
+        for i in range(len(history) - 1):
             print(history[i].split('#'))
             his_t += f"{base64_decode(history[i].split('#')[1])}: {history[i].split('#')[2]}\n"
         ret_message = f"红包信息\n" \
@@ -107,5 +107,25 @@ async def red_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer()
         await sleep(10)
         await rep.delete()
+    else:
+        await query.answer("红包未找到")
+
+
+async def withdraw_red(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    packet_id = int(query.data.split("_")[1])
+    packet_data = await ScoreOperate.get_red_packet(packet_id)
+    if packet_data:
+        if packet_data.telegram_id != query.from_user.id:
+            return await query.answer("无法撤回他人的红包")
+        if packet_data.status == 1:
+            return await query.answer("红包已经被领完")
+        elif packet_data.status == 2:
+            return await query.answer("红包已经被撤回")
+        packet_data.status = 2
+        await ScoreOperate.update_red_packet(packet_data)
+        score_data = await ScoreOperate.get_score(packet_data.telegram_id)
+        score_data.score += packet_data.current_amount
+        await query.answer(f"红包已经被撤回,已经返还{packet_data.current_amount}积分")
     else:
         await query.answer("红包未找到")

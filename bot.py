@@ -58,6 +58,7 @@ def run_bot():
     application.add_handler(CallbackQueryHandler(callback.cancel, pattern='cancel'))
     application.add_handler(CallbackQueryHandler(callback.receive_red_packet, pattern='red_'))
     application.add_handler(CallbackQueryHandler(callback.red_info, pattern='redinfo_'))
+    application.add_handler(CallbackQueryHandler(callback.withdraw_red, pattern='withdraw_'))
     bot_logger.info("Bot started")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
