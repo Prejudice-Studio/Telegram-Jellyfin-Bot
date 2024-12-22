@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import re
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -32,3 +33,21 @@ def get_password_hash(password: str) -> str:
     pw_string = password + Config.SALT
     sha256_hash.update(pw_string.encode('utf-8'))
     return sha256_hash.hexdigest()
+
+
+def is_password_strong(password):
+    """
+    判断密码是否过于简单
+    :param password: 待判断的密码
+    :return: 如果密码复杂，返回 True；否则返回 False
+    """
+    # 密码长度至少8个字符
+    if len(password) < 8:
+        return False
+    # 至少包含一个小写字母
+    if not re.search(r'[a-z]', password):
+        return False
+    # 至少包含一个大写字母
+    if not re.search(r'[A-Z]', password):
+        return False
+    return True

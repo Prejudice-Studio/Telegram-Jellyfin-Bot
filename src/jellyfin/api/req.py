@@ -7,6 +7,30 @@ from httpx import Response
 from src.logger import je_logger
 
 
+def json_response(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        response = await func(*args, **kwargs)
+        if response.status_code == 204 or response.status_code == 200:
+            return response.json()  # 自动调用 json() 方法
+        else:
+            raise ValueError(f"Request failed, status code: {response.status_code}, response: {response.text}")
+    
+    return wrapper
+
+
+def bool_response(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        response = await func(*args, **kwargs)
+        if response.status_code == 204 or response.status_code == 200:
+            return True
+        else:
+            return False
+    
+    return wrapper
+
+
 def http_warp(func):
     @wraps(func)
     async def wrapper(self, path: str, *args, **kwargs):

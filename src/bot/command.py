@@ -12,13 +12,13 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from src.bot import check_admin, check_banned, command_warp
-from src.config import BotConfig, JellyfinConfig
+from src.config import JellyfinConfig
 from src.database.cdk import CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import UserModel, UsersOperate, UsersSessionFactory
 from src.jellyfin.api import JellyfinAPI
 from src.jellyfin_client import client
-from src.utils import convert_to_china_timezone, get_password_hash
+from src.utils import convert_to_china_timezone, get_password_hash, is_password_strong
 
 
 async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | None]:
@@ -102,7 +102,7 @@ class AdminCommand:
     @check_admin
     async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(context.args) != 1:
-            return await update.message.reply_text("使用方法: /checkinfo <jellyfin用户名/Telegram用户ID>")
+            return await update.message.reply_text("使用方法: /checkinfo <jellyfin用户名/Telegram用户ID/Fullname>")
         username = context.args[0]
         jellyfin_user, user_info = await get_user_info(username)
         if not jellyfin_user:
@@ -165,17 +165,15 @@ class AdminCommand:
     
     @staticmethod
     async def set_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if update.effective_user.id != BotConfig.ADMIN:
-            return await update.message.reply_text("Unauthorized")
         if len(context.args) != 1:
             return await update.message.reply_text("Usage: /op <telegram_id>")
         tg_id = int(context.args[0])
-        user_info = UsersData.get_user_by_id(tg_id)
+        user_info = await UsersOperate.get_user(tg_id)
         if not user_info:
             return await update.message.reply_text("User not found.")
         user_info.role = 1
-        await update.message.reply_text(f"Successfully set {user_info.TelegramFullName} as an administrator.")
-        UsersData.save()
+        await UsersOperate.update_user(user_info)
+        await update.message.reply_text(f"Successfully set {user_info.fullname} as an administrator.")
     
     # 查看注册码
     @staticmethod
@@ -221,7 +219,8 @@ class UserCommand:
         eff_user = update.effective_user
         if not username.isalnum() or not password.isalnum():
             return await update.message.reply_text("用户名与密码不合法.")
-        
+        if not is_password_strong(password):
+            return await update.message.reply_text("密码强度不够(需要至少8位字符，且包含至少一个小写字母和大写字母).")
         cdk_info = await CdkOperate.get_cdk(reg_code)
         if not cdk_info:
             return await update.message.reply_text("注册码不可用")
@@ -282,10 +281,18 @@ class UserCommand:
             score = score_data.score
             checkin_time = score_data.checkin_time
         checkin_time_v = checkin_time if checkin_time is not None else 0
+        limits = "无用户组"
+        if user_info.role == 0:
+            limits = "封禁"
+        elif user_info.role == 1:
+            limits = "普通用户"
+        elif user_info.role == 2:
+            limits = "管理员"
         await update.message.reply_text(
                 f"----------Telegram----------\n"
                 f"TelegramID: {user_info.telegram_id}\n"
                 f"Telegram昵称: {user_info.fullname}\n"
+                f"用户权限: {limits}\n"
                 f"----------Jellyfin----------\n"
                 f"用户名: {jellyfin_user['Name']}\n"
                 f"上次登录: {last_login}\n"
@@ -387,10 +394,11 @@ class UserCommand:
         if len(context.args) != 2:
             return await update.message.reply_text("使用方法: /changepassword 原密码 新密码")
         old_pw, new_password = context.args[0], context.args[1]
-        old_pw_hash = get_password_hash(old_pw)
-        if old_pw_hash != user_info.password:
-            return await update.message.reply_text("原密码错误.")
+        if not is_password_strong(new_password):
+            return await update.message.reply_text("密码强度不够(需要至少8位字符，且包含至少一个小写字母和大写字母).")
+        user_client = JellyfinAPI(JellyfinConfig.BASE_URL, 2)
         try:
+            await user_client.JellyfinReq.login(user_info.account, old_pw)
             await client.Users.change_password(old_pw, new_password, user_info.bind_id)
             new_password_hash = get_password_hash(new_password)
             user_info.password = new_password_hash
@@ -398,15 +406,4 @@ class UserCommand:
             return await update.message.reply_text("密码修改成功.")
         except Exception as e:
             logging.error(f"Error: {e}")
-            return await update.message.reply_text("[Server]Failed to change password.")
-    
-    @staticmethod
-    @check_banned
-    @command_warp
-    async def get_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if update.effective_chat.type != "private":
-            return await update.message.reply_text("请在私聊中使用.")
-        user_info = await UsersOperate.get_user(update.effective_user.id)
-        if not user_info or not user_info.account:
-            return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
-        await update.message.reply_text(f"你的密码是: <code>{user_info.password}</code>", parse_mode='HTML')
+            return await update.message.reply_text("[Server]密码更改失败，请检查原密码是否正确.")

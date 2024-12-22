@@ -1,6 +1,7 @@
 from typing import Optional
 
 from src.jellyfin.api import JellyfinRequest
+from src.jellyfin.api.req import bool_response, json_response
 
 
 def info():
@@ -18,6 +19,7 @@ class Users:
     def __init__(self, client: JellyfinRequest):
         self.client = client
     
+    @json_response
     async def get_user(self, user_id: Optional[str] = "{UserID}"):
         """
         获取用户信息
@@ -26,6 +28,7 @@ class Users:
         """
         return await self.client.get(f'Users/{user_id}')
     
+    @json_response
     async def get_users(self):
         """
         获取所有用户
@@ -33,9 +36,11 @@ class Users:
         """
         return await self.client.get("Users")
     
+    @json_response
     async def get_public_users(self):
         return await self.client.get("Users/Public")
     
+    @json_response
     async def get_user_settings(self, user_id: Optional[str] = "{UserID}", client="emby"):
         """
         获取用户设置
@@ -48,6 +53,7 @@ class Users:
             "client": client
         })
     
+    @bool_response
     async def delete_user(self, user_id: Optional[str] = "{UserID}"):
         """
         删除用户
@@ -56,6 +62,7 @@ class Users:
         """
         return await self.client.delete(f'Users/{user_id}')
     
+    @json_response
     async def get_user_views(self, user_id: Optional[str] = "{UserID}"):
         """
         获取用户视图
@@ -64,6 +71,7 @@ class Users:
         """
         return await self.client.get(f'Users/{user_id}/Views')
     
+    @json_response
     async def get_user_media_folders(self, user_id: Optional[str] = "{UserID}", fields=None):
         """
         获取用户媒体文件夹
@@ -75,6 +83,7 @@ class Users:
             "fields": fields
         })
     
+    @json_response
     async def new_user(self, name: str, password: str):
         """
         创建新用户
@@ -87,6 +96,7 @@ class Users:
             "Password": password
         })
     
+    @json_response
     async def get_item(self, item_id: str, user_id: Optional[str] = "{UserID}"):
         """
         获取项目
@@ -98,12 +108,14 @@ class Users:
             'Fields': info()
         })
     
+    @json_response
     async def get_items(self, item_ids: list, user_id: Optional[str] = "{UserID}"):
         return self.client.get(f"Users/{user_id}/Items", params={
             'Ids': ','.join(str(x) for x in item_ids),
             'Fields': info()
         })
     
+    @bool_response
     async def change_password(self, old_pw: str = "", new_pw: str = "", user_id: Optional[str] = "{UserID}"):
         """
         重置密码
