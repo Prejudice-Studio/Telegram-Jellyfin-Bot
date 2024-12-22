@@ -32,17 +32,21 @@ def check_banned(func):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
         if not (update and update.effective_user):
             return await func(update, context, *args, **kwargs)
-        
-        user_data = await UsersOperate.get_user(update.effective_user.id)
+        eff_user = update.effective_user
+        user_data = await UsersOperate.get_user(eff_user.id)
         if not user_data:
-            await UsersOperate.add_user(UserModel(telegram_id=update.effective_user.id,
-                                                  username=update.effective_user.username,
+            await UsersOperate.add_user(UserModel(telegram_id=eff_user.id,
+                                                  username=eff_user.username,
                                                   role=1,
-                                                  fullname=update.effective_user.full_name,
+                                                  fullname=eff_user.full_name,
                                                   ))
             return await func(update, context, *args, **kwargs)
         if user_data.role == 0:
             return
+        if user_data.fullname != eff_user.full_name or user_data.username != eff_user.username:
+            user_data.username = eff_user.username
+            user_data.fullname = eff_user.full_name
+            await UsersOperate.update_user(user_data)
         return await func(update, context, *args, **kwargs)
     
     return wrapper

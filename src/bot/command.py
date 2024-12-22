@@ -235,8 +235,6 @@ class UserCommand:
         user_info = await UsersOperate.get_user(eff_user.id)
         password_hash = get_password_hash(password)
         if user_info:
-            user_info.fullname = eff_user.full_name
-            user_info.username = eff_user.username
             user_info.account = username
             user_info.password = password_hash
             user_info.bind_id = ret_user["Id"]
@@ -346,8 +344,6 @@ class UserCommand:
         if user_info:
             if user_info.bind_id:
                 return await update.message.reply_text("你已绑定一个Jellyfin账号。请先解绑")
-            user_info.fullname = eff_user.full_name
-            user_info.username = eff_user.username
             user_info.bind_id = jellyfin_user["User"]["Id"]
             user_info.account = username
             user_info.password = password_hash
