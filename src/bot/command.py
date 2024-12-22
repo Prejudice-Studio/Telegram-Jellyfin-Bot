@@ -8,7 +8,6 @@ from datetime import datetime
 from io import BytesIO
 
 from sqlalchemy import or_, select
-from sqlalchemy.util import await_only
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 

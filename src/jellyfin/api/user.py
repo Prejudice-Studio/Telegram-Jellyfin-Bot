@@ -54,11 +54,11 @@ class Users:
         })
     
     @bool_response
-    async def delete_user(self, user_id: Optional[str] = "{UserID}") -> bool:
+    async def delete_user(self, user_id: Optional[str] = "{UserID}"):
         """
         删除用户
         :param user_id: 用户ID
-        :return:
+        :return: bool
         """
         return await self.client.delete(f'Users/{user_id}')
     

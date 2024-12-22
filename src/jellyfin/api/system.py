@@ -1,5 +1,3 @@
-from httpx import Response
-
 from src.jellyfin.api import JellyfinRequest
 from src.jellyfin.api.req import json_response
 
