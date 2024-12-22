@@ -29,6 +29,7 @@ class Config(BaseConfig):
     全局配置
     """
     
+    LOGGING: bool = True  # 是否开启日志输出本地
     SQLALCHEMY_LOG = False  # 是否开启SQLAlchemy日志
     PROXY: str = None  # 代理
     MAX_RETRY: int = 3  # 重试次数
