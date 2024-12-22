@@ -7,7 +7,7 @@ from telegram.ext import ContextTypes
 
 from src.bot import command_warp
 from src.database.score import ScoreOperate
-from src.database.user import UsersOperate
+from src.database.user import Role, UsersOperate
 from src.jellyfin_client import client
 from src.utils import base64_decode, base64_encode
 
@@ -25,8 +25,10 @@ async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logging.error(e)
             await update.effective_user.send_message("账户删除失败")
+        user_info.role = Role.SEA.value
+        await UsersOperate.update_user(user_info)
         await UsersOperate.clear_bind(update.effective_user.id)
-        await update.effective_user.send_message("账户删除成")
+        await update.effective_user.send_message("账户删除成功")
     else:
         await update.effective_user.send_message("无法找到账户")
     await query.delete_message()

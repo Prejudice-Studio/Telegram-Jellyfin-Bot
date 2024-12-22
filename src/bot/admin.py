@@ -14,7 +14,7 @@ from src.bot import check_admin
 from src.config import JellyfinConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
-from src.database.user import UsersOperate
+from src.database.user import Role, UsersOperate
 from src.jellyfin_client import client
 from src.utils import convert_to_china_timezone, get_user_info
 
@@ -163,14 +163,24 @@ async def deleteAccountBy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"成功删除用户 {username}")
 
 
-async def set_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if len(context.args) != 1:
-        return await update.message.reply_text("Usage: /op <telegram_id>")
-    tg_id = int(context.args[0])
-    user_info = await UsersOperate.get_user(tg_id)
+async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 2:
+        return await update.message.reply_text("Usage: /setUserGroup <id/name> <group>")
+    u_name = int(context.args[0])
+    group = context.args[1].upper()
+    _, user_info = await get_user_info(u_name)
     if not user_info:
         return await update.message.reply_text("用户未找到")
-    user_info.role = 2
+    role_map = {
+        "ADMIN": Role.ADMIN.value,
+        "BANNED": Role.BANNED.value,
+        "SEA": Role.SEA.value,
+        "ORDINARY": Role.ORDINARY.value,
+        "STAR": Role.STAR.value
+    }
+    if group not in role_map:
+        return await update.message.reply_text("无效的用户组")
+    user_info.role = role_map[group]
     await UsersOperate.update_user(user_info)
     await update.message.reply_text(f"成功设置 {user_info.fullname} 为管理员")
 

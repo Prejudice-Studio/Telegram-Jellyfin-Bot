@@ -15,8 +15,10 @@ class UsersDatabaseModel(AsyncAttrs, DeclarativeBase):
 class Role(Enum):
     """角色(权限)"""
     BANNED = 0
-    USER = 1
+    SEA = 1
     ADMIN = 2
+    ORDINARY = 3
+    STAR = 4
 
 
 class UserModel(UsersDatabaseModel):
@@ -25,7 +27,7 @@ class UserModel(UsersDatabaseModel):
     telegram_id: Mapped[int] = mapped_column(primary_key=True, index=True)  # Telegram ID
     username: Mapped[str] = mapped_column(nullable=True)  # 用户名
     fullname: Mapped[str] = mapped_column(nullable=True)  # TG 全名
-    role: Mapped[int] = mapped_column(default=Role.USER.value)
+    role: Mapped[int] = mapped_column(default=Role.SEA.value)
     config: Mapped[str] = mapped_column(nullable=True)  # 用户配置 后期预留，可能塞json进去
     account: Mapped[str] = mapped_column(nullable=True)  # 账户
     password: Mapped[str] = mapped_column(nullable=True)  # 密码 hash

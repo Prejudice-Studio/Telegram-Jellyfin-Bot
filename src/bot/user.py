@@ -10,7 +10,7 @@ from src.bot import check_banned, check_private, command_warp
 from src.config import JellyfinConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import RedPacketModel, ScoreModel, ScoreOperate
-from src.database.user import UserModel, UsersOperate
+from src.database.user import Role, UserModel, UsersOperate
 from src.jellyfin.api import JellyfinAPI
 from src.jellyfin_client import client
 from src.utils import convert_to_china_timezone, get_password_hash, is_password_strong
@@ -190,11 +190,12 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info.bind_id = jellyfin_user["User"]["Id"]
         user_info.account = username
         user_info.password = password_hash
+        user_info.role = Role.ORDINARY.value
         await UsersOperate.update_user(user_info)
         await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
     else:
         user_info = UserModel(telegram_id=eff_user.id, username=eff_user.username, fullname=eff_user.full_name,
-                              account=username, password=password_hash, bind_id=jellyfin_user["User"]["Id"])
+                              account=username, password=password_hash, bind_id=jellyfin_user["User"]["Id"], role=Role.ORDINARY.value)
         await UsersOperate.add_user(user_info)
         await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
 
