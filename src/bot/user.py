@@ -21,22 +21,22 @@ from src.utils import convert_to_china_timezone, get_password_hash, is_password_
 @check_private
 async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not JellyfinConfig.USER_GEN_CDK:
-        return await update.message.reply_text("Registration code generation is disabled.")
+        return await update.message.reply_text("用户注册码生成已关闭")
     score_data = await ScoreOperate.get_score(update.effective_user.id)
     if score_data is None or score_data.score < 200:
-        return await update.message.reply_text("Insufficient points (200 points required).")
+        return await update.message.reply_text("积分不足 (至少需要200积分).")
     quantity = 1
     if len(context.args) == 1:
         quantity = int(context.args[0])
     if quantity * 200 > score_data.score:
-        return await update.message.reply_text(f"Insufficient points. Current points: {score_data.score}")
+        return await update.message.reply_text(f"积分不足，当前积分: {score_data.score}")
     code_list = []
     for _ in range(quantity):
         code = f"reg_{''.join(random.choices(string.ascii_letters + string.digits, k=16))}_prej"
         code_data = CdkModel(cdk=code, limit=1, expired_time=0)
         code_list.append(code)
         await CdkOperate.add_cdk(code_data)
-    text = f"Generated {quantity} registration codes.\n\n" + "".join(f"{code}\n" for code in code_list)
+    text = f"生成 {quantity} 个注册码\n\n" + "".join(f"{code}\n" for code in code_list)
     score_data.score -= quantity * 200
     await ScoreOperate.update_score(score_data)
     await update.message.reply_text(text)
@@ -96,7 +96,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         jellyfin_user = await client.Users.get_user(user_info.bind_id)
     except Exception as e:
         logging.error(f"Error: {e}")
-        return await update.message.reply_text("[Server]Failed to connect to Jellyfin.")
+        return await update.message.reply_text("[Server]服务器发生错误，请检查日志")
     logging.info(f"Jellyfin user: {jellyfin_user}")
     if not jellyfin_user:
         return await update.message.reply_text("用户未找到.")
@@ -137,7 +137,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info or user_info.account == "":
-        return await update.message.reply_text("无Jellyfin账号与该Telegram账号绑定.")
+        return await update.message.reply_text("无Jellyfin账号与该Telegram账号绑定。")
     # 二次确认
     keyboard = [[InlineKeyboardButton("确认", callback_data='confirm_delete'),
                  InlineKeyboardButton("取消", callback_data='cancel')]]
@@ -156,12 +156,12 @@ async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
         score_info.checkin_time = 0
     last_sign_date = datetime.fromtimestamp(score_info.checkin_time).date()
     if last_sign_date == datetime.now().date():
-        return await update.message.reply_text("今天已经签到过了.")
+        return await update.message.reply_text("今天已经签到过了。")
     points = random.randint(1, 10)
     score_info.score += points
     score_info.checkin_time = int(datetime.now().timestamp())
     await ScoreOperate.update_score(score_info)
-    await update.message.reply_text(f"签到成功! 你获得了 {points} 积分. 当前积分: {score_info.score}.")
+    await update.message.reply_text(f"签到成功! 你获得了 {points} 积分。当前积分: {score_info.score}")
 
 
 @check_banned

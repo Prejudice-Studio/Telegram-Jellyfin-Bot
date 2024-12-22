@@ -61,11 +61,11 @@ def command_warp(func):
             last_check_time = datetime.now().timestamp()
             if not await check_server_connectivity():
                 server_close = True
-                return await update.message.reply_text("Server is closed, please try again later.")
+                return await update.message.reply_text("服务器已经关闭，请稍后再试。")
             else:
                 server_close = False
         if server_close:
-            return await update.message.reply_text("Server is closed, please try again later.")
+            return await update.message.reply_text("服务器已经关闭，请稍后再试。")
         return await func(update, context, *args, **kwargs)
     
     return wrapper
@@ -77,7 +77,7 @@ def check_private(func):
         if not (update and update.effective_user):
             return
         if update.effective_chat.type != "private":
-            rep = await update.message.reply_text("请在私聊中使用.")
+            rep = await update.message.reply_text("请在私聊中使用。")
             await sleep(1)
             await update.message.delete()
             await rep.delete()
