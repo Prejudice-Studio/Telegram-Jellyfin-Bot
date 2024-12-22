@@ -6,7 +6,7 @@ from datetime import datetime
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
-from src.bot import check_banned, command_warp
+from src.bot import check_banned, check_private, command_warp
 from src.config import JellyfinConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
@@ -18,6 +18,7 @@ from src.utils import convert_to_china_timezone, get_password_hash, is_password_
 
 @check_banned
 @command_warp
+@check_private
 async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not JellyfinConfig.USER_GEN_CDK:
         return await update.message.reply_text("Registration code generation is disabled.")
@@ -43,6 +44,7 @@ async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @check_banned
 @command_warp
+@check_private
 async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 3:
         return await update.message.reply_text("Usage: /reg <username> <password> <reg_code>")
@@ -131,6 +133,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # noinspection PyUnusedLocal
 @check_banned
 @command_warp
+@check_private
 async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info or user_info.account == "":
@@ -144,6 +147,7 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # noinspection PyUnusedLocal
 @check_banned
+@check_private
 async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
     score_info = await ScoreOperate.get_score(update.effective_user.id)
     if not score_info:
@@ -162,9 +166,8 @@ async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @check_banned
 @command_warp
+@check_private
 async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type != "private":
-        return await update.message.reply_text("请在私聊中使用.")
     if len(context.args) != 2:
         return await update.message.reply_text("使用方法: /bind 用户名 密码")
     username, password = context.args
@@ -199,6 +202,7 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # noinspection PyUnusedLocal
 @check_banned
 @command_warp
+@check_private
 async def unbind(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info or not user_info.bind_id:
@@ -213,9 +217,8 @@ async def unbind(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @check_banned
 @command_warp
+@check_private
 async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type != "private":
-        return await update.message.reply_text("请在私聊中使用.")
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info or not user_info.bind_id:
         return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")

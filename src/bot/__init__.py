@@ -1,3 +1,4 @@
+from asyncio import sleep
 from datetime import datetime
 from functools import wraps
 
@@ -65,6 +66,22 @@ def command_warp(func):
                 server_close = False
         if server_close:
             return await update.message.reply_text("Server is closed, please try again later.")
+        return await func(update, context, *args, **kwargs)
+    
+    return wrapper
+
+
+def check_private(func):
+    @wraps(func)
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        if not (update and update.effective_user):
+            return
+        if update.effective_chat.type != "private":
+            rep = await update.message.reply_text("请在私聊中使用.")
+            await sleep(1)
+            await update.message.delete()
+            await rep.delete()
+            return
         return await func(update, context, *args, **kwargs)
     
     return wrapper
