@@ -95,3 +95,4 @@ class JellyfinConfig(BaseConfig):
 Config.update_from_toml()
 BotConfig.update_from_toml('Bot')
 JellyfinConfig.update_from_toml('Jellyfin')
+FlaskConfig.update_from_toml('Flask')
