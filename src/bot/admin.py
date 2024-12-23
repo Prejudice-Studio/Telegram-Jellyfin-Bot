@@ -159,6 +159,9 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not jellyfin_user:
         return await update.message.reply_text("User not found.")
     je_id = jellyfin_user["Id"]
+    if user_info:
+        user_info.role = Role.STAR.value
+        await UsersOperate.update_user(user_info)
     try:
         if not await client.Users.delete_user(je_id):
             return await update.message.reply_text("[Server]删除用户失败[2]")

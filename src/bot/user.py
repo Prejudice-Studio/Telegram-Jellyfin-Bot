@@ -83,11 +83,12 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     password_hash = get_password_hash(password)
     if user_info:
-        user_info.account, user_info.password, user_info.bind_id = username, password_hash, ret_user["Id"]
+        user_info.account, user_info.password, user_info.bind_id, user_info.role = username, password_hash, ret_user[
+            "Id"], Role.ORDINARY.value
         await UsersOperate.update_user(user_info)
     else:
         user_info = UserModel(telegram_id=eff_user.id, username=eff_user.username, fullname=eff_user.full_name,
-                              account=username, password=password_hash, bind_id=ret_user["Id"])
+                              account=username, password=password_hash, bind_id=ret_user["Id"], role=Role.ORDINARY.value)
         await UsersOperate.add_user(user_info)
     return await update.message.reply_text(f"注册成功，自动与Telegram绑定. 用户名: {username}")
 
