@@ -33,6 +33,39 @@ async def get_bgm_info(bgm_id: str) -> str | None:
 
 @check_banned
 @check_private
+async def check_require(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_info = await UsersOperate.get_user(update.effective_user.id)
+    if user_info.role not in {Role.STAR.value, Role.ADMIN.value}:
+        return await update.message.reply_text("您没有权限使用此功能")
+    if len(context.args) != 1 or not context.args[0].isdigit():
+        return await update.message.reply_text("Usage: /check_require <require_id>")
+    req_id = int(context.args[0])
+    req_info = await BangumiOperate.get_req_bgm(req_id)
+    if not req_info:
+        return await update.message.reply_text("请求ID不存在")
+    if req_info.telegram_id != update.effective_user.id and user_info.role != Role.ADMIN.value:
+        return await update.message.reply_text("您没有权限查看此请求")
+    other_info = json.loads(str(req_info.other_info))
+    rep_text = (f"来自 {'您' if user_info.role != Role.ADMIN.value else '用户 ' + update.effective_user.full_name} 的请求:\n"
+                f"番剧名: {other_info['name_cn']}\n"
+                f"上映日期: {other_info['date']}\n"
+                f"集数: {other_info['total_episodes']}\n"
+                f"Bgm链接: https://bgm.tv/subject/{req_info.bangumi_id}\n"
+                f"当前状态: {str(ReqStatue(req_info.status)).replace('ReqStatue.', '')}")
+    if user_info.role == Role.ADMIN.value:
+        keyboard = [
+            [InlineKeyboardButton("接受", callback_data=f'reqa_accepted_{req_info.id}'),
+             InlineKeyboardButton("拒绝", callback_data=f'reqa_rejected_{req_info.id}'),
+             InlineKeyboardButton("完成", callback_data=f'reqa_completed_{req_info.id}')]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text(rep_text, reply_markup=reply_markup)
+    else:
+        await update.message.reply_text(rep_text)
+
+
+@check_banned
+@check_private
 async def require(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if user_info.role != Role.STAR.value and user_info.role != Role.ADMIN.value:
@@ -99,6 +132,7 @@ async def require_submit(update: Update, context: ContextTypes.DEFAULT_TYPE):
             timestamp=int(datetime.now().timestamp()),
             other_info=json.dumps(id_info)
     )
+    await BangumiOperate.add_req_bgm(req_info)
     rep_text = (f"来自 {query.from_user.full_name} 的请求:\n"
                 f"番剧名: {id_info['name_cn']}\n"
                 f"上映日期: {id_info['date']}\n"
@@ -109,7 +143,6 @@ async def require_submit(update: Update, context: ContextTypes.DEFAULT_TYPE):
                  InlineKeyboardButton("拒绝", callback_data=f'reqa_rejected_{req_info.id}'),
                  InlineKeyboardButton("完成", callback_data=f'reqa_completed_{req_info.id}')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await BangumiOperate.add_req_bgm(req_info)
     await context.bot.send_message(chat_id=BotConfig.ADMIN, text=rep_text, reply_markup=reply_markup)
     await query.answer()
     await query.edit_message_text(f"提交成功，Require ID <code>{req_info.id}</code>", parse_mode='HTML')
@@ -143,7 +176,7 @@ async def require_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 InlineKeyboardButton("完成", callback_data=f'reqa_completed_{req_info.id}')
             ]
         ])
-        other_info = json.loads(req_info.other_info)
+        other_info = json.loads(str(req_info.other_info))
         await query.edit_message_text(ori_msg, reply_markup=reply_markup)
         await context.bot.send_message(req_info.telegram_id, f"您的请求ID: {req_info.id} 发生变化\n"
                                                              f"番名：{other_info['name_cn']}\n"
