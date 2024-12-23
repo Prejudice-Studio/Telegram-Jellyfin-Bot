@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 
 from telegram import Update
@@ -9,6 +10,7 @@ import src.bot.user as UserCommand
 from src.bot import callback
 from src.config import BotConfig, Config
 from src.logger import bot_logger
+from src.webhook.api import run_flask
 
 if Config.PROXY and Config.PROXY != "":
     os.environ['https_proxy'] = Config.PROXY
@@ -71,4 +73,11 @@ def run_bot():
 
 
 if __name__ == "__main__":
-    run_bot()
+    bot_process = multiprocessing.Process(target=run_bot)
+    api_process = multiprocessing.Process(target=run_flask)
+    
+    bot_process.start()
+    api_process.start()
+    
+    bot_process.join()
+    api_process.join()

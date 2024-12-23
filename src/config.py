@@ -60,6 +60,19 @@ class Config(BaseConfig):
     BANGUMI_TOKEN: str = ""  # Bangumi Token
 
 
+class LoggerConfig(BaseConfig):
+    pass
+
+
+class FlaskConfig(BaseConfig):
+    """
+    Flask API 配置
+    """
+    ENABLE: bool = False  # 是否启用Flask API 主要用于webhook
+    HOST: str = '0.0.0.0'
+    PORT: int = 5000
+
+
 class BotConfig(BaseConfig):
     """
     机器人配置
