@@ -23,19 +23,18 @@ from src.utils import convert_to_china_timezone, get_user_info
 async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rep_text = (f"欢迎使用Telegram-Jellyfin-Bot，以下为管理员命令部分\n"
                 f"基本命令:\n"
-                f"<code>/summon <usage_limit> <quantity> [validity_hours]</code> 生成注册码\n"
-                f"<code>/checkinfo <jellyfin用户名/Telegram用户ID/Fullname></code> 查看用户信息\n"
-                f"<code>/deleteAccount <ID/名字/TG昵称></code> 删除用户\n"
-                f"<code>/setGroup <id/name> <group></code> 设置用户权限\n"
+                f"<code>/summon [limit] [quantity] [validity_hours]</code> 生成注册码 (limit：限制数，quantity：数量，validity_hours：有效小时数)\n"
+                f"<code>/checkinfo [jellyfin用户名/Telegram用户ID/Fullname]</code> 查看用户信息\n"
+                f"<code>/deleteAccount [ID/名字/TG昵称]</code> 删除用户\n"
+                f"<code>/setGroup [id/name] [group]</code> 设置用户权限\n"
                 f"<code>/cdks</code> 查看所有注册码\n"
                 f"<code>/update</code> 更新Bot\n"
-                f"<code>/setScore <id/username> <score></code> 设置用户积分\n"
-                f"<code>/setCDKgen <true/false></code> 是否允许用户生成注册码\n"
-                f"<code>/deleteCDK <cdk></code> 删除某个注册码\n"
-                f"<code>/setCdkLimit <cdk> <limit></code> 设置注册码使用次数\n"
-                f"<code>/setCdkTime <cdk> <hours></code> 设置注册码有效时间\n"
+                f"<code>/setScore [id/username] [score]</code> 设置用户积分\n"
+                f"<code>/setCDKgen [true/false]</code> 是否允许用户生成注册码\n"
+                f"<code>/deleteCDK [cdk]</code> 删除某个注册码\n"
+                f"<code>/setCdkLimit [cdk] [limit]</code> 设置注册码使用次数\n"
+                f"<code>/setCdkTime [cdk] [hours]</code> 设置注册码有效时间\n"
                 f"<code>/requireList</code> 查看番剧请求列表\n")
-    
     await update.message.reply_text(rep_text, parse_mode="HTML")
 
 
