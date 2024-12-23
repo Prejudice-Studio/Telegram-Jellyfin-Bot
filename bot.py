@@ -63,6 +63,7 @@ def run_bot():
     application.add_handler(CallbackQueryHandler(callback.withdraw_red, pattern='withdraw_'))
     application.add_handler(CallbackQueryHandler(Require.require_choose, pattern='reqb_'))
     application.add_handler(CallbackQueryHandler(Require.require_submit, pattern='req_'))
+    application.add_handler(CallbackQueryHandler(Require.require_action, pattern='reqa_')) # 管理员处理请求
     bot_logger.info("Bot started")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 

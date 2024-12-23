@@ -13,7 +13,7 @@ from src.database.user import Role, UserModel, UsersOperate
 from src.jellyfin.api import JellyfinAPI
 from src.jellyfin_client import client
 from src.logger import bot_logger
-from src.utils import ROLE_MAP, convert_to_china_timezone, get_password_hash, is_password_strong
+from src.utils import convert_to_china_timezone, get_password_hash, is_password_strong
 
 
 @check_banned
@@ -116,7 +116,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         score, checkin_time = score_data.score, score_data.checkin_time
     checkin_time_v = checkin_time if checkin_time is not None else 0
-    limits = next((role for role, value in ROLE_MAP.items() if user_info.role == value), "无用户组")
+    limits = Role(user_info.role).name
     await update.message.reply_text(
             f"----------Telegram----------\n"
             f"TelegramID: {user_info.telegram_id}\n"
