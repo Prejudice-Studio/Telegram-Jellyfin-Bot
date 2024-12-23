@@ -151,9 +151,9 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 @check_admin
-async def deleteAccountBy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
-        return await update.message.reply_text("Usage: /deleteAccountBy <jellyfin_username>")
+        return await update.message.reply_text("Usage: /deleteAccount <jellyfin_username>")
     username = context.args[0]
     jellyfin_user, user_info = await get_user_info(username)
     if not jellyfin_user:
