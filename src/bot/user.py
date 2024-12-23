@@ -16,6 +16,23 @@ from src.logger import bot_logger
 from src.utils import convert_to_china_timezone, get_password_hash, is_password_strong
 
 
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    rep_text = (f"欢迎使用Telegram-Jellyfin-Bot，使用 <code>/help </code> 查看帮助\n"
+                f"基本命令:\n"
+                f"<code>/reg 账户 密码 注册码</code> 注册Jellyfin账号\n"
+                f"<code>/info</code> 查看账号信息\n"
+                f"<code>/bind 账户 密码</code> 绑定账户 <code>/unbind</code> 解绑\n"
+                f"<code>/delete</code> 删除账号\n"
+                f"<code>/sign</code> 每日签到\n"
+                f"<code>/red</code> 发红包（仅限群聊内）\n"
+                f"<code>/password 原密码 新密码</code> 更改账户密码\n"
+                f"<code>/gencdk</code> 生成注册码\n"
+                f"<code>/require BangumiID/链接/番剧名字</code> 申请增加番剧\n"
+                f"<code>/checkrequire 请求ID</code> 查看番剧申请状态\n")
+    
+    await update.message.reply_text(rep_text, parse_mode="HTML")
+
+
 @check_banned
 @command_warp
 @check_private
@@ -47,7 +64,7 @@ async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @check_private
 async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) < 2:
-        return await update.message.reply_text("Usage: /reg <username> <password> <reg_code>")
+        return await update.message.reply_text("Usage: /reg <username> <password> <cdk>")
     username, password, reg_code = context.args[0], context.args[1], None
     if len(context.args) == 3:
         reg_code = context.args[2]
@@ -222,7 +239,7 @@ async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user_info or not user_info.bind_id:
         return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
     if len(context.args) != 2:
-        return await update.message.reply_text("使用方法: /changepassword 原密码 新密码")
+        return await update.message.reply_text("使用方法: /password 原密码 新密码")
     old_pw, new_password = context.args[0], context.args[1]
     if not is_password_strong(new_password):
         return await update.message.reply_text("密码强度不够(需要至少8位字符，且包含至少一个小写字母和大写字母).")
@@ -240,6 +257,8 @@ async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @check_banned
 async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type != "group" and update.effective_chat.type != "supergroup":
+        return await update.message.reply_text("请在群聊内使用")
     score_data = await ScoreOperate.get_score(update.effective_user.id)
     if len(context.args) < 2:
         return await update.message.reply_text("使用方法: /red {TotalScore} {Count} {Mode} 不填与0为随机，1为均分")

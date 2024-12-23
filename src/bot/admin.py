@@ -20,9 +20,29 @@ from src.utils import convert_to_china_timezone, get_user_info
 
 
 @check_admin
-async def set_code_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    rep_text = (f"欢迎使用Telegram-Jellyfin-Bot，以下为管理员命令部分\n"
+                f"基本命令:\n"
+                f"<code>/summon <usage_limit> <quantity> [validity_hours]</code> 生成注册码\n"
+                f"<code>/checkinfo <jellyfin用户名/Telegram用户ID/Fullname></code> 查看用户信息\n"
+                f"<code>/deleteAccount <ID/名字/TG昵称></code> 删除用户\n"
+                f"<code>/setGroup <id/name> <group></code> 设置用户权限\n"
+                f"<code>/cdks</code> 查看所有注册码\n"
+                f"<code>/update</code> 更新Bot\n"
+                f"<code>/setScore <id/username> <score></code> 设置用户积分\n"
+                f"<code>/setCDKgen <true/false></code> 是否允许用户生成注册码\n"
+                f"<code>/deleteCDK <cdk></code> 删除某个注册码\n"
+                f"<code>/setCdkLimit <cdk> <limit></code> 设置注册码使用次数\n"
+                f"<code>/setCdkTime <cdk> <hours></code> 设置注册码有效时间\n"
+                f"<code>/requireList</code> 查看番剧请求列表\n")
+    
+    await update.message.reply_text(rep_text, parse_mode="HTML")
+
+
+@check_admin
+async def set_cdk_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
-        return await update.message.reply_text("Usage: /setRegCodeUsageLimit <cdk> <limit>")
+        return await update.message.reply_text("Usage: /setCdkLimit <cdk> <limit>")
     cdk = context.args[0]
     limit = int(context.args[1])
     cdk_info = await CdkOperate.get_cdk(cdk)
@@ -34,9 +54,9 @@ async def set_code_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 @check_admin
-async def set_code_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def set_cdk_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
-        return await update.message.reply_text("Usage: /setRegCodeTime <cdk> <hours>")
+        return await update.message.reply_text("Usage: /setCdkTime <cdk> <hours>")
     cdk = context.args[0]
     hours = int(context.args[1])
     cdk_info = await CdkOperate.get_cdk(cdk)
@@ -52,7 +72,7 @@ async def set_code_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @check_admin
 async def del_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
-        return await update.message.reply_text("Usage: /deleteRegCode <cdk>")
+        return await update.message.reply_text("Usage: /deletecdk <cdk>")
     cdk = context.args[0]
     if cdk == "all":
         await CdkOperate.delete_all_cdk()
@@ -67,9 +87,9 @@ async def del_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @check_admin
 async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
-        return await update.message.reply_text("Usage: /setRegCodeGenerateStatus <true/false>")
+        return await update.message.reply_text("Usage: /setcdkgen <true/false>")
     if context.args[0] not in ["true", "false"]:
-        return await update.message.reply_text("Usage: /setRegCodeGenerateStatus <true/false>")
+        return await update.message.reply_text("Usage: /setcdkgen <true/false>")
     JellyfinConfig.USER_GEN_CDK = context.args[0] == "true"
     JellyfinConfig.save_to_toml()
     await update.message.reply_text(f"已成功生成注册码\n {context.args[0]}.")
@@ -173,7 +193,7 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
-        return await update.message.reply_text("Usage: /setUserGroup <id/name> <group>")
+        return await update.message.reply_text("Usage: /setUser <id/name> <group>")
     u_name = int(context.args[0])
     group = context.args[1].upper()
     _, user_info = await get_user_info(u_name)
@@ -188,7 +208,7 @@ async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # noinspection PyUnusedLocal
 @check_admin
-async def get_all_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def get_all_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     code_list = await CdkOperate.get_all_cdk()
     ret_text = ""
     for code in code_list:
@@ -203,7 +223,7 @@ async def get_all_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_buffer.seek(0)
         await update.message.reply_document(document=file_buffer, filename="codes.txt")
     else:
-        await update.message.reply_text(text)
+        await update.message.reply_text(text, parse_mode="HTML")
 
 
 # noinspection PyUnusedLocal

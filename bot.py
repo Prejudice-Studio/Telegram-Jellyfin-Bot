@@ -31,31 +31,33 @@ def run_bot():
                    .build())
     
     # 普通命令
-    application.add_handler(CommandHandler("reg", UserCommand.reg))
+    application.add_handler(CommandHandler(["start", "help"], UserCommand.start))  # 帮助
+    application.add_handler(CommandHandler("reg", UserCommand.reg))  # 注册账户 需要cdk（部分权限账户不需要）
     application.add_handler(CommandHandler("info", UserCommand.info))
     application.add_handler(CommandHandler("delete", UserCommand.delete_account))
     application.add_handler(CommandHandler("sign", UserCommand.sign))
     application.add_handler(CommandHandler("bind", UserCommand.bind))
     application.add_handler(CommandHandler("unbind", UserCommand.unbind))
-    application.add_handler(CommandHandler("changepassword", UserCommand.reset_pw))
-    application.add_handler(CommandHandler("generateRegCode", UserCommand.gen_cdk))
-    application.add_handler(CommandHandler("red", UserCommand.red_packet))
-    application.add_handler(CommandHandler("require", Require.require))
-    application.add_handler(CommandHandler("checkrequire", Require.check_require))
+    application.add_handler(CommandHandler("password", UserCommand.reset_pw))  # 修改密码
+    application.add_handler(CommandHandler("gencdk", UserCommand.gen_cdk))  # 生成cdk
+    application.add_handler(CommandHandler("red", UserCommand.red_packet))  # 发红包
+    application.add_handler(CommandHandler("require", Require.require))  # 申请番剧 仅star用户
+    application.add_handler(CommandHandler("checkrequire", Require.check_require))  # 番剧申请状态 仅star用户
     
     # 管理员命令
-    application.add_handler(CommandHandler("summon", AdminCommand.summon))  # 管理员生成注册码
+    application.add_handler(CommandHandler("shelp", AdminCommand.shelp))  # 生成注册码
+    application.add_handler(CommandHandler("summon", AdminCommand.summon))  # 生成注册码
     application.add_handler(CommandHandler("checkinfo", AdminCommand.checkinfo))  # 管理员查看用户信息
-    application.add_handler(CommandHandler("deleteAccount", AdminCommand.delete_account))  # 管理员删除用户
-    application.add_handler(CommandHandler("setUser", AdminCommand.set_group, filters=filters.ChatType.PRIVATE & filters.Chat(
-            chat_id=BotConfig.ADMIN)))  # 设置管理员
-    application.add_handler(CommandHandler("regcodes", AdminCommand.get_all_code))
+    application.add_handler(CommandHandler("deleteAccount", AdminCommand.delete_account))  # 删除用户
+    application.add_handler(CommandHandler("setGroup", AdminCommand.set_group, filters=filters.ChatType.PRIVATE & filters.Chat(
+            chat_id=BotConfig.ADMIN)))  # 设置用户权限
+    application.add_handler(CommandHandler("cdks", AdminCommand.get_all_cdk))  # 查看所有注册码
     application.add_handler(CommandHandler("update", AdminCommand.update))
-    application.add_handler(CommandHandler("setScore", AdminCommand.set_score))
-    application.add_handler(CommandHandler("setRegCodeGenerateStatus", AdminCommand.set_gen_cdk))
-    application.add_handler(CommandHandler("deleteRegCode", AdminCommand.del_cdk))
-    application.add_handler(CommandHandler("setRegCodeUsageLimit", AdminCommand.set_code_limit))
-    application.add_handler(CommandHandler("setRegCodeTime", AdminCommand.set_code_time))
+    application.add_handler(CommandHandler("setScore", AdminCommand.set_score))  # 设置用户积分
+    application.add_handler(CommandHandler("setCDKgen", AdminCommand.set_gen_cdk))  # 是否允许用户生成注册码
+    application.add_handler(CommandHandler("deleteCDK", AdminCommand.del_cdk))  # 删除某个注册码
+    application.add_handler(CommandHandler("setCdkLimit", AdminCommand.set_cdk_limit))
+    application.add_handler(CommandHandler("setCdkTime", AdminCommand.set_cdk_time))
     application.add_handler(CommandHandler("requireList", Require.require_list))
     
     # 按钮回调
