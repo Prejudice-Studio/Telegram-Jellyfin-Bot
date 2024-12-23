@@ -11,6 +11,7 @@ from src.config import BotConfig
 from src.database.bangumi import BangumiOperate, BangumiRequireModel, ReqStatue
 from src.database.user import Role, UsersOperate
 from src.jellyfin_client import Bangumi_client
+from src.utils import convert_to_china_timezone
 
 
 async def get_bgm_info(bgm_id: str) -> str | None:
@@ -184,3 +185,33 @@ async def require_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer(response_text)
     else:
         await query.answer("未知操作")
+
+
+@check_admin
+async def require_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    req_list = await BangumiOperate.get_all_handle_list()
+    rep_text = ""
+    for req in req_list:
+        other_info = json.loads(str(req.other_info))
+        tg_info = await UsersOperate.get_user(req.telegram_id)
+        rep_text += (f"来自 <b>{tg_info.fullname}</b> 的请求:\n"
+                     f"用户ID: <code>{tg_info.telegram_id}</code>\n"
+                     f"Username: @{tg_info.username if tg_info.username else "N/A"}\n"
+                     f"发起时间: {convert_to_china_timezone(req.timestamp)}\n"
+                     f"<b>番剧名</b>: {other_info['name_cn']}\n"
+                     f"<b>上映日期</b>: {other_info['date']}\n"
+                     f"<b>集数</b>: {other_info['total_episodes']}\n"
+                     f"<b>Bgm链接</b>: https://bgm.tv/subject/{req.bangumi_id}\n"
+                     f"当前状态: <b>{str(ReqStatue(req.status)).replace('ReqStatue.', '')}</b>\n"
+                     f"============================\n")
+    while len(rep_text) > 4096:
+        part_text = rep_text[:4096]
+        last_newline_index = part_text.rfind('\n')
+        if last_newline_index != -1:
+            part_text = rep_text[:last_newline_index]
+        else:
+            part_text = rep_text[:4096]
+        await update.message.reply_text(part_text, parse_mode='HTML')
+        rep_text = rep_text[len(part_text):]
+    if rep_text:
+        await update.message.reply_text(rep_text, parse_mode='HTML')

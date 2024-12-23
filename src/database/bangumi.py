@@ -1,6 +1,7 @@
 from enum import Enum
+from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -72,3 +73,17 @@ class BangumiOperate:
             async with session.begin():
                 scalar = await session.execute(select(BangumiRequireModel).filter(BangumiRequireModel.bangumi_id == bgm_id).limit(1))
                 return scalar.scalar_one_or_none()
+    
+    @staticmethod
+    async def get_all_handle_list() -> Sequence[BangumiRequireModel]:
+        async with BangumiSessionFactory() as session:
+            async with session.begin():
+                scalar = await session.execute(
+                        select(BangumiRequireModel).filter(
+                                or_(
+                                        BangumiRequireModel.status == ReqStatue.UNHANDLED.value,
+                                        BangumiRequireModel.status == ReqStatue.ACCEPTED.value
+                                )
+                        )
+                )
+                return scalar.scalars().all()
