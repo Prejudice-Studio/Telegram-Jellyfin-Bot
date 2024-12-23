@@ -1,5 +1,8 @@
 python-telegram-bot~=21.0
-jellyfin-apiclient-python~=1.10.0
 aiofiles~=24.1.0
 toml~=0.10.2
 pytz~=2024.2
+SQLAlchemy~=2.0.36
+httpx~=0.27.2
+requests~=2.32.3
+aiosqlite~=0.20.0

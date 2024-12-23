@@ -1,14 +1,16 @@
-import logging
+import multiprocessing
 import os
 
 from telegram import Update
-from telegram.ext import Application, CallbackQueryHandler, CommandHandler
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, filters
 
+import src.bot.admin as AdminCommand
+import src.bot.require as Require
+import src.bot.user as UserCommand
 from src.bot import callback
-from src.bot.command import AdminCommand, UserCommand
 from src.config import BotConfig, Config
-
-logging.basicConfig(level=Config.LOG_LEVE, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+from src.logger import bot_logger
+from src.webhook.api import run_flask
 
 if Config.PROXY and Config.PROXY != "":
     os.environ['https_proxy'] = Config.PROXY
@@ -35,22 +37,47 @@ def run_bot():
     application.add_handler(CommandHandler("sign", UserCommand.sign))
     application.add_handler(CommandHandler("bind", UserCommand.bind))
     application.add_handler(CommandHandler("unbind", UserCommand.unbind))
-    application.add_handler(CommandHandler("checkpassword", UserCommand.get_pw))
     application.add_handler(CommandHandler("changepassword", UserCommand.reset_pw))
+    application.add_handler(CommandHandler("generateRegCode", UserCommand.gen_cdk))
+    application.add_handler(CommandHandler("red", UserCommand.red_packet))
+    application.add_handler(CommandHandler("require", Require.require))
+    application.add_handler(CommandHandler("checkrequire", Require.check_require))
+    
     # 管理员命令
     application.add_handler(CommandHandler("summon", AdminCommand.summon))  # 管理员生成注册码
     application.add_handler(CommandHandler("checkinfo", AdminCommand.checkinfo))  # 管理员查看用户信息
-    application.add_handler(CommandHandler("deleteAccountBy", AdminCommand.deleteAccountBy))  # 管理员删除用户
-    application.add_handler(CommandHandler("op", AdminCommand.set_admin))  # 设置管理员
+    application.add_handler(CommandHandler("deleteAccount", AdminCommand.delete_account))  # 管理员删除用户
+    application.add_handler(CommandHandler("setUser", AdminCommand.set_group, filters=filters.ChatType.PRIVATE & filters.Chat(
+            chat_id=BotConfig.ADMIN)))  # 设置管理员
     application.add_handler(CommandHandler("regcodes", AdminCommand.get_all_code))
     application.add_handler(CommandHandler("update", AdminCommand.update))
+    application.add_handler(CommandHandler("setScore", AdminCommand.set_score))
+    application.add_handler(CommandHandler("setRegCodeGenerateStatus", AdminCommand.set_gen_cdk))
+    application.add_handler(CommandHandler("deleteRegCode", AdminCommand.del_cdk))
+    application.add_handler(CommandHandler("setRegCodeUsageLimit", AdminCommand.set_code_limit))
+    application.add_handler(CommandHandler("setRegCodeTime", AdminCommand.set_code_time))
+    application.add_handler(CommandHandler("requireList", Require.require_list))
+    
     # 按钮回调
     application.add_handler(CallbackQueryHandler(callback.confirm_delete, pattern='confirm_delete'))
     application.add_handler(CallbackQueryHandler(callback.confirm_unbind, pattern='confirm_unbind'))
     application.add_handler(CallbackQueryHandler(callback.cancel, pattern='cancel'))
-    logging.info("Bot started")
+    application.add_handler(CallbackQueryHandler(callback.receive_red_packet, pattern='red_'))
+    application.add_handler(CallbackQueryHandler(callback.red_info, pattern='redinfo_'))
+    application.add_handler(CallbackQueryHandler(callback.withdraw_red, pattern='withdraw_'))
+    application.add_handler(CallbackQueryHandler(Require.require_choose, pattern='reqb_'))
+    application.add_handler(CallbackQueryHandler(Require.require_submit, pattern='req_'))
+    application.add_handler(CallbackQueryHandler(Require.require_action, pattern='reqa_'))  # 处理番剧请求
+    bot_logger.info("Bot started")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
-    run_bot()
+    bot_process = multiprocessing.Process(target=run_bot)
+    api_process = multiprocessing.Process(target=run_flask)
+    
+    bot_process.start()
+    api_process.start()
+    
+    bot_process.join()
+    api_process.join()
