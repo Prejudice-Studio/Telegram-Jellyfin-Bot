@@ -64,7 +64,6 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
     :return:
     """
     je_id = None
-    
     async def fetch_user_id(f_username: str):
         async with UsersSessionFactory() as f_session:
             scalars = await f_session.execute(select(UserModel).filter(
@@ -90,7 +89,7 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
             je_id = je_data["Id"] if je_data else None
         except Exception as e:
             bot_logger.error(f"Error: {e}")
-            return None, None
+            return None, user_info
     if je_id is not None:
         try:
             jellyfin_user = await client.Users.get_user(je_id)
@@ -102,7 +101,7 @@ async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | N
             bot_logger.error(f"Error: {e}")
     if user_info:
         return None, user_info
-    return None, None
+    return None, user_info
 
 
 def base64_encode(ori_str: str) -> str:
