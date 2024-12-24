@@ -293,7 +293,7 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return await update.message.reply_text("均分模式下请确保总积分能被红包数量整除.")
         red_data = [total // count for _ in range(count)]
     else:
-        red_data = None
+        return await update.message.reply_text("模式错误.")
     new_packet = RedPacketModel(telegram_id=update.effective_user.id, amount=total, count=count, type=mode, current_amount=total,
                                 create_time=int(datetime.now().timestamp()), data=json.dumps(red_data))
     await ScoreOperate.add_red_packet(new_packet)
