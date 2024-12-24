@@ -91,7 +91,8 @@ async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("Usage: /setcdkgen <true/false>")
     JellyfinConfig.USER_GEN_CDK = context.args[0] == "true"
     JellyfinConfig.save_to_toml()
-    await update.message.reply_text(f"已成功生成注册码\n {context.args[0]}.")
+    await update.message.reply_text(f"当前用户生成注册码权限 <code>{'允许' if context.args[0] == 'true' else '禁止'}</code>",
+                                    parse_mode="HTML")
 
 
 @check_admin
