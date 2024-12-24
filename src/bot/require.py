@@ -79,6 +79,11 @@ async def require(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parsed_url = urlparse(bgm)
         path_parts = parsed_url.path.split("/")
         bgm_id = path_parts[-1] if path_parts and path_parts[-1].isdigit() else None
+    elif bgm.startswith("https://bangumi.tv/subject"):
+        # 第二个域名
+        parsed_url = urlparse(bgm)
+        path_parts = parsed_url.path.split("/")
+        bgm_id = path_parts[-1] if path_parts and path_parts[-1].isdigit() else None
     elif bgm.isdigit():
         bgm_id = bgm_id
     else:

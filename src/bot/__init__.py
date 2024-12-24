@@ -80,7 +80,7 @@ def check_private(func):
             return
         if update.effective_chat.type != "private":
             rep = await update.message.reply_text("请在私聊中使用。")
-            await sleep(1)
+            await sleep(5)
             await update.message.delete()
             await rep.delete()
             return
