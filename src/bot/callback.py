@@ -61,8 +61,10 @@ async def receive_red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE)
     packet_id = int(query.data.split("_")[1])
     packet_data = await ScoreOperate.get_red_packet(packet_id)
     if packet_data:
-        if packet_data.status != 0:
+        if packet_data.status == 0:
             return await query.answer("红包已经被领完")
+        elif packet_data.status == 1:
+            return await query.answer("红包已经被撤回")
         history = packet_data.history.split(",") if packet_data.history else []
         if any(query.from_user.id == int(entry.split('#')[0]) for entry in history[:-1]):
             return await query.answer("您已经领过这个红包了")
@@ -102,12 +104,12 @@ async def red_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
                       f"总份数: {packet_data.count}\n" \
                       f"剩余金额: {packet_data.current_amount}\n" \
                       f"类型: {'随机' if packet_data.type == 0 else '平均'}\n" \
-                      f"状态: {'已领完' if packet_data.status == 1 else '未领完'}"
+                      f"状态: {'未领完' if packet_data.status == 0 else '已领完或撤回'}"
         if his_t != "":
             ret_message += f"\n领取历史:\n{his_t}"
         rep = await update.effective_message.reply_text(ret_message)
         await query.answer()
-        await sleep(10)
+        await sleep(30)
         await rep.delete()
     else:
         await query.answer("红包未找到")
