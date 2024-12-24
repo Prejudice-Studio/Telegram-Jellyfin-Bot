@@ -2,10 +2,10 @@ import base64
 import hashlib
 import re
 from datetime import datetime, timezone
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 
+import numpy as np
 import pytz
-from httpx import Response
 from sqlalchemy import or_, select
 
 from src.config import Config
@@ -112,3 +112,34 @@ def base64_encode(ori_str: str) -> str:
 
 def base64_decode(encode_str: str) -> str:
     return base64.b64decode(encode_str.encode('utf-8')).decode('utf-8')
+
+
+# 红包生成
+def generate_red_packets(max_amount: int, count: int, mean_v: int = 2, std_dev_v: int = 9):
+    """
+    红包生成
+    :param max_amount: 最大金额
+    :param count: 红包个数
+    :param mean_v: 平均值
+    :param std_dev_v: 标准差
+    :return:
+    """
+    mean = max_amount / mean_v
+    std_dev = max_amount / std_dev_v
+    amounts = np.random.normal(mean, std_dev, count)
+    amounts = np.maximum(amounts, 1)
+    total_amount = sum(amounts)
+    if total_amount > max_amount:
+        amounts *= (max_amount / total_amount)
+    
+    amounts = np.round(amounts).astype(int)
+    amounts = np.maximum(amounts, 1)
+    final_total = sum(amounts)
+    # 金额纠正
+    if final_total < max_amount:
+        difference = max_amount - final_total
+        amounts[0] += difference
+    elif final_total > max_amount:
+        difference = final_total - max_amount
+        amounts[-1] -= difference
+    return amounts.tolist()

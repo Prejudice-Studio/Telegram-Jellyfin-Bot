@@ -1,3 +1,4 @@
+import json
 import random
 import string
 from datetime import datetime
@@ -13,7 +14,7 @@ from src.database.user import Role, UserModel, UsersOperate
 from src.jellyfin.api import JellyfinAPI
 from src.jellyfin_client import client
 from src.logger import bot_logger
-from src.utils import convert_to_china_timezone, get_password_hash, is_password_strong
+from src.utils import convert_to_china_timezone, generate_red_packets, get_password_hash, is_password_strong
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -265,11 +266,17 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("请在群聊内使用")
     score_data = await ScoreOperate.get_score(update.effective_user.id)
     if len(context.args) < 2:
-        return await update.message.reply_text("使用方法: /red {TotalScore} {Count} {Mode} 不填与0为随机，1为均分")
+        return await update.message.reply_text("使用方法: /red {总金额} {个数} {Mode} 不填与0为随机，1为均分\n"
+                                               "高级设置 /red {总金额} {个数} {Mode} {均值} {标准差} （控制红包金额分布）")
     total, count = context.args[0], context.args[1]
     mode = "0"
-    if len(context.args) == 3:
+    mean, std_dev = 2, 9
+    if len(context.args) >= 3:
         mode = context.args[2]
+        if len(context.args) == 5:
+            mean = context.args[3]
+            std_dev = context.args[4]
+    
     if not total.isdigit() or not count.isdigit() or not mode.isdigit():
         return await update.message.reply_text("请确保输入数字.")
     total, count, mode = int(total), int(count), int(mode)
@@ -279,10 +286,16 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("积分不足.")
     if count > total:
         return await update.message.reply_text("请确保红包数量大于红包总积分.")
-    if mode == 1 and total % count != 0:
-        return await update.message.reply_text("均分模式下请确保总积分能被红包数量整除.")
+    if mode == 0:
+        red_data = generate_red_packets(total, count, mean, std_dev)
+    elif mode == 1:
+        if total % count != 0:
+            return await update.message.reply_text("均分模式下请确保总积分能被红包数量整除.")
+        red_data = [total // count for _ in range(count)]
+    else:
+        red_data = None
     new_packet = RedPacketModel(telegram_id=update.effective_user.id, amount=total, count=count, type=mode, current_amount=total,
-                                create_time=int(datetime.now().timestamp()))
+                                create_time=int(datetime.now().timestamp()), data=json.dumps(red_data))
     await ScoreOperate.add_red_packet(new_packet)
     await ScoreOperate.update_score(score_data)
     keyboard = [[InlineKeyboardButton("点击领取红包", callback_data=f'red_{new_packet.id}')],

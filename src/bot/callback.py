@@ -1,3 +1,4 @@
+import json
 import random
 from asyncio import sleep
 
@@ -65,23 +66,21 @@ async def receive_red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE)
             return await query.answer("红包已经被领完")
         elif packet_data.status == 2:
             return await query.answer("红包已经被撤回")
+        if not packet_data.data:
+            return await query.answer("红包数据错误")
         history = packet_data.history.split(",") if packet_data.history else []
         if any(query.from_user.id == int(entry.split('#')[0]) for entry in history[:-1]):
             return await query.answer("您已经领过这个红包了")
-        rec_count = len(history) - 1 if len(history) != 0 else 0
-        e_score = 0  # 领取的金额
-        if packet_data.type == 0:
-            max_p = packet_data.current_amount - packet_data.count
-            e_score = random.randint(1, max_p) if max_p > 0 else 1
-            if rec_count + 1 == packet_data.count:
-                e_score = packet_data.current_amount
-        elif packet_data.type == 1:
-            e_score = packet_data.amount // packet_data.count
+        all_packet = json.loads(packet_data.data)
+        e_score = random.choice(all_packet)
+        all_packet.remove(e_score)
         # 红包领取部分
         await ScoreOperate.change_score(query.from_user.id, e_score)
         packet_data.current_amount -= e_score
         packet_data.history += f"{query.from_user.id}#{base64_encode(query.from_user.full_name)}#{e_score},"
-        if rec_count + 1 == packet_data.count:  # 领完
+        packet_data.data = json.dumps(all_packet)
+        rec_count = len(history) if len(history) != 0 else 0
+        if rec_count == packet_data.count:  # 领完
             packet_data.status = 1
         await ScoreOperate.update_red_packet(packet_data)
         await query.answer(f"您收到了 {e_score} 积分")
