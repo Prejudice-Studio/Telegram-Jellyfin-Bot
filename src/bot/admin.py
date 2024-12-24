@@ -10,7 +10,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from src.bot import check_admin
-from src.config import JellyfinConfig
+from src.config import BotConfig, JellyfinConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UsersOperate
@@ -201,8 +201,9 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"成功删除用户 {username}")
 
 
-@check_admin
 async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != BotConfig.ADMIN:
+        return
     if len(context.args) != 2:
         return await update.message.reply_text("Usage: /setUser <id/name> <group>")
     u_name = int(context.args[0])

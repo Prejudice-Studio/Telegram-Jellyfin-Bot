@@ -49,8 +49,7 @@ def run_bot():
     application.add_handler(CommandHandler("summon", AdminCommand.summon))  # 生成注册码
     application.add_handler(CommandHandler("checkinfo", AdminCommand.checkinfo))  # 管理员查看用户信息
     application.add_handler(CommandHandler("deleteAccount", AdminCommand.delete_account))  # 删除用户
-    application.add_handler(CommandHandler("setGroup", AdminCommand.set_group, filters=filters.ChatType.PRIVATE & filters.Chat(
-            chat_id=BotConfig.ADMIN)))  # 设置用户权限
+    application.add_handler(CommandHandler("setGroup", AdminCommand.set_group))  # 设置用户权限
     application.add_handler(CommandHandler("cdks", AdminCommand.get_all_cdk))  # 查看所有注册码
     application.add_handler(CommandHandler("update", AdminCommand.update))
     application.add_handler(CommandHandler("setScore", AdminCommand.set_score))  # 设置用户积分
