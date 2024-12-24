@@ -125,17 +125,27 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("使用方法: /checkinfo <jellyfin用户名/Telegram用户ID/Fullname>")
     username = context.args[0]
     jellyfin_user, user_info = await get_user_info(username)
-    if not jellyfin_user:
-        return await update.message.reply_text("未找到用户")
+    # if not jellyfin_user:
+    #     return await update.message.reply_text("未找到用户")
     last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
     # 检查积分和签到信息
-    if not user_info:
+    if not user_info and jellyfin_user:
         await update.message.reply_text(
                 f"找到Jellyfin用户，但未绑定Telegram.\n"
                 f"用户名: {jellyfin_user['Name']}\n"
                 f"上次登录: {last_login}\n")
+    elif not jellyfin_user and user_info:
+        score_data = await ScoreOperate.get_score(user_info.telegram_id)
+        await update.message.reply_text(
+                f"找到Telegram用户，但未绑定Jellyfin或服务器已关闭.\n"
+                f"Telegram ID: {user_info.telegram_id}\n"
+                f"Telegram NAME: {user_info.username}\n"
+                f"Telegram昵称: {user_info.fullname}\n"
+                f"用户组: {Role(user_info.role).name}\n"
+                f"积分: {score_data.score if score_data else 0}\n"
+                f"上次签到时间: {convert_to_china_timezone(score_data.checkin_time)}\n")
     else:
-        score_data = await ScoreOperate.get_score(update.effective_user.id)
+        score_data = await ScoreOperate.get_score(user_info.telegram_id)
         if not score_data:
             score = 0
             checkin_time = "N/A"

@@ -2,9 +2,10 @@ import base64
 import hashlib
 import re
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional, Tuple
 
 import pytz
+from httpx import Response
 from sqlalchemy import or_, select
 
 from src.config import Config
@@ -57,13 +58,14 @@ def is_password_strong(password):
     return True
 
 
-async def get_user_info(username: str | int) -> tuple[dict | None, UserModel | None]:
+async def get_user_info(username: str | int) -> tuple[None, UserModel | None | Any] | tuple[Any, Any] | tuple[None, UserModel]:
     """
     获取 Jellyfin 用户信息
     :param username: Telegram ID/Fullname or Jellyfin username
     :return:
     """
     je_id = None
+    
     async def fetch_user_id(f_username: str):
         async with UsersSessionFactory() as f_session:
             scalars = await f_session.execute(select(UserModel).filter(

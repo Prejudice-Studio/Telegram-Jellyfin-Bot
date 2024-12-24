@@ -100,8 +100,10 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     password_hash = get_password_hash(password)
     if user_info:
-        user_info.account, user_info.password, user_info.bind_id, user_info.role = username, password_hash, ret_user[
-            "Id"], Role.ORDINARY.value
+        user_info.account, user_info.password, user_info.bind_id = username, password_hash, ret_user[
+            "Id"]
+        if user_info.role == Role.SEA.value:
+            user_info.role = Role.ORDINARY.value
         await UsersOperate.update_user(user_info)
     else:
         user_info = UserModel(telegram_id=eff_user.id, username=eff_user.username, fullname=eff_user.full_name,
@@ -204,8 +206,10 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_info:
         if user_info.bind_id:
             return await update.message.reply_text("你已绑定一个Jellyfin账号。请先解绑")
-        user_info.account, user_info.password, user_info.bind_id, user_info.role = username, password_hash, jellyfin_user["User"][
-            "Id"], Role.ORDINARY.value
+        user_info.account, user_info.password, user_info.bind_id = username, password_hash, jellyfin_user["User"][
+            "Id"]
+        if user_info.role == Role.SEA.value:
+            user_info.role = Role.ORDINARY.value
         await UsersOperate.update_user(user_info)
         await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
     else:
