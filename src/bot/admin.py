@@ -205,16 +205,16 @@ async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != BotConfig.ADMIN:
         return await update.message.reply_text("无权限")
     if len(context.args) != 2:
-        return await update.message.reply_text("Usage: /setUser <id/name> <group>")
+        return await update.message.reply_text("Usage: /setGroup <id/name> <group>")
     group = context.args[1].upper()
     _, user_info = await get_user_info(context.args[0])
     if not user_info:
         return await update.message.reply_text("用户未找到")
-    if group not in Role:
+    if group not in Role.__members__:
         return await update.message.reply_text("无效的用户组")
     user_info.role = Role[group].value
     await UsersOperate.update_user(user_info)
-    await update.message.reply_text(f"成功设置 {user_info.fullname} 为管理员")
+    await update.message.reply_text(f"成功设置 {user_info.fullname} 为 {group}")
 
 
 # noinspection PyUnusedLocal
