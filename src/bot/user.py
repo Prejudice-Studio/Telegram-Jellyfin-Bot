@@ -274,8 +274,8 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) >= 3:
         mode = context.args[2]
         if len(context.args) == 5:
-            mean = context.args[3]
-            std_dev = context.args[4]
+            mean = int(context.args[3])
+            std_dev = int(context.args[4])
     
     if not total.isdigit() or not count.isdigit() or not mode.isdigit():
         return await update.message.reply_text("请确保输入数字.")
