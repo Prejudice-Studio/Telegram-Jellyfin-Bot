@@ -201,6 +201,7 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"成功删除用户 {username}")
 
 
+@check_admin
 async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
         return await update.message.reply_text("Usage: /setUser <id/name> <group>")
