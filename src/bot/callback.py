@@ -61,9 +61,9 @@ async def receive_red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE)
     packet_id = int(query.data.split("_")[1])
     packet_data = await ScoreOperate.get_red_packet(packet_id)
     if packet_data:
-        if packet_data.status == 0:
+        if packet_data.status == 1:
             return await query.answer("红包已经被领完")
-        elif packet_data.status == 1:
+        elif packet_data.status == 2:
             return await query.answer("红包已经被撤回")
         history = packet_data.history.split(",") if packet_data.history else []
         if any(query.from_user.id == int(entry.split('#')[0]) for entry in history[:-1]):
