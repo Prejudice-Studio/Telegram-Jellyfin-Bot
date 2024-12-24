@@ -203,7 +203,7 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != BotConfig.ADMIN:
-        return
+        return await update.message.reply_text("无权限")
     if len(context.args) != 2:
         return await update.message.reply_text("Usage: /setUser <id/name> <group>")
     u_name = int(context.args[0])
