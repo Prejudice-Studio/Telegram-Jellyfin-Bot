@@ -206,9 +206,8 @@ async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("无权限")
     if len(context.args) != 2:
         return await update.message.reply_text("Usage: /setUser <id/name> <group>")
-    u_name = int(context.args[0])
     group = context.args[1].upper()
-    _, user_info = await get_user_info(u_name)
+    _, user_info = await get_user_info(context.args[0])
     if not user_info:
         return await update.message.reply_text("用户未找到")
     if group not in Role:
