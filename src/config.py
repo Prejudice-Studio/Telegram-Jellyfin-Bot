@@ -46,6 +46,15 @@ class BaseConfig:
             logging.error(f'Error occurred while saving config file: {err}')
 
 
+class ProgramConfig(BaseConfig):
+    """
+    程序配置 不从本地更新
+    """
+    VERSION: str = "0.0.1"
+    NAME: str = "JellyfinBot"
+    REDPACKET_FILEID: str = ""  # 红包文件ID
+
+
 class Config(BaseConfig):
     """
     全局配置
@@ -81,6 +90,7 @@ class BotConfig(BaseConfig):
     BOT_TOKEN: str = ""  # 机器人 Token
     BASE_URL: str = "https://api.telegram.org/bot"  # 自定义URL
     TIMEOUT: int = 10  # bot请求/读取超时时间
+    REDPACKET_IMG: str = ""  # 红包图片路径
 
 
 class JellyfinConfig(BaseConfig):

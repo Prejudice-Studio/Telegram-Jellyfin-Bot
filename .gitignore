@@ -140,3 +140,4 @@ dmypy.json
 !config.production.toml
 /data/*
 /database/*
+*.png

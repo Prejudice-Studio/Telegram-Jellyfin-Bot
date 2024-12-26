@@ -7,7 +7,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from src.bot import check_banned, check_private, command_warp
-from src.config import JellyfinConfig
+from src.config import BotConfig, JellyfinConfig, ProgramConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import RedPacketModel, ScoreModel, ScoreOperate
 from src.database.user import Role, UserModel, UsersOperate
@@ -299,8 +299,20 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await ScoreOperate.add_red_packet(new_packet)
     await ScoreOperate.update_score(score_data)
     keyboard = [[InlineKeyboardButton("点击领取红包", callback_data=f'red_{new_packet.id}')],
-                [InlineKeyboardButton("查看红包详情", callback_data=f'redinfo_{new_packet.id}')],
-                [InlineKeyboardButton("撤回红包", callback_data=f'withdraw_{new_packet.id}')]]
+                [InlineKeyboardButton("查看红包详情", callback_data=f'redinfo_{new_packet.id}'),
+                 InlineKeyboardButton("撤回红包", callback_data=f'withdraw_{new_packet.id}')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.effective_chat.send_message(f"用户{update.effective_user.username}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
-                                             reply_markup=reply_markup)
+    if BotConfig.REDPACKET_IMG != "":
+        if ProgramConfig.REDPACKET_FILEID:
+            await update.effective_chat.send_photo(ProgramConfig.REDPACKET_FILEID,
+                                                   caption=f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
+                                                   reply_markup=reply_markup)
+        else:
+            msg = await update.effective_chat.send_photo(open(BotConfig.REDPACKET_IMG, "rb"),
+                                                         caption=f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
+                                                         reply_markup=reply_markup)
+            ProgramConfig.REDPACKET_FILEID = msg.photo[-1].file_id
+    else:
+        await update.effective_chat.send_message(
+                f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
+                reply_markup=reply_markup)
