@@ -9,7 +9,7 @@ from io import BytesIO
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from src.bot import check_admin
+from src.bot import check_admin, command_warp
 from src.config import BotConfig, JellyfinConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
@@ -181,6 +181,7 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(message)
 
 
+@command_warp
 @check_admin
 async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
@@ -269,6 +270,7 @@ async def set_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"成功设置用户 {user_info.fullname} 积分为{score}.")
 
 
+@command_warp
 @check_admin
 async def resetpw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:

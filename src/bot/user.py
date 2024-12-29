@@ -3,7 +3,7 @@ import random
 import string
 from datetime import datetime
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from src.bot import check_banned, check_private, command_warp
@@ -26,12 +26,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/delete</code> 删除账号\n"
                 f"<code>/sign</code> 每日签到\n"
                 f"<code>/red</code> 发红包（仅限群聊内）\n"
-                f"<code>/password 原密码 新密码</code> 更改账户密码\n"
+                f"<code>/password 新密码</code> 更改账户密码\n"
                 f"<code>/gencdk</code> 生成注册码\n"
                 f"<code>/require BangumiID/链接/番剧名字</code> 申请增加番剧\n"
                 f"<code>/checkrequire 请求ID</code> 查看番剧申请状态\n")
     
-    await update.message.reply_text(rep_text, parse_mode="HTML")
+    # await update.message.reply_text(rep_text, parse_mode="HTML")
+    # 菜单
+    all_keyboard = [["/reg 注册账户", "/info 信息", "/bind 绑定账户", "/unbind 解绑"],
+                    ["/delete 删除账户", "/sign 签到", "/red  红包", "/password 重置密码"],
+                    ["/gencdk 生成cdk", "/require 番剧申请", "/checkrequire 番剧申请查询"]]
+    reply_markup = ReplyKeyboardMarkup(all_keyboard, resize_keyboard=True)
+    await update.message.reply_text(rep_text, reply_markup=reply_markup, parse_mode="HTML")
 
 
 @check_banned
@@ -243,21 +249,19 @@ async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info or not user_info.bind_id:
         return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
-    if len(context.args) != 2:
-        return await update.message.reply_text("使用方法: /password 原密码 新密码")
-    old_pw, new_password = context.args[0], context.args[1]
+    if len(context.args) != 1:
+        return await update.message.reply_text("使用方法: /password 新密码")
+    new_password = context.args[0]
     if not is_password_strong(new_password):
         return await update.message.reply_text("密码强度不够(需要至少8位字符，且包含至少一个小写字母和大写字母).")
-    user_client = JellyfinAPI(JellyfinConfig.BASE_URL, 2)
     try:
-        await user_client.JellyfinReq.login(user_info.account, old_pw)
-        await client.Users.change_password(old_pw, new_password, user_info.bind_id)
+        await client.Users.change_password("", new_password, user_info.bind_id)
         user_info.password = get_password_hash(new_password)
         await UsersOperate.update_user(user_info)
         return await update.message.reply_text("密码修改成功.")
     except Exception as e:
         bot_logger.error(f"Error: {e}")
-        return await update.message.reply_text("[Server]密码更改失败，请检查原密码是否正确.")
+        return await update.message.reply_text("[Server]密码更改失败.")
 
 
 @check_banned
