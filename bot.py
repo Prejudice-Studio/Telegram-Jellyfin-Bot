@@ -43,6 +43,7 @@ def run_bot():
     application.add_handler(CommandHandler("red", UserCommand.red_packet))  # 发红包
     application.add_handler(CommandHandler("require", Require.require))  # 申请番剧 仅star用户
     application.add_handler(CommandHandler("checkrequire", Require.check_require))  # 番剧申请状态 仅star用户
+    application.add_handler(CommandHandler("cancel", UserCommand.cancel))
     
     # 管理员命令
     application.add_handler(CommandHandler("shelp", AdminCommand.shelp))  # 生成注册码

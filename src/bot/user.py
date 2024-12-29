@@ -3,7 +3,7 @@ import random
 import string
 from datetime import datetime
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import ContextTypes
 
 from src.bot import check_banned, check_private, command_warp
@@ -35,9 +35,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 菜单
     all_keyboard = [["/reg 注册账户", "/info 信息", "/bind 绑定账户", "/unbind 解绑"],
                     ["/delete 删除账户", "/sign 签到", "/red  红包", "/password 重置密码"],
-                    ["/gencdk 生成cdk", "/require 番剧申请", "/checkrequire 番剧申请查询"]]
+                    ["/gencdk 生成cdk", "/require 番剧申请", "/checkrequire 番剧申请查询"],
+                    ["/cancel 取消"]]
     reply_markup = ReplyKeyboardMarkup(all_keyboard, resize_keyboard=True)
     await update.message.reply_text(rep_text, reply_markup=reply_markup, parse_mode="HTML")
+
+
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("操作取消.", reply_markup=ReplyKeyboardRemove())
 
 
 @check_banned

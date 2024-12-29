@@ -40,7 +40,7 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     ["/setGroup", "/cdks", "/update"],
                     ["/resetpw", "/setScore", "/setCDKgen"],
                     ["/deleteCDK", "/setCdkLimit", "/setCdkTime"],
-                    ["/requireList"]]
+                    ["/requireList"], ["/cancel 取消"]]
     reply_markup = ReplyKeyboardMarkup(all_keyboard, resize_keyboard=True)
     await update.message.reply_text(rep_text, parse_mode="HTML", reply_markup=reply_markup)
 
