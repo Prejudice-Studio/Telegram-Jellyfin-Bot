@@ -62,7 +62,7 @@ async def get_user_info(username: str | int) -> tuple[None, UserModel | None | A
     """
     获取 Jellyfin 用户信息
     :param username: Telegram ID/Fullname or Jellyfin username
-    :return:
+    :return: Jellyfin 用户信息, 用户数据库信息
     """
     je_id = None
     

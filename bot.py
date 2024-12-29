@@ -58,6 +58,7 @@ def run_bot():
     application.add_handler(CommandHandler("setCdkLimit", AdminCommand.set_cdk_limit))
     application.add_handler(CommandHandler("setCdkTime", AdminCommand.set_cdk_time))
     application.add_handler(CommandHandler("requireList", Require.require_list))
+    application.add_handler(CommandHandler("resetpw", AdminCommand.resetpw))
     
     # 按钮回调
     application.add_handler(CallbackQueryHandler(callback.confirm_delete, pattern='confirm_delete'))

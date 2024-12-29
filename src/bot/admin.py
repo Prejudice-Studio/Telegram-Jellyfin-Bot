@@ -16,7 +16,7 @@ from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UsersOperate
 from src.jellyfin_client import client
 from src.logger import bot_logger
-from src.utils import convert_to_china_timezone, get_user_info
+from src.utils import convert_to_china_timezone, get_password_hash, get_user_info
 
 
 @check_admin
@@ -29,6 +29,7 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/setGroup [id/name] [group]</code> 设置用户权限\n"
                 f"<code>/cdks</code> 查看所有注册码\n"
                 f"<code>/update</code> 更新Bot\n"
+                f"<code>/resetpw [id/username] [pw]</code> 设置用户密码\n"
                 f"<code>/setScore [id/username] [score]</code> 设置用户积分\n"
                 f"<code>/setCDKgen [true/false]</code> 是否允许用户生成注册码\n"
                 f"<code>/deleteCDK [cdk]</code> 删除某个注册码\n"
@@ -266,3 +267,23 @@ async def set_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
     score_data.score = score
     await ScoreOperate.update_score(score_data)
     await update.message.reply_text(f"成功设置用户 {user_info.fullname} 积分为{score}.")
+
+
+@check_admin
+async def resetpw(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 2:
+        return await update.message.reply_text("Usage: /resetpw <id/username> <new pw>")
+    u_name = context.args[0]
+    je_data, user_info = await get_user_info(u_name)
+    if not je_data and not user_info:
+        return await update.message.reply_text("用户未找到")
+    new_pw = context.args[1]
+    je_id = je_data["Id"]
+    
+    if await client.Users.change_password("", new_pw, je_id):
+        if user_info:
+            user_info.password = get_password_hash(new_pw)
+            await UsersOperate.update_user(user_info)
+        return await update.message.reply_text("成功重置密码")
+    else:
+        return await update.message.reply_text("重置密码失败")
