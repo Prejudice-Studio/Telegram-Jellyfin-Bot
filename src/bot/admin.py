@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 from io import BytesIO
 
-from telegram import Update
+from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from src.bot import check_admin, command_warp
@@ -36,7 +36,13 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/setCdkLimit [cdk] [limit]</code> 设置注册码使用次数\n"
                 f"<code>/setCdkTime [cdk] [hours]</code> 设置注册码有效时间\n"
                 f"<code>/requireList</code> 查看番剧请求列表\n")
-    await update.message.reply_text(rep_text, parse_mode="HTML")
+    all_keyboard = [["/summon", "/checkinfo", "/deleteAccount"],
+                    ["/setGroup", "/cdks", "/update"],
+                    ["/resetpw", "/setScore", "/setCDKgen"],
+                    ["/deleteCDK", "/setCdkLimit", "/setCdkTime"],
+                    ["/requireList"]]
+    reply_markup = ReplyKeyboardMarkup(all_keyboard, resize_keyboard=True)
+    await update.message.reply_text(rep_text, parse_mode="HTML", reply_markup=reply_markup)
 
 
 @check_admin
