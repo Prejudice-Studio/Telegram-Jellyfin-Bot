@@ -1,13 +1,26 @@
 PROXY = ""  # 代理地址 示例：http://127.0.0.1:7890 一般用不到
 MAX_RETRY = 3  # 重试次数
 LOG_LEVE = 30  # 日志等级
+LOGGING = true # 日志是否保存本地
+SQLALCHEMY_LOG = false # 是否打印sql日志
+DATABASES_DIR = 'database' # 数据库路径，一般不用指定
+SALT = "" # 密码盐，推荐更改
+BANGUMI_TOKEN = "" # bangumi api access token
+
+[Flask]
+ENABLE = false # Flask api (用于jellyfin webhook)
+HOST = '0.0.0.0'
+PORT = 5000
 
 [Bot]
 ADMIN = 0  # 管理员账号 Telegram ID
 BOT_TOKEN = ""  # 机器人 Token 必要
 BASE_URL = ""  # 自定义TG URL 示例：http://127.0.0.1:8081/bot 一般用不到
 TIMEOUT = 10  # bot请求/读取超时时间
+REDPACKET_IMG = "" #红包图片，留空发红包时候不带图
+
 
 [Jellyfin]
 BASE_URL = ""  # Jellyfin URL 必要
 API_KEY = ""  # Jellyfin API Key 必要
+USER_GEN_CDK = false # 是否允许用户生成cdk（也可以通过命令开关）
