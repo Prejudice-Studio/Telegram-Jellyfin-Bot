@@ -1,0 +1,42 @@
+[user_commands]
+start = "UserCommand.start"
+help = "UserCommand.start"
+reg = "UserCommand.reg" # 注册
+info = "UserCommand.info" #显 示个人信息
+delete = "UserCommand.delete_account" # 删除账户
+sign = "UserCommand.sign" # 签到
+bind = "UserCommand.bind" # 绑定
+unbind = "UserCommand.unbind" # 解绑
+password = "UserCommand.reset_pw" # 重置密码
+gencdk = "UserCommand.gen_cdk" # 生成CDK
+red = "UserCommand.red_packet" # 发红包
+require = "Require.require" # 番剧申请
+checkrequire = "Require.check_require" # 查看申请
+cancel = "UserCommand.cancel" # 取消操作
+
+[admin_commands]
+shelp = "AdminCommand.shelp"
+summon = "AdminCommand.summon" # 生成cdk
+checkinfo = "AdminCommand.checkinfo" # 查询用户信息
+deleteAccount = "AdminCommand.delete_account" # 删除指定用户jellyfin账户
+setGroup = "AdminCommand.set_group" # 设置用户权限组
+cdks = "AdminCommand.get_all_cdk" # 查看所有cdk
+update = "AdminCommand.update" # 更新程序（从GitHub）
+setScore = "AdminCommand.set_score" # 设置用户积分
+setCDKgen = "AdminCommand.set_gen_cdk" # 设置是否允许用户消耗积分生成cdk
+deleteCDK = "AdminCommand.del_cdk" # 删除CDK
+setCdkLimit = "AdminCommand.set_cdk_limit" # 设置某个cdk使用限制
+setCdkTime = "AdminCommand.set_cdk_time" # 设置某个cdk有效时间
+requireList = "Require.require_list" # 查看番剧申请列表
+resetpw = "AdminCommand.resetpw" # 重置用户密码
+
+[callback_queries] # 回调函数，基本不用改
+confirm_delete = "callback.confirm_delete"
+confirm_unbind = "callback.confirm_unbind"
+cancel = "callback.cancel"
+red_ = "callback.receive_red_packet"
+redinfo_ = "callback.red_info"
+withdraw_ = "callback.withdraw_red"
+reqb_ = "Require.require_choose"
+req_ = "Require.require_submit"
+reqa_ = "Require.require_action"

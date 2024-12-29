@@ -1,12 +1,17 @@
 import multiprocessing
 import os
 
+import toml
 from telegram import Update
-from telegram.ext import Application, CallbackQueryHandler, CommandHandler, filters
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler
 
+# noinspection PyUnresolvedReferences
 import src.bot.admin as AdminCommand
+# noinspection PyUnresolvedReferences
 import src.bot.require as Require
+# noinspection PyUnresolvedReferences
 import src.bot.user as UserCommand
+# noinspection PyUnresolvedReferences
 from src.bot import callback
 from src.config import BotConfig, Config
 from src.logger import bot_logger
@@ -30,47 +35,66 @@ def run_bot():
                    .base_url(BotConfig.BASE_URL)
                    .build())
     
-    # 普通命令
-    application.add_handler(CommandHandler(["start", "help"], UserCommand.start))  # 帮助
-    application.add_handler(CommandHandler("reg", UserCommand.reg))  # 注册账户 需要cdk（部分权限账户不需要）
-    application.add_handler(CommandHandler("info", UserCommand.info))
-    application.add_handler(CommandHandler("delete", UserCommand.delete_account))
-    application.add_handler(CommandHandler("sign", UserCommand.sign))
-    application.add_handler(CommandHandler("bind", UserCommand.bind))
-    application.add_handler(CommandHandler("unbind", UserCommand.unbind))
-    application.add_handler(CommandHandler("password", UserCommand.reset_pw))  # 修改密码
-    application.add_handler(CommandHandler("gencdk", UserCommand.gen_cdk))  # 生成cdk
-    application.add_handler(CommandHandler("red", UserCommand.red_packet))  # 发红包
-    application.add_handler(CommandHandler("require", Require.require))  # 申请番剧 仅star用户
-    application.add_handler(CommandHandler("checkrequire", Require.check_require))  # 番剧申请状态 仅star用户
-    application.add_handler(CommandHandler("cancel", UserCommand.cancel))
+    def load_handlers(application):
+        if os.path.exists('command.toml'):
+            data = toml.load('command.toml')
+        else:
+            data = toml.loads("""
+            [user_commands]
+            start = "UserCommand.start"
+            help = "UserCommand.start"
+            reg = "UserCommand.reg"
+            info = "UserCommand.info"
+            delete = "UserCommand.delete_account"
+            sign = "UserCommand.sign"
+            bind = "UserCommand.bind"
+            unbind = "UserCommand.unbind"
+            password = "UserCommand.reset_pw"
+            gencdk = "UserCommand.gen_cdk"
+            red = "UserCommand.red_packet"
+            require = "Require.require"
+            checkrequire = "Require.check_require"
+            cancel = "UserCommand.cancel"
+            
+            [admin_commands]
+            shelp = "AdminCommand.shelp"
+            summon = "AdminCommand.summon"
+            checkinfo = "AdminCommand.checkinfo"
+            deleteAccount = "AdminCommand.delete_account"
+            setGroup = "AdminCommand.set_group"
+            cdks = "AdminCommand.get_all_cdk"
+            update = "AdminCommand.update"
+            setScore = "AdminCommand.set_score"
+            setCDKgen = "AdminCommand.set_gen_cdk"
+            deleteCDK = "AdminCommand.del_cdk"
+            setCdkLimit = "AdminCommand.set_cdk_limit"
+            setCdkTime = "AdminCommand.set_cdk_time"
+            requireList = "Require.require_list"
+            resetpw = "AdminCommand.resetpw"
+            
+            [callback_queries]
+            confirm_delete = "callback.confirm_delete"
+            confirm_unbind = "callback.confirm_unbind"
+            cancel = "callback.cancel"
+            red_ = "callback.receive_red_packet"
+            redinfo_ = "callback.red_info"
+            withdraw_ = "callback.withdraw_red"
+            reqb_ = "Require.require_choose"
+            req_ = "Require.require_submit"
+            reqa_ = "Require.require_action"
+            """)
+        # 用户命令
+        for command, handler in data['user_commands'].items():
+            application.add_handler(CommandHandler(command, eval(handler)))
+        # 管理员命令
+        for command, handler in data['admin_commands'].items():
+            application.add_handler(CommandHandler(command, eval(handler)))
+        # 回调
+        for pattern, handler in data['callback_queries'].items():
+            application.add_handler(CallbackQueryHandler(eval(handler), pattern=pattern))
     
-    # 管理员命令
-    application.add_handler(CommandHandler("shelp", AdminCommand.shelp))  # 生成注册码
-    application.add_handler(CommandHandler("summon", AdminCommand.summon))  # 生成注册码
-    application.add_handler(CommandHandler("checkinfo", AdminCommand.checkinfo))  # 管理员查看用户信息
-    application.add_handler(CommandHandler("deleteAccount", AdminCommand.delete_account))  # 删除用户
-    application.add_handler(CommandHandler("setGroup", AdminCommand.set_group))  # 设置用户权限
-    application.add_handler(CommandHandler("cdks", AdminCommand.get_all_cdk))  # 查看所有注册码
-    application.add_handler(CommandHandler("update", AdminCommand.update))
-    application.add_handler(CommandHandler("setScore", AdminCommand.set_score))  # 设置用户积分
-    application.add_handler(CommandHandler("setCDKgen", AdminCommand.set_gen_cdk))  # 是否允许用户生成注册码
-    application.add_handler(CommandHandler("deleteCDK", AdminCommand.del_cdk))  # 删除某个注册码
-    application.add_handler(CommandHandler("setCdkLimit", AdminCommand.set_cdk_limit))
-    application.add_handler(CommandHandler("setCdkTime", AdminCommand.set_cdk_time))
-    application.add_handler(CommandHandler("requireList", Require.require_list))
-    application.add_handler(CommandHandler("resetpw", AdminCommand.resetpw))
+    load_handlers(application)
     
-    # 按钮回调
-    application.add_handler(CallbackQueryHandler(callback.confirm_delete, pattern='confirm_delete'))
-    application.add_handler(CallbackQueryHandler(callback.confirm_unbind, pattern='confirm_unbind'))
-    application.add_handler(CallbackQueryHandler(callback.cancel, pattern='cancel'))
-    application.add_handler(CallbackQueryHandler(callback.receive_red_packet, pattern='red_'))
-    application.add_handler(CallbackQueryHandler(callback.red_info, pattern='redinfo_'))
-    application.add_handler(CallbackQueryHandler(callback.withdraw_red, pattern='withdraw_'))
-    application.add_handler(CallbackQueryHandler(Require.require_choose, pattern='reqb_'))
-    application.add_handler(CallbackQueryHandler(Require.require_submit, pattern='req_'))
-    application.add_handler(CallbackQueryHandler(Require.require_action, pattern='reqa_'))  # 处理番剧请求
     bot_logger.info("Bot started")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
