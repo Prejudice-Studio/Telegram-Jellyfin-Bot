@@ -200,6 +200,7 @@ async def require_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
         other_info = json.loads(str(req.other_info))
         tg_info = await UsersOperate.get_user(req.telegram_id)
         rep_text += (f"来自 <b>{tg_info.fullname}</b> 的请求:\n"
+                     f"请求ID: <code>{req.id}</code>\n"
                      f"用户ID: <code>{tg_info.telegram_id}</code>\n"
                      f"Username: @{tg_info.username if tg_info.username else "N/A"}\n"
                      f"发起时间: {convert_to_china_timezone(req.timestamp)}\n"
