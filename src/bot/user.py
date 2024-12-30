@@ -306,6 +306,7 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
     new_packet = RedPacketModel(telegram_id=update.effective_user.id, amount=total, count=count, type=mode, current_amount=total,
                                 create_time=int(datetime.now().timestamp()), data=json.dumps(red_data))
     await ScoreOperate.add_red_packet(new_packet)
+    score_data.score -= total
     await ScoreOperate.update_score(score_data)
     keyboard = [[InlineKeyboardButton("点击领取红包", callback_data=f'red_{new_packet.id}')],
                 [InlineKeyboardButton("查看红包详情", callback_data=f'redinfo_{new_packet.id}'),

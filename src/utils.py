@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import logging
 import re
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -127,6 +128,7 @@ def generate_red_packets(max_amount: int, count: int, mean_v: int = 2, std_dev_v
     mean = max_amount / mean_v
     std_dev = max_amount / std_dev_v
     amounts = np.random.normal(mean, std_dev, count)
+    logging.info(f"amounts: {max_amount} {count} {mean} {std_dev}")
     amounts = np.maximum(amounts, 1)
     total_amount = sum(amounts)
     if total_amount > max_amount:
@@ -134,6 +136,10 @@ def generate_red_packets(max_amount: int, count: int, mean_v: int = 2, std_dev_v
     
     amounts = np.round(amounts).astype(int)
     amounts = np.maximum(amounts, 1)
+    # 负值纠正
+    if np.any(amounts < 0):
+        amounts = np.maximum(amounts, 1)
+    
     final_total = sum(amounts)
     # 金额纠正
     if final_total < max_amount:
@@ -142,4 +148,5 @@ def generate_red_packets(max_amount: int, count: int, mean_v: int = 2, std_dev_v
     elif final_total > max_amount:
         difference = final_total - max_amount
         amounts[-1] -= difference
+    logging.info(f"amounts: { sum(amounts)} {amounts}")
     return amounts.tolist()
