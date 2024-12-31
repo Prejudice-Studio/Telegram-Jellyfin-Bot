@@ -9,7 +9,7 @@ from io import BytesIO
 from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
-from src.bot import check_admin, command_warp
+from src.bot import check_admin, check_private, command_warp
 from src.config import BotConfig, JellyfinConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
@@ -264,6 +264,7 @@ async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # noinspection PyUnusedLocal
 @check_admin
+@check_private
 async def get_all_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     code_list = await CdkOperate.get_all_cdk()
     ret_text = ""
