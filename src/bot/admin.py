@@ -135,9 +135,9 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     jellyfin_user, user_info = await get_user_info(username)
     # if not jellyfin_user:
     #     return await update.message.reply_text("未找到用户")
-    last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
     # 检查积分和签到信息
     if not user_info and jellyfin_user:
+        last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
         await update.message.reply_text(
                 f"找到Jellyfin用户，但未绑定Telegram.\n"
                 f"用户名: {jellyfin_user['Name']}\n"
@@ -162,6 +162,7 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             checkin_time = score_data.checkin_time
         checkin_time_v = checkin_time if checkin_time is not None else 0
         limits = Role(user_info.role).name
+        last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
         message = (
             f"----------Telegram----------\n"
             f"Telegram ID: {user_info.telegram_id}\n"
