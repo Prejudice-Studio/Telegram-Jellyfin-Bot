@@ -1,6 +1,7 @@
 import json
 import random
 import string
+from asyncio import sleep
 from datetime import datetime
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
@@ -45,7 +46,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("操作取消.", reply_markup=ReplyKeyboardRemove())
+    msg = await update.message.reply_text("操作取消.", reply_markup=ReplyKeyboardRemove())
+    await sleep(2)
+    await msg.delete()
 
 
 @check_banned
