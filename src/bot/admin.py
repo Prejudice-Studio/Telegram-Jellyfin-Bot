@@ -26,6 +26,8 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/summon [limit] [quantity] [validity_hours]</code> 生成注册码 (limit：限制数，quantity：数量，validity_hours：有效小时数)\n"
                 f"<code>/checkinfo [jellyfin用户名/Telegram用户ID/Fullname]</code> 查看用户信息\n"
                 f"<code>/deleteAccount [ID/名字/TG昵称]</code> 删除用户\n"
+                f"<code>/clearUser [id/name]</code> 清除某个用户全部数据\n"
+                f"<code>/move [id/name] [new_tg_id]</code> 迁移用户数据到新的tg账户\n"
                 f"<code>/setGroup [id/name] [group]</code> 设置用户权限\n"
                 f"<code>/cdks</code> 查看所有注册码\n"
                 f"<code>/update</code> 更新Bot\n"
@@ -37,6 +39,7 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/setCdkTime [cdk] [hours]</code> 设置注册码有效时间\n"
                 f"<code>/requireList</code> 查看番剧请求列表\n")
     all_keyboard = [["/summon", "/checkinfo", "/deleteAccount"],
+                    ["/clearUser", "/move"],
                     ["/setGroup", "/cdks", "/update"],
                     ["/resetpw", "/setScore", "/setCDKgen"],
                     ["/deleteCDK", "/setCdkLimit", "/setCdkTime"],
@@ -57,6 +60,35 @@ async def set_cdk_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cdk_info.limit += limit
     await CdkOperate.update_cdk(cdk_info)
     await update.message.reply_text(f"成功设置 {cdk} 的 limit 为 {cdk_info.limit}.")
+
+
+@check_admin
+async def clear_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 1:
+        return await update.message.reply_text("Usage: /clear_user <id/name>")
+    _, user_info = await get_user_info(context.args[0])
+    if not user_info:
+        return await update.message.reply_text("用户未找到")
+    tg_id = user_info.telegram_id
+    await UsersOperate.delete(tg_id)
+    await ScoreOperate.delete(tg_id)
+    await update.message.reply_text(f"成功清除用户 {user_info.fullname} 的所有数据.")
+
+
+@check_admin
+async def move(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 2:
+        return await update.message.reply_text("Usage: /move <id/name> <new_tg_id>")
+    old_id, new_id = context.args
+    _, user_info = await get_user_info(old_id)
+    if not user_info:
+        return await update.message.reply_text("用户未找到")
+    user_info.telegram_id = int(new_id)
+    await UsersOperate.update_user(user_info)
+    if score_data := await ScoreOperate.get_score(old_id):
+        score_data.telegram_id = int(new_id)
+        await ScoreOperate.update_score(score_data)
+    await update.message.reply_text(f"成功将用户 {user_info.fullname} 数据迁移到新账户 {new_id}.")
 
 
 @check_admin

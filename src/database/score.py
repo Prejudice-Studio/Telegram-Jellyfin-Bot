@@ -1,4 +1,4 @@
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -41,6 +41,17 @@ ScoreSessionFactory = async_sessionmaker(bind=ENGINE, expire_on_commit=False)
 
 
 class ScoreOperate:
+    @staticmethod
+    async def delete(telegram_id: int):
+        """
+        删除用户积分
+        :param telegram_id: Telegram ID
+        """
+        async with ScoreSessionFactory() as session:
+            async with session.begin():
+                await session.execute(delete(ScoreModel).filter(ScoreModel.telegram_id == telegram_id))
+                await session.execute(delete(RedPacketModel).filter(RedPacketModel.telegram_id == telegram_id))
+    
     @staticmethod
     async def add_score(score_data: ScoreModel) -> ScoreModel:
         """
@@ -95,7 +106,7 @@ class ScoreOperate:
         async with ScoreSessionFactory() as session:
             async with session.begin():
                 session.add(red_packet_data)
-            
+    
     @staticmethod
     async def get_red_packet(red_packet_id: int) -> RedPacketModel | None:
         """
@@ -107,7 +118,7 @@ class ScoreOperate:
             async with session.begin():
                 scalar = await session.execute(select(RedPacketModel).filter(RedPacketModel.id == red_packet_id).limit(1))
                 return scalar.scalar_one_or_none()
-            
+    
     @staticmethod
     async def update_red_packet(red_packet_data: RedPacketModel):
         """
@@ -117,4 +128,3 @@ class ScoreOperate:
         async with ScoreSessionFactory() as session:
             async with session.begin():
                 await session.merge(red_packet_data)
-                

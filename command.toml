@@ -29,6 +29,8 @@ setCdkLimit = "AdminCommand.set_cdk_limit" # 设置某个cdk使用限制
 setCdkTime = "AdminCommand.set_cdk_time" # 设置某个cdk有效时间
 requireList = "Require.require_list" # 查看番剧申请列表
 resetpw = "AdminCommand.resetpw" # 重置用户密码
+clearUser = "AdminCommand.clear_user" # 清除用户数据
+move =  "AdminCommand.move" # 移动用户数据
 
 [callback_queries] # 回调函数，基本不用改
 confirm_delete = "callback.confirm_delete"

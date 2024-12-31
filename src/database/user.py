@@ -1,6 +1,6 @@
 from enum import Enum
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -83,3 +83,14 @@ class UsersOperate:
             async with session.begin():
                 await session.execute(update(UserModel).filter_by(telegram_id=telegram_id).
                                       values(account=None, password=None, bind_id=None))
+    
+    @staticmethod
+    async def delete(telegram_id: int):
+        """
+        删除用户
+        :param telegram_id: Telegram ID
+        """
+        async with UsersSessionFactory() as session:
+            async with session.begin():
+                await session.execute(delete(UserModel).filter_by(telegram_id=telegram_id))
+                

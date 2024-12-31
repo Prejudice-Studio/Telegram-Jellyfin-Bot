@@ -71,6 +71,8 @@ def run_bot():
             setCdkTime = "AdminCommand.set_cdk_time"
             requireList = "Require.require_list"
             resetpw = "AdminCommand.resetpw"
+            clearUser = "AdminCommand.clear_user"
+            move =  "AdminCommand.move"
             
             [callback_queries]
             confirm_delete = "callback.confirm_delete"
