@@ -38,7 +38,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     ["/gencdk 生成cdk", "/require 番剧申请", "/checkrequire 番剧申请查询"],
                     ["/cancel 取消"]]
     reply_markup = ReplyKeyboardMarkup(all_keyboard, resize_keyboard=True)
-    await update.message.reply_text(rep_text, reply_markup=reply_markup, parse_mode="HTML")
+    if update.effective_chat.type == "private":
+        await update.message.reply_text(rep_text, parse_mode="HTML", reply_markup=reply_markup)
+    else:
+        await update.message.reply_text(rep_text, parse_mode="HTML")
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):

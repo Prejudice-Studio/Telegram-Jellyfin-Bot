@@ -45,7 +45,10 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     ["/deleteCDK", "/setCdkLimit", "/setCdkTime"],
                     ["/requireList"], ["/cancel 取消"]]
     reply_markup = ReplyKeyboardMarkup(all_keyboard, resize_keyboard=True)
-    await update.message.reply_text(rep_text, parse_mode="HTML", reply_markup=reply_markup)
+    if update.effective_chat.type == "private":
+        await update.message.reply_text(rep_text, parse_mode="HTML", reply_markup=reply_markup)
+    else:
+        await update.message.reply_text(rep_text, parse_mode="HTML")
 
 
 @check_admin
