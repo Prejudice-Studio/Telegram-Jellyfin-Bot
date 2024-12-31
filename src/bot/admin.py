@@ -238,7 +238,7 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"确认删除用户? \n"
                                         f"Je账户: {jellyfin_user['Name']}\n"
                                         f"Tg信息: {user_info.fullname} {user_info.username if user_info.username else "无用户名"}\n"
-                                        f"TG ID: {user_info.id}", reply_markup=keyboard)
+                                        f"TG ID: {user_info.telegram_id}", reply_markup=keyboard)
     await update.message.reply_text(f"确认删除用户? \n"
                                     f"JE账户{jellyfin_user['Name']}", reply_markup=keyboard)
 
