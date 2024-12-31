@@ -232,15 +232,15 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not jellyfin_user:
         return await update.message.reply_text("User not found.")
     je_id = jellyfin_user["Id"]
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("确认删除", callback_data=f"admdelje_{je_id}")],
-                                     [InlineKeyboardButton("取消", callback_data="cancel")]])
+    keyboard = InlineKeyboardMarkup(
+            [[InlineKeyboardButton("确认删除", callback_data=f"admdelje_{je_id}"), InlineKeyboardButton("取消", callback_data="cancel")]])
     if user_info:
-        await update.message.reply_text(f"确认删除用户? \n"
-                                        f"Je账户: {jellyfin_user['Name']}\n"
-                                        f"Tg信息: {user_info.fullname} {user_info.username if user_info.username else "无用户名"}\n"
-                                        f"TG ID: {user_info.telegram_id}", reply_markup=keyboard)
-    await update.message.reply_text(f"确认删除用户? \n"
-                                    f"JE账户{jellyfin_user['Name']}", reply_markup=keyboard)
+        return await update.message.reply_text(f"确认删除用户? \n"
+                                               f"Je账户: {jellyfin_user['Name']}\n"
+                                               f"Tg信息: {user_info.fullname} {user_info.username if user_info.username else "无用户名"}\n"
+                                               f"TG ID: {user_info.telegram_id}", reply_markup=keyboard)
+    return await update.message.reply_text(f"确认删除用户? \n"
+                                           f"JE账户{jellyfin_user['Name']}", reply_markup=keyboard)
 
 
 async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
