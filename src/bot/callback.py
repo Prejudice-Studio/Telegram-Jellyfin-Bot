@@ -10,7 +10,30 @@ from src.database.score import ScoreOperate
 from src.database.user import Role, UsersOperate
 from src.jellyfin_client import client
 from src.logger import bot_logger
-from src.utils import base64_decode, base64_encode
+from src.utils import base64_decode, base64_encode, get_user_info
+
+
+# noinspection PyUnusedLocal
+@command_warp
+async def admin_delete_je(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    je_id = int(query.data.split("_")[1])
+    jellyfin_user, user_info = await get_user_info(je_id)
+    if not jellyfin_user:
+        return await query.answer("用户不存在")
+    je_id = jellyfin_user["Id"]
+    if user_info:
+        user_info.role = Role.SEA.value
+        await UsersOperate.update_user(user_info)
+        await UsersOperate.clear_bind(user_info.telegram_id)
+    try:
+        if not await client.Users.delete_user(je_id):
+            return await update.message.reply_text("[Server]删除用户失败[2]")
+    except Exception as e:
+        bot_logger.error(f"Error: {e}")
+        return await update.message.reply_text("[Server]删除用户失败[1]")
+    await query.answer(f"成功删除JE用户{jellyfin_user['Name']}")
+    await query.delete_message()
 
 
 # noinspection PyUnusedLocal

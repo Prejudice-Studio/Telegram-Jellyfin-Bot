@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 from io import BytesIO
 
-from telegram import ReplyKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from src.bot import check_admin, check_private, command_warp
@@ -15,7 +15,6 @@ from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UsersOperate
 from src.jellyfin_client import client
-from src.logger import bot_logger
 from src.utils import convert_to_china_timezone, get_password_hash, get_user_info
 
 
@@ -233,17 +232,15 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not jellyfin_user:
         return await update.message.reply_text("User not found.")
     je_id = jellyfin_user["Id"]
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("确认删除", callback_data=f"admdelje_{je_id}")],
+                                     [InlineKeyboardButton("取消", callback_data="cancel")]])
     if user_info:
-        user_info.role = Role.SEA.value
-        await UsersOperate.update_user(user_info)
-        await UsersOperate.clear_bind(user_info.telegram_id)
-    try:
-        if not await client.Users.delete_user(je_id):
-            return await update.message.reply_text("[Server]删除用户失败[2]")
-    except Exception as e:
-        bot_logger.error(f"Error: {e}")
-        return await update.message.reply_text("[Server]删除用户失败[1]")
-    await update.message.reply_text(f"成功删除用户 {username}")
+        await update.message.reply_text(f"确认删除用户? \n"
+                                        f"Je账户: {jellyfin_user['Name']}\n"
+                                        f"Tg信息: {user_info.fullname} {user_info.username if user_info.username else "无用户名"}\n"
+                                        f"TG ID: {user_info.id}", reply_markup=keyboard)
+    await update.message.reply_text(f"确认删除用户? \n"
+                                    f"JE账户{jellyfin_user['Name']}", reply_markup=keyboard)
 
 
 async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):

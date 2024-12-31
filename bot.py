@@ -84,6 +84,7 @@ def run_bot():
             reqb_ = "Require.require_choose"
             req_ = "Require.require_submit"
             reqa_ = "Require.require_action"
+            admdelje_ = "callback.admin_delete_je"
             """)
         # 用户命令
         for command, handler in data['user_commands'].items():
