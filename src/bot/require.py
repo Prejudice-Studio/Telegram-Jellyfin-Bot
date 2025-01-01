@@ -47,7 +47,7 @@ async def check_require(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if req_info.telegram_id != update.effective_user.id and user_info.role != Role.ADMIN.value:
         return await update.message.reply_text("您没有权限查看此请求")
     other_info = json.loads(str(req_info.other_info))
-    rep_text = (f"来自 {'您' if user_info.role != Role.ADMIN.value else '用户 ' + update.effective_user.full_name} 的请求:\n"
+    rep_text = (f"来自 {'您' if user_info.role != update.effective_user.full_name else '用户 ' + str(req_info.telegram_id)} 的请求:\n"
                 f"番剧名: {other_info['name_cn']}\n"
                 f"上映日期: {other_info['date']}\n"
                 f"集数: {other_info['total_episodes']}\n"
