@@ -5,7 +5,10 @@ import subprocess
 import sys
 from datetime import datetime
 from io import BytesIO
+from pathlib import Path
 
+import toml
+from sqlalchemy.sql.coercions import expect
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
@@ -36,13 +39,15 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/deleteCDK [cdk]</code> 删除某个注册码\n"
                 f"<code>/setCdkLimit [cdk] [limit]</code> 设置注册码使用次数\n"
                 f"<code>/setCdkTime [cdk] [hours]</code> 设置注册码有效时间\n"
-                f"<code>/requireList</code> 查看番剧请求列表\n")
+                f"<code>/requireList</code> 查看番剧请求列表\n"
+                f"<code>/getconfig</code> 获取配置\n"
+                f"<code>/setconfig [key] [value]</code> 设置配置\n")
     all_keyboard = [["/summon", "/checkinfo", "/deleteAccount"],
-                    ["/clearUser", "/move"],
+                    ["/clearUser", "/move", "/requireList"],
                     ["/setGroup", "/cdks", "/update"],
                     ["/resetpw", "/setScore", "/setCDKgen"],
                     ["/deleteCDK", "/setCdkLimit", "/setCdkTime"],
-                    ["/requireList"], ["/cancel 取消"]]
+                    ["/getconfig", "/setconfig", "/cancel 取消"]]
     reply_markup = ReplyKeyboardMarkup(all_keyboard, resize_keyboard=True)
     if update.effective_chat.type == "private":
         await update.message.reply_text(rep_text, parse_mode="HTML", reply_markup=reply_markup)
@@ -134,6 +139,50 @@ async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     JellyfinConfig.save_to_toml()
     await update.message.reply_text(f"当前用户生成注册码权限 <code>{'允许' if context.args[0] == 'true' else '禁止'}</code>",
                                     parse_mode="HTML")
+
+
+async def get_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != BotConfig.ADMIN:
+        return await update.message.reply_text("无权限")
+    ROOT_PATH: Path = Path(__file__ + '/../../..').resolve()
+    toml_file_path = os.path.join(ROOT_PATH, 'config.toml')
+    with open(toml_file_path, 'r') as f:
+        text = f.read()
+    if len(text) > 4096:
+        await update.message.reply_document(document=toml_file_path, filename="config.toml")
+    else:
+        await update.message.reply_text(text)
+
+
+async def set_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != BotConfig.ADMIN:
+        return await update.message.reply_text("无权限")
+    if len(context.args) == 2:
+        key, value = context.args
+        section = None
+    elif len(context.args) == 3:
+        section, key, value = context.args
+    else:
+        return await update.message.reply_text("Usage: /set_config <key> <value> or /set_config <section> <key> <value>")
+    ROOT_PATH: Path = Path(__file__ + '/../../..').resolve()
+    toml_file_path = os.path.join(ROOT_PATH, 'config.toml')
+    config = toml.load(toml_file_path)
+    try:
+        if section:
+            if section not in config:
+                return await update.message.reply_text("Section not found")
+            ori_type = type(config[section][key])
+            config[section][key] = ori_type(value)
+        else:
+            ori_type = type(config[key])
+            config[key] = ori_type(value)
+        with open(toml_file_path, 'w') as f:
+            toml.dump(config, f)
+    except Exception as e:
+        return await update.message.reply_text(f"Error: {e}")
+    await update.message.reply_text(f"成功设置 {key} 为 {value},即将重启bot")
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
 
 
 @check_admin

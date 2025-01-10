@@ -73,6 +73,8 @@ def run_bot():
             resetpw = "AdminCommand.resetpw"
             clearUser = "AdminCommand.clear_user"
             move =  "AdminCommand.move"
+            getconfig = "AdminCommand.get_config" # 获取配置
+            setconfig = "AdminCommand.set_config" # 设置配置
             
             [callback_queries]
             confirm_delete = "callback.confirm_delete"
