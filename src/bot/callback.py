@@ -18,10 +18,10 @@ from src.utils import base64_decode, base64_encode, get_user_info
 async def admin_delete_je(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     je_id = int(query.data.split("_")[1])
-    jellyfin_user, user_info = await get_user_info(je_id)
-    if not jellyfin_user:
+    Emby_user, user_info = await get_user_info(je_id)
+    if not Emby_user:
         return await query.answer("用户不存在")
-    je_id = jellyfin_user["Id"]
+    je_id = Emby_user["Id"]
     if user_info:
         user_info.role = Role.SEA.value
         await UsersOperate.update_user(user_info)
@@ -32,7 +32,7 @@ async def admin_delete_je(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]删除用户失败[1]")
-    await query.answer(f"成功删除JE用户{jellyfin_user['Name']}")
+    await query.answer(f"成功删除JE用户{Emby_user['Name']}")
     await query.delete_message()
 
 
@@ -111,6 +111,7 @@ async def receive_red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.answer("红包未找到")
 
 
+# noinspection PyUnusedLocal
 async def red_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     packet_id = int(query.data.split("_")[1])
@@ -137,6 +138,7 @@ async def red_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer("红包未找到")
 
 
+# noinspection PyUnusedLocal
 async def withdraw_red(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     packet_id = int(query.data.split("_")[1])

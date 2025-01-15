@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 import httpx
 from httpx import Response
 
-from src.logger import je_logger
+from src.logger import emby_logger
 
 
 def json_response(func):
@@ -60,8 +60,8 @@ class EmbyRequest:
         self.user_id = None
         
         self.client.headers = {
-            'X-Emby-Client': 'Telegram Jellyfin Bot',
-            'X-Emby-Device-Name': 'Telegram Jellyfin Bot',
+            'X-Emby-Client': 'Telegram Bot',
+            'X-Emby-Device-Name': 'Telegram Bot',
             'X-Emby-Client-Version': '1.0.0',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 '
                           'Safari/537.36 Edg/114.0.1823.82'
@@ -78,7 +78,7 @@ class EmbyRequest:
         }
         self.client.headers['X-Emby-Device-Id'] = gen_device_id()
         response = await self.client.post(login_url, data=login_data)
-        je_logger.info(f"Login {response.status_code} {response.text}")
+        emby_logger.info(f"Login {response.status_code} {response.text}")
         if response.status_code == 200:
             json_resp = response.json()
             if token := json_resp.get('AccessToken'):
@@ -93,7 +93,7 @@ class EmbyRequest:
     async def get(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None, **kwargs) -> Response:
         response = await self.client.get(path, params=params, headers=headers, **kwargs)
         response.raise_for_status()
-        je_logger.info(f"GET {path} {response.status_code}")
+        emby_logger.info(f"GET {path} {response.status_code}")
         return response
     
     @http_warp
@@ -101,7 +101,7 @@ class EmbyRequest:
                    json: Optional[Dict[str, Any]] = None, **kwargs) -> Response:
         response = await self.client.post(path, params=params, headers=headers, data=json, **kwargs)
         response.raise_for_status()
-        je_logger.info(f"POST {path} {response.status_code}")
+        emby_logger.info(f"POST {path} {response.status_code}")
         return response
     
     @http_warp
@@ -109,7 +109,7 @@ class EmbyRequest:
                   json: Optional[Dict[str, Any]] = None, **kwargs) -> Response:
         response = await self.client.put(path, params=params, headers=headers, data=json, **kwargs)
         response.raise_for_status()
-        je_logger.info(f"PUT {path} {response.status_code}")
+        emby_logger.info(f"PUT {path} {response.status_code}")
         return response
     
     @http_warp
@@ -117,7 +117,7 @@ class EmbyRequest:
                      **kwargs) -> Response:
         response = await self.client.delete(path, params=params, headers=headers, **kwargs)
         response.raise_for_status()
-        je_logger.info(f"DELETE {path} {response.status_code}")
+        emby_logger.info(f"DELETE {path} {response.status_code}")
         return response
     
     async def close(self):

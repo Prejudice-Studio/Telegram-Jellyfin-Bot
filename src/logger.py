@@ -7,7 +7,7 @@ from src.config import Config
 
 ROOT_PATH: Path = Path(__file__ + '/../..').resolve()
 
-je_logger = logging.getLogger('jellyfin')
+emby_logger = logging.getLogger('emby')
 bot_logger = logging.getLogger('bot')
 
 logging.basicConfig(level=Config.LOG_LEVE, stream=sys.stdout, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

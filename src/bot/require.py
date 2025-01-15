@@ -17,7 +17,7 @@ from src.utils import convert_to_china_timezone
 async def get_bgm_info(bgm_id: str) -> str | None:
     try:
         id_info = await Bangumi_client.Subject.get_subject(bgm_id)
-    except Exception as e:
+    except Exception:
         return None
     if not id_info:
         return None
@@ -108,6 +108,7 @@ async def require(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(rep_text, reply_markup=reply_markup, parse_mode='HTML')
 
 
+# noinspection PyUnusedLocal
 async def require_choose(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_info = await UsersOperate.get_user(update.effective_user.id)
@@ -173,6 +174,7 @@ async def require_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return await query.answer(f"请求已经是{response_text}")
         req_info.status = target_info
         await BangumiOperate.update_req_bgm(req_info)
+        # noinspection PyUnresolvedReferences
         ori_msg = query.message.text
         ori_msg = re.sub(r"当前状态:\s*.*", f"当前状态: {response_text}", ori_msg)
         reply_markup = InlineKeyboardMarkup([
@@ -192,6 +194,7 @@ async def require_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer("未知操作")
 
 
+# noinspection PyUnusedLocal
 @check_admin
 async def require_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     req_list = await BangumiOperate.get_all_handle_list()

@@ -10,7 +10,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMa
 from telegram.ext import ContextTypes
 
 from src.bot import check_banned, check_private, command_warp
-from src.config import BotConfig, JellyfinConfig, ProgramConfig
+from src.config import BotConfig, EmbyConfig, ProgramConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import RedPacketModel, ScoreModel, ScoreOperate
 from src.database.user import Role, UserModel, UsersOperate
@@ -20,10 +20,11 @@ from src.logger import bot_logger
 from src.utils import convert_to_china_timezone, generate_red_packets, get_password_hash, is_password_strong
 
 
+# noinspection PyUnusedLocal
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    rep_text = (f"欢迎使用Telegram-Jellyfin-Bot，使用 <code>/help </code> 查看帮助\n"
+    rep_text = (f"欢迎使用Telegram-Emby-Bot，使用 <code>/help </code> 查看帮助\n"
                 f"基本命令:\n"
-                f"<code>/reg 账户 密码 注册码</code> 注册Jellyfin账号\n"
+                f"<code>/reg 账户 密码 注册码</code> 注册Emby账号\n"
                 f"<code>/info</code> 查看账号信息\n"
                 f"<code>/bind 账户 密码</code> 绑定账户 <code>/unbind</code> 解绑\n"
                 f"<code>/delete</code> 删除账号\n"
@@ -47,6 +48,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(rep_text, parse_mode="HTML")
 
 
+# noinspection PyUnusedLocal
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = await update.message.reply_text("操作取消.", reply_markup=ReplyKeyboardRemove())
     await sleep(2)
@@ -57,7 +59,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @command_warp
 @check_private
 async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not JellyfinConfig.USER_GEN_CDK:
+    if not EmbyConfig.USER_GEN_CDK:
         return await update.message.reply_text("用户注册码生成已关闭")
     score_data = await ScoreOperate.get_score(update.effective_user.id)
     if score_data is None or score_data.score < 200:
@@ -95,7 +97,7 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("密码强度不够(需要至少8位字符，且包含至少一个小写字母和大写字母)。")
     user_info = await UsersOperate.get_user(eff_user.id)
     if user_info.bind_id:
-        return await update.message.reply_text("你已绑定一个Jellyfin账号，无法注册。")
+        return await update.message.reply_text("你已绑定一个Emby账号，无法注册。")
     cdk_info = None
     if not (user_info and user_info.role == Role.ORDINARY.value):
         # 非ORDINARY用户需要验证注册码
@@ -116,7 +118,7 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         cdk_info.used_history += f"{str(eff_user.id)},"
         await CdkOperate.update_cdk(cdk_info)
     
-    # 绑定 Telegram 和 Jellyfin 账号
+    # 绑定 Telegram 和 Emby 账号
     
     password_hash = get_password_hash(password)
     if user_info:
@@ -138,17 +140,17 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info or not user_info.bind_id:
-        return await update.message.reply_text("无Jellyfin账号与该Telegram账号绑定.")
+        return await update.message.reply_text("无Emby账号与该Telegram账号绑定.")
     try:
-        jellyfin_user = await client.Users.get_user(user_info.bind_id)
+        emby_user = await client.Users.get_user(user_info.bind_id)
     except Exception as e:
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]服务器发生错误，请检查日志")
-    bot_logger.info(f"Jellyfin user: {jellyfin_user}")
-    if not jellyfin_user:
+    bot_logger.info(f"Emby user: {emby_user}")
+    if not emby_user:
         return await update.message.reply_text("用户未找到.")
     
-    last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
+    last_login = convert_to_china_timezone(emby_user.get("LastLoginDate", "N/A"))
     score_data = await ScoreOperate.get_score(update.effective_user.id)
     if not score_data:
         score = 0
@@ -162,8 +164,8 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"TelegramID: {user_info.telegram_id}\n"
             f"Telegram昵称: {user_info.fullname}\n"
             f"用户组: {limits}\n"
-            f"----------Jellyfin----------\n"
-            f"用户名: {jellyfin_user['Name']}\n"
+            f"----------Emby----------\n"
+            f"用户名: {emby_user['Name']}\n"
             f"上次登录: {last_login}\n"
             f"----------Score----------\n"
             f"积分: {score}\n"
@@ -177,7 +179,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info or user_info.account == "":
-        return await update.message.reply_text("无Jellyfin账号与该Telegram账号绑定。")
+        return await update.message.reply_text("无Emby账号与该Telegram账号绑定。")
     # 二次确认
     keyboard = [[InlineKeyboardButton("确认", callback_data='confirm_delete'),
                  InlineKeyboardButton("取消", callback_data='cancel')]]
@@ -211,13 +213,13 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
         return await update.message.reply_text("使用方法: /bind 用户名 密码")
     username, password = context.args
-    user_client = EmbyAPI(JellyfinConfig.BASE_URL, 2)
+    user_client = EmbyAPI(EmbyConfig.BASE_URL, 2)
     try:
-        jellyfin_user = await user_client.JellyfinReq.login(username, password)
+        emby_user = await user_client.EmbyReq.login(username, password)
     except Exception as e:
         bot_logger.error(f"Error: {e}")
-        return await update.message.reply_text("[Server]Failed to connect to Jellyfin.")
-    if not jellyfin_user:
+        return await update.message.reply_text("[Server]Failed to connect to Emby.")
+    if not emby_user:
         return await update.message.reply_text("用户名或密码错误.")
     eff_user = update.effective_user
     # 绑定 Telegram 账号
@@ -225,18 +227,18 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
     password_hash = get_password_hash(password)
     if user_info:
         if user_info.bind_id:
-            return await update.message.reply_text("你已绑定一个Jellyfin账号。请先解绑")
-        user_info.account, user_info.password, user_info.bind_id = username, password_hash, jellyfin_user["User"][
+            return await update.message.reply_text("你已绑定一个Emby账号。请先解绑")
+        user_info.account, user_info.password, user_info.bind_id = username, password_hash, emby_user["User"][
             "Id"]
         if user_info.role == Role.SEA.value:
             user_info.role = Role.ORDINARY.value
         await UsersOperate.update_user(user_info)
-        await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
+        await update.message.reply_text(f"成功与Emby用户 {username} 绑定.")
     else:
         user_info = UserModel(telegram_id=eff_user.id, username=eff_user.username, fullname=eff_user.full_name,
-                              account=username, password=password_hash, bind_id=jellyfin_user["User"]["Id"], role=Role.ORDINARY.value)
+                              account=username, password=password_hash, bind_id=emby_user["User"]["Id"], role=Role.ORDINARY.value)
         await UsersOperate.add_user(user_info)
-        await update.message.reply_text(f"成功与Jellyfin用户 {username} 绑定.")
+        await update.message.reply_text(f"成功与Emby用户 {username} 绑定.")
 
 
 # noinspection PyUnusedLocal
@@ -246,12 +248,12 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unbind(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info or not user_info.bind_id:
-        return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
+        return await update.effective_chat.send_message("该Telegram账号未绑定现有Emby账号.")
     # 二次确认解绑
     keyboard = [[InlineKeyboardButton("确认", callback_data='confirm_unbind'),
                  InlineKeyboardButton("取消", callback_data='cancel')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.effective_chat.send_message(f"你确定与Jellyfin用户:{user_info.account}解绑吗?",
+    await update.effective_chat.send_message(f"你确定与Emby用户:{user_info.account}解绑吗?",
                                              reply_markup=reply_markup)
 
 
@@ -261,7 +263,7 @@ async def unbind(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info or not user_info.bind_id:
-        return await update.effective_chat.send_message("该Telegram账号未绑定现有Jellyfin账号.")
+        return await update.effective_chat.send_message("该Telegram账号未绑定现有Emby账号.")
     if len(context.args) != 1:
         return await update.message.reply_text("使用方法: /password 新密码")
     new_password = context.args[0]
@@ -327,7 +329,8 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                                    reply_markup=reply_markup)
         else:
             msg = await update.effective_chat.send_photo(open(BotConfig.REDPACKET_IMG, "rb"),
-                                                         caption=f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
+                                                         caption=f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count},"
+                                                                 f" 模式{mode}",
                                                          reply_markup=reply_markup)
             ProgramConfig.REDPACKET_FILEID = msg.photo[-1].file_id
     else:
@@ -340,11 +343,12 @@ emby_url = os.getenv('EMBY_URL')
 emby_key = os.getenv('EMBY_KEY')
 
 
+# noinspection PyShadowingNames
 @check_banned
 async def emby_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info.bind_id:
-        return await update.message.reply_text("请先绑定Jellyfin账号")
+        return await update.message.reply_text("请先绑定Emby账号")
     if user_info.bind_id == "reg":
         return await update.message.reply_text("已经注册过emby账户了")
     if len(context.args) != 2:

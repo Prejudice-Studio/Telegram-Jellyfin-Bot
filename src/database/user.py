@@ -31,7 +31,7 @@ class UserModel(UsersDatabaseModel):
     config: Mapped[str] = mapped_column(nullable=True)  # 用户配置 后期预留，可能塞json进去
     account: Mapped[str] = mapped_column(nullable=True)  # 账户
     password: Mapped[str] = mapped_column(nullable=True)  # 密码 hash
-    bind_id: Mapped[str] = mapped_column(nullable=True)  # 绑定的jellyfin账户ID
+    bind_id: Mapped[str] = mapped_column(nullable=True)  # 绑定的Emby账户ID
     data: Mapped[str] = mapped_column(nullable=True)  # 预留的其他配置
 
 

@@ -8,12 +8,11 @@ from io import BytesIO
 from pathlib import Path
 
 import toml
-from sqlalchemy.sql.coercions import expect
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from src.bot import check_admin, check_private, command_warp
-from src.config import BotConfig, JellyfinConfig
+from src.config import BotConfig, EmbyConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UsersOperate
@@ -21,12 +20,13 @@ from src.init_check import client
 from src.utils import convert_to_china_timezone, get_password_hash, get_user_info
 
 
+# noinspection PyUnusedLocal
 @check_admin
 async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    rep_text = (f"欢迎使用Telegram-Jellyfin-Bot，以下为管理员命令部分\n"
+    rep_text = (f"欢迎使用Telegram-Emby-Bot，以下为管理员命令部分\n"
                 f"基本命令:\n"
                 f"<code>/summon [limit] [quantity] [validity_hours]</code> 生成注册码 (limit：限制数，quantity：数量，validity_hours：有效小时数)\n"
-                f"<code>/checkinfo [jellyfin用户名/Telegram用户ID/Fullname]</code> 查看用户信息\n"
+                f"<code>/checkinfo [Emby用户名/Telegram用户ID/Fullname]</code> 查看用户信息\n"
                 f"<code>/deleteAccount [ID/名字/TG昵称]</code> 删除用户\n"
                 f"<code>/clearUser [id/name]</code> 清除某个用户全部数据\n"
                 f"<code>/move [id/name] [new_tg_id]</code> 迁移用户数据到新的tg账户\n"
@@ -135,12 +135,13 @@ async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("Usage: /setcdkgen <true/false>")
     if context.args[0] not in ["true", "false"]:
         return await update.message.reply_text("Usage: /setcdkgen <true/false>")
-    JellyfinConfig.USER_GEN_CDK = context.args[0] == "true"
-    JellyfinConfig.save_to_toml()
+    EmbyConfig.USER_GEN_CDK = context.args[0] == "true"
+    EmbyConfig.save_to_toml()
     await update.message.reply_text(f"当前用户生成注册码权限 <code>{'允许' if context.args[0] == 'true' else '禁止'}</code>",
                                     parse_mode="HTML")
 
 
+# noinspection PyUnusedLocal
 async def get_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != BotConfig.ADMIN:
         return await update.message.reply_text("无权限")
@@ -213,28 +214,27 @@ async def summon(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @check_admin
 async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
-        return await update.message.reply_text("使用方法: /checkinfo <jellyfin用户名/Telegram用户ID/Fullname>")
+        return await update.message.reply_text("使用方法: /checkinfo <Emby用户名/Telegram用户ID/Fullname>")
     username = context.args[0]
-    jellyfin_user, user_info = await get_user_info(username)
-    # if not jellyfin_user:
-    #     return await update.message.reply_text("未找到用户")
+    emby_user, user_info = await get_user_info(username)
     # 检查积分和签到信息
-    if not user_info and jellyfin_user:
-        last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
+    if not user_info and emby_user:
+        last_login = convert_to_china_timezone(emby_user.get("LastLoginDate", "N/A"))
         await update.message.reply_text(
-                f"找到Jellyfin用户，但未绑定Telegram.\n"
-                f"用户名: {jellyfin_user['Name']}\n"
+                f"找到Emby用户，但未绑定Telegram.\n"
+                f"用户名: {emby_user['Name']}\n"
                 f"上次登录: {last_login}\n")
-    elif not jellyfin_user and user_info:
+    elif not emby_user and user_info:
         score_data = await ScoreOperate.get_score(user_info.telegram_id)
+        checkin_time_v = score_data.checkin_time if score_data.checkin_time is not None else 0
         await update.message.reply_text(
-                f"找到Telegram用户，但未绑定Jellyfin或服务器已关闭.\n"
+                f"找到Telegram用户，但未绑定Emby或服务器已关闭.\n"
                 f"Telegram ID: {user_info.telegram_id}\n"
                 f"Telegram NAME: {user_info.username}\n"
                 f"Telegram昵称: {user_info.fullname}\n"
                 f"用户组: {Role(user_info.role).name}\n"
                 f"积分: {score_data.score if score_data else 0}\n"
-                f"上次签到时间: {convert_to_china_timezone(score_data.checkin_time)}\n")
+                f"上次签到时间: {convert_to_china_timezone(checkin_time_v)}\n")
     else:
         score_data = await ScoreOperate.get_score(user_info.telegram_id)
         if not score_data:
@@ -245,16 +245,16 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             checkin_time = score_data.checkin_time
         checkin_time_v = checkin_time if checkin_time is not None else 0
         limits = Role(user_info.role).name
-        last_login = convert_to_china_timezone(jellyfin_user.get("LastLoginDate", "N/A"))
+        last_login = convert_to_china_timezone(emby_user.get("LastLoginDate", "N/A"))
         message = (
             f"----------Telegram----------\n"
             f"Telegram ID: {user_info.telegram_id}\n"
             f"Telegram NAME: {user_info.username}\n"
             f"Telegram昵称: {user_info.fullname}\n"
             f"用户组: {limits}\n"
-            f"----------Jellyfin----------\n"
+            f"----------Emby----------\n"
             f"账户: {user_info.account}\n"
-            f"用户名: {jellyfin_user['Name']}\n"
+            f"用户名: {emby_user['Name']}\n"
             f"账户ID: {user_info.bind_id}\n"
             f"上次登录: {last_login}\n"
             f"----------Score----------\n"
@@ -264,8 +264,8 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         if update.effective_chat.type == "private":
             message = message.replace(
-                    f"Username: {jellyfin_user['Name']}",
-                    f"Username: {jellyfin_user['Name']}\n"
+                    f"Username: {emby_user['Name']}",
+                    f"Username: {emby_user['Name']}\n"
             )
         
         await update.message.reply_text(message)
@@ -275,21 +275,21 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @check_admin
 async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
-        return await update.message.reply_text("Usage: /deleteAccount <jellyfin_username>")
+        return await update.message.reply_text("Usage: /deleteAccount <Emby_username>")
     username = context.args[0]
-    jellyfin_user, user_info = await get_user_info(username)
-    if not jellyfin_user:
+    emby_user, user_info = await get_user_info(username)
+    if not emby_user:
         return await update.message.reply_text("User not found.")
-    je_id = jellyfin_user["Id"]
+    je_id = emby_user["Id"]
     keyboard = InlineKeyboardMarkup(
             [[InlineKeyboardButton("确认删除", callback_data=f"admdelje_{je_id}"), InlineKeyboardButton("取消", callback_data="cancel")]])
     if user_info:
         return await update.message.reply_text(f"确认删除用户? \n"
-                                               f"Je账户: {jellyfin_user['Name']}\n"
+                                               f"Je账户: {emby_user['Name']}\n"
                                                f"Tg信息: {user_info.fullname} {user_info.username if user_info.username else "无用户名"}\n"
                                                f"TG ID: {user_info.telegram_id}", reply_markup=keyboard)
     return await update.message.reply_text(f"确认删除用户? \n"
-                                           f"JE账户{jellyfin_user['Name']}", reply_markup=keyboard)
+                                           f"JE账户{emby_user['Name']}", reply_markup=keyboard)
 
 
 async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):

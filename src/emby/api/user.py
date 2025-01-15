@@ -115,6 +115,7 @@ class Users:
             'Fields': info()
         })
     
+    # noinspection PyUnusedLocal
     @bool_response
     async def change_password(self, old_pw: str = "", new_pw: str = "", user_id: Optional[str] = "{UserID}"):
         """

@@ -35,6 +35,7 @@ def run_bot():
                    .base_url(BotConfig.BASE_URL)
                    .build())
     
+    # noinspection PyShadowingNames
     def load_handlers(application):
         if os.path.exists('command.toml'):
             data = toml.load('command.toml')

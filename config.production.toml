@@ -8,7 +8,7 @@ SALT = "" # 密码盐，推荐更改
 BANGUMI_TOKEN = "" # bangumi api access token
 
 [Flask]
-ENABLE = false # Flask api (用于jellyfin webhook)
+ENABLE = false # Flask api (用于Emby webhook)
 HOST = '0.0.0.0'
 PORT = 5000
 
@@ -20,7 +20,7 @@ TIMEOUT = 10  # bot请求/读取超时时间
 REDPACKET_IMG = "" #红包图片，留空发红包时候不带图
 
 
-[Jellyfin]
-BASE_URL = ""  # Jellyfin URL 必要
-API_KEY = ""  # Jellyfin API Key 必要
+[Emby]
+BASE_URL = ""  # Emby URL 必要
+API_KEY = ""  # Emby API Key 必要
 USER_GEN_CDK = false # 是否允许用户生成cdk（也可以通过命令开关）

@@ -51,7 +51,6 @@ class ProgramConfig(BaseConfig):
     程序配置 不从本地更新
     """
     VERSION: str = "0.0.1"
-    NAME: str = "JellyfinBot"
     REDPACKET_FILEID: str = ""  # 红包文件ID
 
 
@@ -65,7 +64,7 @@ class Config(BaseConfig):
     PROXY: str = None  # 代理
     MAX_RETRY: int = 3  # 重试次数
     DATABASES_DIR: Path = ROOT_PATH / 'database'  # 数据库路径
-    SALT = 'jellyfin'  # 加密盐
+    SALT = 'Emby'  # 加密盐
     BANGUMI_TOKEN: str = ""  # Bangumi Token
 
 
@@ -93,16 +92,16 @@ class BotConfig(BaseConfig):
     REDPACKET_IMG: str = ""  # 红包图片路径
 
 
-class JellyfinConfig(BaseConfig):
+class EmbyConfig(BaseConfig):
     """
     Jellyfin配置
     """
-    BASE_URL: str = ""  # Jellyfin URL
-    API_KEY: str = ""  # Jellyfin API Key
+    BASE_URL: str = ""  # Emby URL
+    API_KEY: str = ""  # Emby API Key
     USER_GEN_CDK: bool = False  # 是否允许用户生成CDK
 
 
 Config.update_from_toml()
 BotConfig.update_from_toml('Bot')
-JellyfinConfig.update_from_toml('Jellyfin')
+EmbyConfig.update_from_toml('Emby')
 FlaskConfig.update_from_toml('Flask')

@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional
 import httpx
 from httpx import Response
 
-from src.logger import je_logger
+from src.logger import emby_logger
 
 
 def json_response(func):
@@ -37,28 +37,28 @@ class BangumiRequest:
     async def get(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None, **kwargs) -> Response:
         response = await self.client.get(path, params=params, headers=headers, **kwargs)
         response.raise_for_status()
-        je_logger.info(f"GET {path} {response.status_code}")
+        emby_logger.info(f"GET {path} {response.status_code}")
         return response
     
     async def post(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
                    json: Optional[Dict[str, Any]] = None, **kwargs) -> Response:
         response = await self.client.post(path, params=params, headers=headers, json=json, **kwargs)
         response.raise_for_status()
-        je_logger.info(f"POST {path} {response.status_code}")
+        emby_logger.info(f"POST {path} {response.status_code}")
         return response
     
     async def put(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
                   json: Optional[Dict[str, Any]] = None, **kwargs) -> Response:
         response = await self.client.put(path, params=params, headers=headers, json=json, **kwargs)
         response.raise_for_status()
-        je_logger.info(f"PUT {path} {response.status_code}")
+        emby_logger.info(f"PUT {path} {response.status_code}")
         return response
     
     async def delete(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
                      **kwargs) -> Response:
         response = await self.client.delete(path, params=params, headers=headers, **kwargs)
         response.raise_for_status()
-        je_logger.info(f"DELETE {path} {response.status_code}")
+        emby_logger.info(f"DELETE {path} {response.status_code}")
         return response
     
     async def close(self):

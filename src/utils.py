@@ -61,9 +61,9 @@ def is_password_strong(password):
 
 async def get_user_info(username: str | int) -> tuple[None, UserModel | None | Any] | tuple[Any, Any] | tuple[None, UserModel]:
     """
-    获取 Jellyfin 用户信息
-    :param username: Telegram ID/Fullname or Jellyfin username
-    :return: Jellyfin 用户信息, 用户数据库信息
+    获取用户信息
+    :param username: Telegram ID/Fullname or Emby username
+    :return: Emby 用户信息, 用户数据库信息
     """
     je_id = None
     
@@ -148,5 +148,5 @@ def generate_red_packets(max_amount: int, count: int, mean_v: int = 2, std_dev_v
     elif final_total > max_amount:
         difference = final_total - max_amount
         amounts[-1] -= difference
-    logging.info(f"amounts: { sum(amounts)} {amounts}")
+    logging.info(f"amounts: {sum(amounts)} {amounts}")
     return amounts.tolist()

@@ -8,7 +8,7 @@ from src.emby.api.user import Users
 class EmbyAPI:
     def __init__(self, url: str, auth: int, api_key: Optional[str] = None):
         super().__init__()
-        self.JellyfinReq = EmbyRequest(url, auth, api_key)
-        self.Users = Users(self.JellyfinReq)
-        self.System = System(self.JellyfinReq)
+        self.EmbyReq = EmbyRequest(url, auth, api_key)
+        self.Users = Users(self.EmbyReq)
+        self.System = System(self.EmbyReq)
         
