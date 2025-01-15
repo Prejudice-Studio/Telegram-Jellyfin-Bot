@@ -109,7 +109,8 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if cdk_info.expired_time != 0 and cdk_info.expired_time < datetime.now().timestamp():
             return await update.message.reply_text("注册码已过期")
     try:
-        ret_user = await client.Users.new_user(username, password)
+        ret_user = await client.Users.new_user(username)
+        await client.Users.change_password(password, ret_user["Id"])
     except Exception as e:
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]创建用户失败(服务器故障或已经存在相同用户)。")
@@ -270,7 +271,7 @@ async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_password_strong(new_password):
         return await update.message.reply_text("密码强度不够(需要至少8位字符，且包含至少一个小写字母和大写字母).")
     try:
-        await client.Users.change_password("", new_password, user_info.bind_id)
+        await client.Users.change_password(new_password, user_info.bind_id)
         user_info.password = get_password_hash(new_password)
         await UsersOperate.update_user(user_info)
         return await update.message.reply_text("密码修改成功.")

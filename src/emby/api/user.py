@@ -84,16 +84,14 @@ class Users:
         })
     
     @json_response
-    async def new_user(self, name: str, password: str):
+    async def new_user(self, name: str):
         """
         创建新用户
         :param name:
-        :param password:
         :return:
         """
         return await self.client.post("Users/New", json={
-            "name": name,
-            "Password": password
+            "Name": name,
         })
     
     @json_response
@@ -117,10 +115,9 @@ class Users:
     
     # noinspection PyUnusedLocal
     @bool_response
-    async def change_password(self, old_pw: str = "", new_pw: str = "", user_id: Optional[str] = "{UserID}"):
+    async def change_password(self, new_pw: str = "", user_id: Optional[str] = "{UserID}"):
         """
         重置密码
-        :param old_pw:
         :param new_pw:
         :param user_id:
         :return:
