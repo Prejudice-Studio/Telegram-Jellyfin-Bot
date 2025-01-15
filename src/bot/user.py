@@ -217,7 +217,7 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
         emby_user = await user_client.EmbyReq.login(username, password)
     except Exception as e:
         bot_logger.error(f"Error: {e}")
-        return await update.message.reply_text("[Server]Failed to connect to Emby.")
+        return await update.message.reply_text(f"[Server]Failed: {e}")
     if not emby_user:
         return await update.message.reply_text("用户名或密码错误.")
     eff_user = update.effective_user
