@@ -1,9 +1,11 @@
 import json
+import os
 import random
 import string
 from asyncio import sleep
 from datetime import datetime
 
+import httpx
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import ContextTypes
 
@@ -332,3 +334,47 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.effective_chat.send_message(
                 f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
                 reply_markup=reply_markup)
+
+
+emby_url = os.getenv('EMBY_URL')
+emby_key = os.getenv('EMBY_KEY')
+
+
+@check_banned
+async def emby_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_info = await UsersOperate.get_user(update.effective_user.id)
+    if not user_info.bind_id:
+        return await update.message.reply_text("请先绑定Jellyfin账号")
+    if user_info.bind_id == "reg":
+        return await update.message.reply_text("已经注册过emby账户了")
+    if len(context.args) != 2:
+        return await update.message.reply_text("使用方法: /emby 用户名 密码")
+    username, password = context.args
+    async with httpx.AsyncClient() as client:
+        payload = {
+            "Name": username
+        }
+        try:
+            resp = await client.post(f"{emby_url}/emby/Users/New", params={"X-Emby-Token": emby_key}, data=payload)
+        except Exception as e:
+            bot_logger.error(f"Error: {e}")
+            return await update.message.reply_text("注册失败")
+        if resp.status_code == 200:
+            user_info.bind_id = "reg"
+            await UsersOperate.update_user(user_info)
+            user_data = resp.json()
+            user_id = user_data["Id"]
+            payload = {
+                "NewPw": password
+            }
+            try:
+                resp = await client.post(f"{emby_url}/emby/Users/{user_id}/Password", params={"X-Emby-Token": emby_key}, data=payload)
+            except Exception as e:
+                bot_logger.error(f"Error: {e}")
+                return await update.message.reply_text("注册失败,密码更改失败")
+            if resp.status_code == 204:
+                return await update.message.reply_text("注册成功")
+            else:
+                return await update.message.reply_text("注册失败,密码更改失败")
+        else:
+            return await update.message.reply_text("注册失败")

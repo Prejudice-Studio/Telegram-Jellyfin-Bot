@@ -13,6 +13,7 @@ red = "UserCommand.red_packet" # 发红包
 require = "Require.require" # 番剧申请
 checkrequire = "Require.check_require" # 查看申请
 cancel = "UserCommand.cancel" # 取消操作
+emby = "UserCommand.emby_reg"
 
 [admin_commands]
 shelp = "AdminCommand.shelp"

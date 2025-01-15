@@ -55,6 +55,7 @@ def run_bot():
             require = "Require.require"
             checkrequire = "Require.check_require"
             cancel = "UserCommand.cancel"
+            emby = "UserCommand.emby_reg"
             
             [admin_commands]
             shelp = "AdminCommand.shelp"
