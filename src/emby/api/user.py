@@ -1,7 +1,7 @@
 from typing import Optional
 
-from src.jellyfin.api import JellyfinRequest
-from src.jellyfin.api.req import bool_response, json_response
+from src.emby.api import EmbyRequest
+from src.emby.api.req import bool_response, json_response
 
 
 def info():
@@ -16,7 +16,7 @@ def info():
 
 
 class Users:
-    def __init__(self, client: JellyfinRequest):
+    def __init__(self, client: EmbyRequest):
         self.client = client
     
     @json_response
@@ -127,6 +127,5 @@ class Users:
         if new_pw == "":
             return await self.client.post(f'Users/{user_id}/Password', json={"resetPassword": True})
         return await self.client.post(f'Users/{user_id}/Password', json={
-            "CurrentPw": old_pw,
             "NewPw": new_pw
         })

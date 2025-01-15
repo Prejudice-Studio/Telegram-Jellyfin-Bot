@@ -1,3 +1,4 @@
+import uuid
 from functools import wraps
 from typing import Any, Dict, Optional
 
@@ -43,30 +44,31 @@ def http_warp(func):
     return wrapper
 
 
-class JellyfinRequest:
+def gen_device_id():
+    device_id = str(uuid.uuid4())
+    return device_id
+
+
+class EmbyRequest:
     
     def __init__(self, url: str, auth: int, api_key: Optional[str] = None):
+        if not (url.endswith("emby") or url.endswith("emby/")):
+            url += "/emby"
         self.client = httpx.AsyncClient(base_url=url)
         self.api_key = api_key
         self.user_data = None
         self.user_id = None
         
+        self.client.headers = {
+            'X-Emby-Client': 'Telegram Jellyfin Bot',
+            'X-Emby-Device-Name': 'Telegram Jellyfin Bot',
+            'X-Emby-Client-Version': '1.0.0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 '
+                          'Safari/537.36 Edg/114.0.1823.82'
+        }
+        
         if auth == 1:  # API key
-            self.client.headers = {
-                'accept': 'application/json',
-                'content-type': 'application/json',
-                'X-Emby-Token': api_key,
-                'X-Emby-Client': 'Telegram Jellyfin Bot',
-                'X-Emby-Device-Name': 'Telegram Jellyfin Bot',
-                'X-Emby-Client-Version': '1.0.0',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 '
-                              'Safari/537.36 Edg/114.0.1823.82'
-            }
-        elif auth == 2:  # 账户密码登录
-            self.client.headers = {
-                'accept': 'application/json',
-                'content-type': 'application/json',
-            }
+            self.client.headers['X-Emby-Token'] = api_key
     
     async def login(self, account: str, password: str):
         login_url = '/Users/authenticatebyname'
@@ -74,17 +76,13 @@ class JellyfinRequest:
             'Username': account,
             'Pw': password
         }
-        auth = 'MediaBrowser Client="Telegram Jellyfin Bot", Device="Telegram", DeviceId="Telegram Jellyfin Bot", Version="1.0.0"'
-        self.client.headers['Authorization'] = auth
-        response = await self.client.post(login_url, json=login_data)
+        self.client.headers['X-Emby-Device-Id'] = gen_device_id()
+        response = await self.client.post(login_url, data=login_data)
         je_logger.info(f"Login {response.status_code} {response.text}")
         if response.status_code == 200:
             json_resp = response.json()
             if token := json_resp.get('AccessToken'):
-                auth = auth + f', Token="{token}"'
-                self.client.headers['Authorization'] = auth
-                self.user_data = json_resp
-                self.user_id = json_resp['User']['Id']
+                self.client.headers['X-Emby-Token'] = token
                 return json_resp
             else:
                 raise ValueError("Login failed, no token")
@@ -101,7 +99,7 @@ class JellyfinRequest:
     @http_warp
     async def post(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
                    json: Optional[Dict[str, Any]] = None, **kwargs) -> Response:
-        response = await self.client.post(path, params=params, headers=headers, json=json, **kwargs)
+        response = await self.client.post(path, params=params, headers=headers, data=json, **kwargs)
         response.raise_for_status()
         je_logger.info(f"POST {path} {response.status_code}")
         return response
@@ -109,7 +107,7 @@ class JellyfinRequest:
     @http_warp
     async def put(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
                   json: Optional[Dict[str, Any]] = None, **kwargs) -> Response:
-        response = await self.client.put(path, params=params, headers=headers, json=json, **kwargs)
+        response = await self.client.put(path, params=params, headers=headers, data=json, **kwargs)
         response.raise_for_status()
         je_logger.info(f"PUT {path} {response.status_code}")
         return response

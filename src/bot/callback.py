@@ -8,7 +8,7 @@ from telegram.ext import ContextTypes
 from src.bot import command_warp
 from src.database.score import ScoreOperate
 from src.database.user import Role, UsersOperate
-from src.jellyfin_client import client
+from src.init_check import client
 from src.logger import bot_logger
 from src.utils import base64_decode, base64_encode, get_user_info
 

@@ -10,7 +10,7 @@ from src.bot import check_admin, check_banned, check_private
 from src.config import BotConfig
 from src.database.bangumi import BangumiOperate, BangumiRequireModel, ReqStatue
 from src.database.user import Role, UsersOperate
-from src.jellyfin_client import Bangumi_client
+from src.init_check import Bangumi_client
 from src.utils import convert_to_china_timezone
 
 

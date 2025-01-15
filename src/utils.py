@@ -11,7 +11,7 @@ from sqlalchemy import or_, select
 
 from src.config import Config
 from src.database.user import UserModel, UsersOperate, UsersSessionFactory
-from src.jellyfin_client import client
+from src.init_check import client
 from src.logger import bot_logger
 
 

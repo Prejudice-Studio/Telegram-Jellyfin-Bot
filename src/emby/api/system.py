@@ -1,9 +1,9 @@
-from src.jellyfin.api import JellyfinRequest
-from src.jellyfin.api.req import json_response
+from src.emby.api import EmbyRequest
+from src.emby.api.req import json_response
 
 
 class System:
-    def __init__(self, client: JellyfinRequest):
+    def __init__(self, client: EmbyRequest):
         self.client = client
     
     @json_response

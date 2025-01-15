@@ -1,8 +1,8 @@
 from src.bangumi import BangumiAPI
 from src.config import Config, JellyfinConfig
-from src.jellyfin.api import JellyfinAPI
+from src.emby.api import EmbyAPI
 
-client = JellyfinAPI(JellyfinConfig.BASE_URL, 1, JellyfinConfig.API_KEY)
+client = EmbyAPI(JellyfinConfig.BASE_URL, 1, JellyfinConfig.API_KEY)
 
 Bangumi_client = BangumiAPI(Config.BANGUMI_TOKEN)
 

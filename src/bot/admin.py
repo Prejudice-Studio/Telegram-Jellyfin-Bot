@@ -17,7 +17,7 @@ from src.config import BotConfig, JellyfinConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UsersOperate
-from src.jellyfin_client import client
+from src.init_check import client
 from src.utils import convert_to_china_timezone, get_password_hash, get_user_info
 
 

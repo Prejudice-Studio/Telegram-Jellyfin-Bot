@@ -14,8 +14,8 @@ from src.config import BotConfig, JellyfinConfig, ProgramConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import RedPacketModel, ScoreModel, ScoreOperate
 from src.database.user import Role, UserModel, UsersOperate
-from src.jellyfin.api import JellyfinAPI
-from src.jellyfin_client import client
+from src.emby.api import EmbyAPI
+from src.init_check import client
 from src.logger import bot_logger
 from src.utils import convert_to_china_timezone, generate_red_packets, get_password_hash, is_password_strong
 
@@ -211,7 +211,7 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
         return await update.message.reply_text("使用方法: /bind 用户名 密码")
     username, password = context.args
-    user_client = JellyfinAPI(JellyfinConfig.BASE_URL, 2)
+    user_client = EmbyAPI(JellyfinConfig.BASE_URL, 2)
     try:
         jellyfin_user = await user_client.JellyfinReq.login(username, password)
     except Exception as e:
