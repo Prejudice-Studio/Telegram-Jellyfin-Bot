@@ -39,56 +39,7 @@ def run_bot():
         if os.path.exists('command.toml'):
             data = toml.load('command.toml')
         else:
-            data = toml.loads("""
-            [user_commands]
-            start = "UserCommand.start"
-            help = "UserCommand.start"
-            reg = "UserCommand.reg"
-            info = "UserCommand.info"
-            delete = "UserCommand.delete_account"
-            sign = "UserCommand.sign"
-            bind = "UserCommand.bind"
-            unbind = "UserCommand.unbind"
-            password = "UserCommand.reset_pw"
-            gencdk = "UserCommand.gen_cdk"
-            red = "UserCommand.red_packet"
-            require = "Require.require"
-            checkrequire = "Require.check_require"
-            cancel = "UserCommand.cancel"
-            emby = "UserCommand.emby_reg"
-            
-            [admin_commands]
-            shelp = "AdminCommand.shelp"
-            summon = "AdminCommand.summon"
-            checkinfo = "AdminCommand.checkinfo"
-            deleteAccount = "AdminCommand.delete_account"
-            setGroup = "AdminCommand.set_group"
-            cdks = "AdminCommand.get_all_cdk"
-            update = "AdminCommand.update"
-            setScore = "AdminCommand.set_score"
-            setCDKgen = "AdminCommand.set_gen_cdk"
-            deleteCDK = "AdminCommand.del_cdk"
-            setCdkLimit = "AdminCommand.set_cdk_limit"
-            setCdkTime = "AdminCommand.set_cdk_time"
-            requireList = "Require.require_list"
-            resetpw = "AdminCommand.resetpw"
-            clearUser = "AdminCommand.clear_user"
-            move =  "AdminCommand.move"
-            getconfig = "AdminCommand.get_config" # 获取配置
-            setconfig = "AdminCommand.set_config" # 设置配置
-            
-            [callback_queries]
-            confirm_delete = "callback.confirm_delete"
-            confirm_unbind = "callback.confirm_unbind"
-            cancel = "callback.cancel"
-            red_ = "callback.receive_red_packet"
-            redinfo_ = "callback.red_info"
-            withdraw_ = "callback.withdraw_red"
-            reqb_ = "Require.require_choose"
-            req_ = "Require.require_submit"
-            reqa_ = "Require.require_action"
-            admdelje_ = "callback.admin_delete_je"
-            """)
+            data = toml.load('command.production.toml')
         # 用户命令
         for command, handler in data['user_commands'].items():
             application.add_handler(CommandHandler(command, eval(handler)))
