@@ -137,7 +137,7 @@ dmypy.json
 *.toml
 *.json
 *__pycache__*
-!config.production.toml
+!*production*
 /data/*
 /database/*
 *.png
