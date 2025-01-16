@@ -23,8 +23,9 @@ async def admin_delete_je(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await query.answer("用户不存在")
     je_id = Emby_user["Id"]
     if user_info:
-        user_info.role = Role.SEA.value
-        await UsersOperate.update_user(user_info)
+        if user_info.role != Role.ADMIN.value:
+            user_info.role = Role.SEA.value
+            await UsersOperate.update_user(user_info)
         await UsersOperate.clear_bind(user_info.telegram_id)
     try:
         if not await client.Users.delete_user(je_id):

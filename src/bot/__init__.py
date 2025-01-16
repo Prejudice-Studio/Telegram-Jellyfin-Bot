@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from src.config import BotConfig
-from src.database.user import UserModel, UsersOperate
+from src.database.user import Role, UserModel, UsersOperate
 from src.init_check import check_server_connectivity
 from src.logger import bot_logger
 
@@ -43,7 +43,7 @@ def check_banned(func):
                                                   fullname=eff_user.full_name,
                                                   ))
             return await func(update, context, *args, **kwargs)
-        if user_data.role == 0:
+        if user_data.role == Role.BANNED.value:
             return
         if user_data.fullname != eff_user.full_name or user_data.username != eff_user.username:
             user_data.username = eff_user.username
