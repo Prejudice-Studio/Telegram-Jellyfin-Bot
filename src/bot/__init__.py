@@ -62,9 +62,11 @@ def command_warp(func):
             last_check_time = datetime.now().timestamp()
             bot_logger.info(f"Server check")
             if not await check_server_connectivity():
+                bot_logger.info(f"Server check close")
                 server_close = True
                 return await update.message.reply_text("服务器已经关闭，请稍后再试。")
             else:
+                bot_logger.info(f"Server check successful")
                 server_close = False
         if server_close:
             return await update.message.reply_text("服务器已经关闭，请稍后再试。")
