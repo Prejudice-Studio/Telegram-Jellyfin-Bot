@@ -90,6 +90,8 @@ class BotConfig(BaseConfig):
     BASE_URL: str = "https://api.telegram.org/bot"  # 自定义URL
     TIMEOUT: int = 10  # bot请求/读取超时时间
     REDPACKET_IMG: str = ""  # 红包图片路径
+    USER_GEN_CDK: bool = False  # 是否允许用户生成CDK
+    USER_GEN_CDK_POINT: int = 200  # 用户生成CDK消耗的积分
 
 
 class EmbyConfig(BaseConfig):
@@ -98,7 +100,6 @@ class EmbyConfig(BaseConfig):
     """
     BASE_URL: str = ""  # Emby URL
     API_KEY: str = ""  # Emby API Key
-    USER_GEN_CDK: bool = False  # 是否允许用户生成CDK
 
 
 Config.update_from_toml()

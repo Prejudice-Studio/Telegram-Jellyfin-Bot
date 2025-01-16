@@ -57,15 +57,15 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @command_warp
 @check_private
 async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not EmbyConfig.USER_GEN_CDK:
+    if not BotConfig.USER_GEN_CDK:
         return await update.message.reply_text("用户注册码生成已关闭")
     score_data = await ScoreOperate.get_score(update.effective_user.id)
-    if score_data is None or score_data.score < 200:
-        return await update.message.reply_text("积分不足 (至少需要200积分).")
+    if score_data is None or score_data.score < BotConfig.USER_GEN_CDK_POINT:
+        return await update.message.reply_text(f"积分不足 (至少需要{BotConfig.USER_GEN_CDK_POINT}积分).")
     quantity = 1
     if len(context.args) == 1:
         quantity = int(context.args[0])
-    if quantity * 200 > score_data.score:
+    if quantity * BotConfig.USER_GEN_CDK_POINT > score_data.score:
         return await update.message.reply_text(f"积分不足，当前积分: {score_data.score}")
     code_list = []
     for _ in range(quantity):
@@ -74,7 +74,7 @@ async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         code_list.append(code)
         await CdkOperate.add_cdk(code_data)
     text = f"生成 {quantity} 个注册码\n\n" + "".join(f"{code}\n" for code in code_list)
-    score_data.score -= quantity * 200
+    score_data.score -= quantity * BotConfig.USER_GEN_CDK_POINT
     await ScoreOperate.update_score(score_data)
     await update.message.reply_text(text)
 
@@ -364,7 +364,6 @@ async def emby_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("注册失败")
-
 
 # @check_banned
 # async def score_(update: Update, context: ContextTypes.DEFAULT_TYPE):

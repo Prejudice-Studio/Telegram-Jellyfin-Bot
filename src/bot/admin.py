@@ -135,8 +135,8 @@ async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("Usage: /setcdkgen <true/false>")
     if context.args[0] not in ["true", "false"]:
         return await update.message.reply_text("Usage: /setcdkgen <true/false>")
-    EmbyConfig.USER_GEN_CDK = context.args[0] == "true"
-    EmbyConfig.save_to_toml()
+    BotConfig.USER_GEN_CDK = context.args[0] == "true"
+    BotConfig.save_to_toml()
     await update.message.reply_text(f"当前用户生成注册码权限 <code>{'允许' if context.args[0] == 'true' else '禁止'}</code>",
                                     parse_mode="HTML")
 
@@ -168,15 +168,23 @@ async def set_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ROOT_PATH: Path = Path(__file__ + '/../../..').resolve()
     toml_file_path = os.path.join(ROOT_PATH, 'config.toml')
     config = toml.load(toml_file_path)
+    
+    def get_origin_type(ori_v, value):
+        if value.isdigit():
+            return int(value)
+        if not ori_v:
+            return value
+        elif ori_v in ["true", "false"]:
+            return value == "true"
+        return value
+    
     try:
         if section:
             if section not in config:
                 return await update.message.reply_text("Section not found")
-            ori_type = type(config[section][key])
-            config[section][key] = ori_type(value)
+            config[section][key] = get_origin_type((config[section]).get(key), value)
         else:
-            ori_type = type(config[key])
-            config[key] = ori_type(value)
+            config[key] = get_origin_type(config.get(key), value)
         with open(toml_file_path, 'w') as f:
             toml.dump(config, f)
     except Exception as e:

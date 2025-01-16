@@ -18,9 +18,9 @@ BOT_TOKEN = ""  # 机器人 Token 必要
 BASE_URL = ""  # 自定义TG URL 示例：http://127.0.0.1:8081/bot 一般用不到
 TIMEOUT = 10  # bot请求/读取超时时间
 REDPACKET_IMG = "" #红包图片，留空发红包时候不带图
+USER_GEN_CDK = false # 是否允许用户生成cdk（也可以通过命令开关）
 
 
 [Emby]
 BASE_URL = ""  # Emby URL 必要
 API_KEY = ""  # Emby API Key 必要
-USER_GEN_CDK = false # 是否允许用户生成cdk（也可以通过命令开关）
