@@ -340,6 +340,7 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # noinspection PyShadowingNames
 @check_banned
+@check_private
 async def emby_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info.bind_id:
@@ -363,3 +364,7 @@ async def emby_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("注册失败")
+
+
+# @check_banned
+# async def score_(update: Update, context: ContextTypes.DEFAULT_TYPE):

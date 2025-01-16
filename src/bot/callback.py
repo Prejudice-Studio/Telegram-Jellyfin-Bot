@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from src.bot import command_warp
-from src.database.score import ScoreOperate
+from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UsersOperate
 from src.init_check import client
 from src.logger import bot_logger
@@ -99,7 +99,13 @@ async def receive_red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE)
         e_score = random.choice(all_packet)
         all_packet.remove(e_score)
         # 红包领取部分
-        await ScoreOperate.change_score(query.from_user.id, e_score)
+        from_user_score = await ScoreOperate.get_score(query.from_user.id)
+        if not from_user_score:
+            from_user_score = ScoreModel(telegram_id=query.from_user.id, score=e_score)
+            await ScoreOperate.add_score(from_user_score)
+        else:
+            from_user_score.score += e_score
+            await ScoreOperate.update_score(from_user_score)
         packet_data.current_amount -= e_score
         packet_data.history += f"{query.from_user.id}#{base64_encode(query.from_user.full_name)}#{e_score},"
         packet_data.data = json.dumps(all_packet)
@@ -107,7 +113,7 @@ async def receive_red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if rec_count == packet_data.count:  # 领完
             packet_data.status = 1
         await ScoreOperate.update_red_packet(packet_data)
-        await query.answer(f"您收到了 {e_score} 积分")
+        await query.answer(f"您收到了 {e_score} 积分，当前总积分 {from_user_score.score}")
     else:
         await query.answer("红包未找到")
 
