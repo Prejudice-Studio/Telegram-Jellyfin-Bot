@@ -191,7 +191,22 @@ async def move_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     to_info.data = from_info.data
     to_info.config = from_info.config
     await UsersOperate.update_user(to_info)
-    await UsersOperate.clear_bind(int(from_id))
+    
+    from_ore_data = await ScoreOperate.get_score(int(from_id))
+    to_ore_data = await ScoreOperate.get_score(int(to_id))
+    
+    # 处理score
+    if from_ore_data:
+        if not to_ore_data:
+            from_ore_data.telegram_id = int(to_id)
+            await ScoreOperate.update_score(from_ore_data)
+            await query.answer("已经将用户移动到该ID")
+            await query.delete_message()
+        else:
+            to_ore_data.score = from_ore_data.score
+            to_ore_data.data = from_ore_data.data
+            await ScoreOperate.update_score(to_ore_data)
+    
     await query.answer("已经将用户移动到该ID")
     await query.delete_message()
     
