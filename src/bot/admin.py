@@ -91,6 +91,13 @@ async def move(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user_info:
         return await update.message.reply_text("用户未找到")
     user_info.telegram_id = int(new_id)
+    n_info = await UsersOperate.get_user(int(new_id))
+    if n_info:
+        # await UsersOperate.delete(int(new_id))
+        keyboard = InlineKeyboardMarkup(
+                [[InlineKeyboardButton("确认", callback_data=f"move_{new_id}"), InlineKeyboardButton("取消", callback_data="cancel")]])
+        await update.message.reply_text(f"新账户 {n_info.fullname} {n_info.telegram_id}已存在，将会覆盖,是否确认?", reply_markup=keyboard)
+    user_info.telegram_id = int(new_id)
     await UsersOperate.update_user(user_info)
     if score_data := await ScoreOperate.get_score(old_id):
         score_data.telegram_id = int(new_id)

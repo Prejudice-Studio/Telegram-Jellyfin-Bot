@@ -168,3 +168,31 @@ async def withdraw_red(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer(f"红包已经被撤回,已经返还{packet_data.current_amount}积分")
     else:
         await query.answer("红包未找到")
+
+
+# noinspection PyUnusedLocal
+async def move_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    from_info = await UsersOperate.get_user(query.from_user.id)
+    if from_info.telegram_id != Role.ADMIN.value:
+        return await query.answer("权限不足")
+    _, from_id, to_id = query.data.split("_")
+    from_info = await UsersOperate.get_user(int(from_id))
+    to_info = await UsersOperate.get_user(int(to_id))
+    if not to_info:
+        from_info.telegram_id = int(to_id)
+        await UsersOperate.update_user(from_info)
+        return await query.answer("已经将用户移动到该ID")
+    to_info.telegram_id = int(to_id)
+    to_info.account = from_info.account
+    to_info.password = from_info.password
+    to_info.role = from_info.role
+    to_info.bind_id = from_info.bind_id
+    to_info.data = from_info.data
+    to_info.config = from_info.config
+    await UsersOperate.update_user(to_info)
+    await UsersOperate.clear_bind(int(from_id))
+    await query.answer("已经将用户移动到该ID")
+    await query.delete_message()
+    
+    
