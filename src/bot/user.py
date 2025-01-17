@@ -376,6 +376,3 @@ async def score_rank(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_info = await UsersOperate.get_user(tg_id)
         text += f"{i + 1}. {user_info.fullname} <b>{rank.score}</b>\n"
     n_m = await update.message.reply_text(text, parse_mode="HTML")
-    await sleep(10)
-    await n_m.delete()
-    await update.message.delete()
