@@ -324,7 +324,7 @@ async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("无效的用户组")
     user_info.role = Role[group].value
     await UsersOperate.update_user(user_info)
-    await update.message.reply_text(f"成功设置 {user_info.fullname} 为 {group}")
+    await update.message.reply_text(f"成功设置 {user_info.fullname} {user_info.telegram_id} 为 {group}")
 
 
 # noinspection PyUnusedLocal
