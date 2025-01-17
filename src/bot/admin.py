@@ -243,6 +243,8 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"用户组: {Role(user_info.role).name}\n"
                 f"积分: {score_data.score if score_data else 0}\n"
                 f"上次签到时间: {convert_to_china_timezone(checkin_time_v)}\n")
+    elif not emby_user and not user_info:
+        return await update.message.reply_text("未找到用户信息（没有注册Emby且未给Bot发送过信息）")
     else:
         score_data = await ScoreOperate.get_score(user_info.telegram_id)
         if not score_data:
