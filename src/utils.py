@@ -150,3 +150,11 @@ def generate_red_packets(max_amount: int, count: int, mean_v: int = 2, std_dev_v
         amounts[-1] -= difference
     logging.info(f"amounts: {sum(amounts)} {amounts}")
     return amounts.tolist()
+
+
+def is_integer(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False

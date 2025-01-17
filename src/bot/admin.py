@@ -17,7 +17,7 @@ from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UserModel, UsersOperate
 from src.init_check import client
-from src.utils import convert_to_china_timezone, get_password_hash, get_user_info
+from src.utils import convert_to_china_timezone, get_password_hash, get_user_info, is_integer
 
 
 # noinspection PyUnusedLocal
@@ -315,7 +315,7 @@ async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tg_id, group = context.args[0], context.args[1].upper()
     _, user_info = await get_user_info(context.args[0])
     if not user_info:
-        if tg_id.isdigit():
+        if is_integer(tg_id):
             user_info = UserModel(telegram_id=int(context.args[0]), username="Unknown", fullname="Unknown")
             await UsersOperate.add_user(user_info)
         else:
@@ -398,7 +398,3 @@ async def resetpw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("成功重置密码")
     else:
         return await update.message.reply_text("重置密码失败")
-
-
-id = "-1001851668861"
-print(id.isdigit())
