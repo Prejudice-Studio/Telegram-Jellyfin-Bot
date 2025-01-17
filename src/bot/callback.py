@@ -96,6 +96,10 @@ async def receive_red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if any(query.from_user.id == int(entry.split('#')[0]) for entry in history[:-1]):
             return await query.answer("您已经领过这个红包了")
         all_packet = json.loads(packet_data.data)
+        if len(all_packet) == 0:
+            packet_data.status = 1
+            await ScoreOperate.update_red_packet(packet_data)
+            return await query.answer("红包已经被领完")
         e_score = random.choice(all_packet)
         all_packet.remove(e_score)
         # 红包领取部分
