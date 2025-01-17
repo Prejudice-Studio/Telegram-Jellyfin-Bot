@@ -198,7 +198,7 @@ async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
     last_sign_date = datetime.fromtimestamp(score_info.checkin_time).date()
     if last_sign_date == datetime.now().date():
         return await update.message.reply_text("今天已经签到过了。")
-    points = random.randint(1, 10)
+    points = random.randint(1, BotConfig.CHECKIN_POINT)
     score_info.score += points
     score_info.checkin_time = int(datetime.now().timestamp())
     await ScoreOperate.update_score(score_info)
