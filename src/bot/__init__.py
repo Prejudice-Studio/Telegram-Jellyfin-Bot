@@ -17,9 +17,16 @@ server_close = False
 def check_admin(func):
     @wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        if not (update and update.effective_user):
+        if not update:
             return
-        user_data = await UsersOperate.get_user(update.effective_user.id)
+        q_id = None
+        if update.message and update.message.sender_chat:
+            q_id = update.message.sender_chat.id
+        elif update.effective_user:
+            q_id = update.effective_user.id
+        if not q_id:
+            return
+        user_data = await UsersOperate.get_user(q_id)
         if not user_data:
             return
         if user_data.role != 2 and update.effective_user.id != BotConfig.ADMIN:
