@@ -91,10 +91,10 @@ async def move(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user_info:
         return await update.message.reply_text("用户未找到")
     user_info.telegram_id = int(new_id)
-    await UsersOperate.add_user(user_info)
+    await UsersOperate.update_user(user_info)
     if score_data := await ScoreOperate.get_score(old_id):
         score_data.telegram_id = int(new_id)
-        await ScoreOperate.add_score(score_data)
+        await ScoreOperate.update_score(score_data)
     await update.message.reply_text(f"成功将用户 {user_info.fullname} 数据迁移到新账户 {new_id}.")
 
 
