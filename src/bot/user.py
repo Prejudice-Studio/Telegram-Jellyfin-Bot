@@ -15,7 +15,7 @@ from src.database.user import Role, UserModel, UsersOperate
 from src.emby.api import EmbyAPI
 from src.init_check import client
 from src.logger import bot_logger
-from src.utils import convert_to_china_timezone, generate_red_packets, get_password_hash, is_password_strong
+from src.utils import convert_to_china_timezone, generate_red_packets, get_password_hash, get_user_info, is_password_strong
 
 
 # noinspection PyUnusedLocal
@@ -32,14 +32,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/gencdk</code> 生成注册码\n"
                 f"<code>/rank</code> 查看排行\n"
                 f"<code>/require BangumiID/链接/番剧名字</code> 申请增加番剧\n"
-                f"<code>/checkrequire 请求ID</code> 查看番剧申请状态\n")
-    
+                f"<code>/checkrequire 请求ID</code> 查看番剧申请状态\n"
+                f"<code>/transfer [目标ID/Name] [金额]</code> 转账\n")
+
     # await update.message.reply_text(rep_text, parse_mode="HTML")
     # 菜单
     all_keyboard = [["/reg 注册账户", "/info 信息", "/bind 绑定账户", "/unbind 解绑"],
                     ["/delete 删除账户", "/sign 签到", "/red  红包", "/password 重置密码"],
-                    ["/gencdk 生成cdk", "/require 番剧申请", "/checkrequire 番剧申请查询"],
-                    ["/rank 查看排行", "/cancel 取消"]]
+                    ["/gencdk 生成cdk", "/require 番剧申请", "/checkrequire 申请查询"],
+                    ["/rank 查看排行", "/transfer", "/cancel 取消"]]
     reply_markup = ReplyKeyboardMarkup(all_keyboard, resize_keyboard=True)
     if update.effective_chat.type == "private":
         await update.message.reply_text(rep_text, parse_mode="HTML", reply_markup=reply_markup)
@@ -375,4 +376,43 @@ async def score_rank(update: Update, context: ContextTypes.DEFAULT_TYPE):
         tg_id = rank.telegram_id
         user_info = await UsersOperate.get_user(tg_id)
         text += f"{i + 1}. {user_info.fullname} <b>{rank.score}</b>\n"
-    n_m = await update.message.reply_text(text, parse_mode="HTML")
+    await update.message.reply_text(text, parse_mode="HTML")
+
+
+@check_banned
+async def transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 2:
+        return await update.message.reply_text("使用方法: /transfer <目标ID/Name> <金额>")
+    target, amount = context.args
+    if not amount.isdigit():
+        return await update.message.reply_text("请确保金额为正整数.")
+    _, target_info = await get_user_info(target)
+    if not target_info:
+        return await update.message.reply_text("目标用户不存在.")
+    eff_user = update.effective_user.id
+    if target_info.telegram_id == eff_user:
+        return await update.message.reply_text("无法给自己转账.")
+    amount = int(amount)
+    score_data = await ScoreOperate.get_score(eff_user)
+    if not score_data or score_data.score < amount:
+        return await update.message.reply_text("积分不足.")
+    target_user = await UsersOperate.get_user(target_info.telegram_id)
+    if not target_user:
+        return await update.message.reply_text("目标用户不存在.")
+    target_score = await ScoreOperate.get_score(target_user.telegram_id)
+    if not target_score:
+        target_score = ScoreModel(telegram_id=target_user.telegram_id, score=amount)
+        await ScoreOperate.add_score(target_score)
+    else:
+        target_score.score += amount
+        await ScoreOperate.update_score(target_score)
+    score_data.score -= amount
+    await ScoreOperate.update_score(score_data)
+    username = target_user.fullname if target_user.fullname else target_user.telegram_id
+    await update.message.reply_text(
+            f'成功转账 {amount} 积分给 <a href="tg://user?id={target_user.telegram_id}">{username}</a>',
+            parse_mode='HTML'
+    )
+    await context.bot.send_message(target_user.telegram_id, f"您收到了来自 <a href='tg://user?id={eff_user}'>"
+                                                            f"{update.effective_user.full_name}</a> 的转账 {amount} 积分",
+                                   parse_mode='HTML')

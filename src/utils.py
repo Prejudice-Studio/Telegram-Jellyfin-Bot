@@ -3,7 +3,7 @@ import hashlib
 import logging
 import re
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 
 import numpy as np
 import pytz
@@ -59,7 +59,7 @@ def is_password_strong(password):
     return True
 
 
-async def get_user_info(username: str | int) -> tuple[None, UserModel | None | Any] | tuple[Any, Any] | tuple[None, UserModel]:
+async def get_user_info(username: str | int) -> tuple[None, UserModel | None] | tuple[None, None] | tuple[None, UserModel]:
     """
     获取用户信息
     :param username: Telegram ID/Fullname or Emby username

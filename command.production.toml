@@ -15,6 +15,7 @@ checkrequire = "Require.check_require" # 查看申请
 cancel = "UserCommand.cancel" # 取消操作
 emby = "UserCommand.emby_reg"
 rank = "UserCommand.score_rank" # 积分排行榜
+transfer = "UserCommand.transfer" # 转账
 
 [admin_commands]
 shelp = "AdminCommand.shelp"

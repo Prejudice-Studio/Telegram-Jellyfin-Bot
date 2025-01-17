@@ -194,7 +194,6 @@ async def move_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await ScoreOperate.update_score(from_ore_data)
         await query.answer("已经将用户移动到该ID")
         await query.delete_message()
-    
     await query.answer("已经将用户移动到该ID")
     await query.delete_message()
     
