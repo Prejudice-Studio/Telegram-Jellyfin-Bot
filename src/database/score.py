@@ -1,3 +1,5 @@
+from typing import Optional, Sequence
+
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -128,3 +130,13 @@ class ScoreOperate:
         async with ScoreSessionFactory() as session:
             async with session.begin():
                 await session.merge(red_packet_data)
+    
+    @staticmethod
+    async def rank(limit: Optional[int] = 20) -> Sequence[ScoreModel]:
+        """
+        获取积分排行榜
+        """
+        async with ScoreSessionFactory() as session:
+            async with session.begin():
+                scalar = await session.execute(select(ScoreModel).order_by(ScoreModel.score.desc()).limit(limit))
+                return scalar.scalars().all()

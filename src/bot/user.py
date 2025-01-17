@@ -365,5 +365,17 @@ async def emby_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("注册失败")
 
-# @check_banned
-# async def score_(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+@check_banned
+async def score_rank(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    rank_list = await ScoreOperate.rank()
+    text = "积分排行榜:\n"
+    for i, rank in enumerate(rank_list):
+        tg_id = rank.telegram_id
+        user_info = await UsersOperate.get_user(tg_id)
+        text += f"{i + 1}. {user_info.fullname} <b>{rank.score}</b>\n"
+    n_m = await update.message.reply_text(text, parse_mode="HTML")
+    await sleep(10)
+    await n_m.delete()
+    await update.message.delete()
+    
