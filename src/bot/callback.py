@@ -174,7 +174,7 @@ async def withdraw_red(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def move_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     from_info = await UsersOperate.get_user(query.from_user.id)
-    if from_info.telegram_id != Role.ADMIN.value:
+    if from_info.role != Role.ADMIN.value:
         return await query.answer("权限不足")
     _, from_id, to_id = query.data.split("_")
     from_info = await UsersOperate.get_user(int(from_id))
