@@ -30,6 +30,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/red</code> 发红包（仅限群聊内）\n"
                 f"<code>/password 新密码</code> 更改账户密码\n"
                 f"<code>/gencdk</code> 生成注册码\n"
+                f"<code>/rank</code> 查看排行\n"
                 f"<code>/require BangumiID/链接/番剧名字</code> 申请增加番剧\n"
                 f"<code>/checkrequire 请求ID</code> 查看番剧申请状态\n")
     
@@ -38,7 +39,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     all_keyboard = [["/reg 注册账户", "/info 信息", "/bind 绑定账户", "/unbind 解绑"],
                     ["/delete 删除账户", "/sign 签到", "/red  红包", "/password 重置密码"],
                     ["/gencdk 生成cdk", "/require 番剧申请", "/checkrequire 番剧申请查询"],
-                    ["/cancel 取消"]]
+                    ["/rank 查看排行", "/cancel 取消"]]
     reply_markup = ReplyKeyboardMarkup(all_keyboard, resize_keyboard=True)
     if update.effective_chat.type == "private":
         await update.message.reply_text(rep_text, parse_mode="HTML", reply_markup=reply_markup)
@@ -198,7 +199,7 @@ async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
     last_sign_date = datetime.fromtimestamp(score_info.checkin_time).date()
     if last_sign_date == datetime.now().date():
         return await update.message.reply_text("今天已经签到过了。")
-    points = random.randint(1, BotConfig.CHECKIN_POINT)
+    points = random.randint(BotConfig.CHECKIN_POINT_MIN, BotConfig.CHECKIN_POINT_MAX)
     score_info.score += points
     score_info.checkin_time = int(datetime.now().timestamp())
     await ScoreOperate.update_score(score_info)
@@ -378,4 +379,3 @@ async def score_rank(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await sleep(10)
     await n_m.delete()
     await update.message.delete()
-    

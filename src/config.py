@@ -92,7 +92,8 @@ class BotConfig(BaseConfig):
     REDPACKET_IMG: str = ""  # 红包图片路径
     USER_GEN_CDK: bool = False  # 是否允许用户生成CDK
     USER_GEN_CDK_POINT: int = 200  # 用户生成CDK消耗的积分
-    CHECKIN_POINT: int = 10  # 签到积分最大值
+    CHECKIN_POINT_MAX: int = 10  # 签到积分最大值
+    CHECKIN_POINT_MIN: int = 1  # 签到积分最小值
 
 
 class EmbyConfig(BaseConfig):
