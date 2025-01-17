@@ -179,33 +179,21 @@ async def move_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     _, from_id, to_id = query.data.split("_")
     from_info = await UsersOperate.get_user(int(from_id))
     to_info = await UsersOperate.get_user(int(to_id))
-    if not to_info:
-        from_info.telegram_id = int(to_id)
-        await UsersOperate.update_user(from_info)
-        return await query.answer("已经将用户移动到该ID")
-    to_info.telegram_id = int(to_id)
-    to_info.account = from_info.account
-    to_info.password = from_info.password
-    to_info.role = from_info.role
-    to_info.bind_id = from_info.bind_id
-    to_info.data = from_info.data
-    to_info.config = from_info.config
-    await UsersOperate.update_user(to_info)
-    
+    if to_info:
+        await UsersOperate.delete(to_info.telegram_id)
+    from_info.telegram_id = int(to_id)
+    await UsersOperate.update_user(from_info)
+  
+    # 处理score
     from_ore_data = await ScoreOperate.get_score(int(from_id))
     to_ore_data = await ScoreOperate.get_score(int(to_id))
-    
-    # 处理score
+    if to_ore_data:
+        await ScoreOperate.delete(int(to_id))
     if from_ore_data:
-        if not to_ore_data:
-            from_ore_data.telegram_id = int(to_id)
-            await ScoreOperate.update_score(from_ore_data)
-            await query.answer("已经将用户移动到该ID")
-            await query.delete_message()
-        else:
-            to_ore_data.score = from_ore_data.score
-            to_ore_data.data = from_ore_data.data
-            await ScoreOperate.update_score(to_ore_data)
+        from_ore_data.telegram_id = int(to_id)
+        await ScoreOperate.update_score(from_ore_data)
+        await query.answer("已经将用户移动到该ID")
+        await query.delete_message()
     
     await query.answer("已经将用户移动到该ID")
     await query.delete_message()
