@@ -12,10 +12,10 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMa
 from telegram.ext import ContextTypes
 
 from src.bot import check_admin, check_private, command_warp
-from src.config import BotConfig, EmbyConfig
+from src.config import BotConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
-from src.database.user import Role, UsersOperate
+from src.database.user import Role, UserModel, UsersOperate
 from src.init_check import client
 from src.utils import convert_to_china_timezone, get_password_hash, get_user_info
 
@@ -307,10 +307,14 @@ async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("无权限")
     if len(context.args) != 2:
         return await update.message.reply_text("Usage: /setGroup <id/name> <group>")
-    group = context.args[1].upper()
+    tg_id, group = context.args[0], context.args[1].upper()
     _, user_info = await get_user_info(context.args[0])
     if not user_info:
-        return await update.message.reply_text("用户未找到")
+        if tg_id.isdigit():
+            user_info = UserModel(telegram_id=int(context.args[0]), username="Unknown", fullname="Unknown")
+            await UsersOperate.add_user(user_info)
+        else:
+            return await update.message.reply_text("用户未找到")
     if group not in Role.__members__:
         return await update.message.reply_text("无效的用户组")
     user_info.role = Role[group].value
