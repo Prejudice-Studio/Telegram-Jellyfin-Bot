@@ -91,10 +91,10 @@ async def move(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user_info:
         return await update.message.reply_text("用户未找到")
     user_info.telegram_id = int(new_id)
-    await UsersOperate.update_user(user_info)
+    await UsersOperate.add_user(user_info)
     if score_data := await ScoreOperate.get_score(old_id):
         score_data.telegram_id = int(new_id)
-        await ScoreOperate.update_score(score_data)
+        await ScoreOperate.add_score(score_data)
     await update.message.reply_text(f"成功将用户 {user_info.fullname} 数据迁移到新账户 {new_id}.")
 
 
@@ -398,3 +398,7 @@ async def resetpw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("成功重置密码")
     else:
         return await update.message.reply_text("重置密码失败")
+
+
+id = "-1001851668861"
+print(id.isdigit())
