@@ -59,13 +59,16 @@ def is_password_strong(password):
     return True
 
 
-async def get_user_info(username: str | int) -> tuple[None, UserModel | None] | tuple[None, None] | tuple[None, UserModel]:
+async def get_user_info(username: str | int, only_tg_info: Optional[bool] = False) -> tuple[None, UserModel | None] | tuple[None, None] | \
+                                                                                      tuple[None, UserModel]:
     """
     获取用户信息
     :param username: Telegram ID/Fullname or Emby username
+    :param only_tg_info: 是否只获取 Telegram 用户信息
     :return: Emby 用户信息, 用户数据库信息
     """
     je_id = None
+    jellyfin_user, user_info = None, None
     
     async def fetch_user_id(f_username: str):
         async with UsersSessionFactory() as f_session:
@@ -85,6 +88,8 @@ async def get_user_info(username: str | int) -> tuple[None, UserModel | None] | 
         user_info = await fetch_user_id(username)
         if user_info:
             je_id = user_info.bind_id
+    if only_tg_info and user_info:
+        return None, user_info
     if not je_id:
         try:
             all_user = await client.Users.get_users()
@@ -99,12 +104,9 @@ async def get_user_info(username: str | int) -> tuple[None, UserModel | None] | 
             async with UsersSessionFactory() as session:
                 user_scalars = await session.execute(select(UserModel).filter_by(bind_id=je_id).limit(1))
                 user_info = user_scalars.scalar_one_or_none()
-            return jellyfin_user, user_info
         except Exception as e:
             bot_logger.error(f"Error: {e}")
-    if user_info:
-        return None, user_info
-    return None, user_info
+    return jellyfin_user, user_info
 
 
 def base64_encode(ori_str: str) -> str:

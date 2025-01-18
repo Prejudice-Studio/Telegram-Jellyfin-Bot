@@ -73,7 +73,7 @@ async def set_cdk_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def clear_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
         return await update.message.reply_text("Usage: /clear_user <id/name>")
-    _, user_info = await get_user_info(context.args[0])
+    _, user_info = await get_user_info(context.args[0], only_tg_info=True)
     if not user_info:
         return await update.message.reply_text("用户未找到")
     tg_id = user_info.telegram_id
@@ -87,7 +87,7 @@ async def move(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
         return await update.message.reply_text("Usage: /move <id/name> <new_tg_id>")
     old_id, new_id = context.args
-    _, user_info = await get_user_info(old_id)
+    _, user_info = await get_user_info(old_id, only_tg_info=True)
     if not user_info:
         return await update.message.reply_text("用户未找到")
     user_info.telegram_id = int(new_id)
@@ -321,11 +321,14 @@ async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
         return await update.message.reply_text("Usage: /setGroup <id/name> <group>")
     tg_id, group = context.args[0], context.args[1].upper()
-    _, user_info = await get_user_info(context.args[0])
+    _, user_info = await get_user_info(context.args[0], only_tg_info=True)
     if not user_info:
         if is_integer(tg_id):
             user_info = UserModel(telegram_id=int(context.args[0]), username="Unknown", fullname="Unknown")
-            await UsersOperate.add_user(user_info)
+            try:
+                await UsersOperate.add_user(user_info)
+            except Exception as e:
+                return await update.message.reply_text(f"添加用户失败: {e}, 请检查日志")
         else:
             return await update.message.reply_text("用户未找到")
     if group not in Role.__members__:
@@ -374,7 +377,7 @@ async def set_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("Usage: /setscore <id/username> <score>")
     u_name = context.args[0]
     score = int(context.args[1])
-    _, user_info = await get_user_info(u_name)
+    _, user_info = await get_user_info(u_name, only_tg_info=True)
     if not user_info:
         return await update.message.reply_text("用户未找到")
     score_data = await ScoreOperate.get_score(user_info.telegram_id)

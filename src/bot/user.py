@@ -386,7 +386,7 @@ async def transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     target, amount = context.args
     if not amount.isdigit():
         return await update.message.reply_text("请确保金额为正整数.")
-    _, target_info = await get_user_info(target)
+    _, target_info = await get_user_info(target, only_tg_info=True)
     if not target_info:
         return await update.message.reply_text("目标用户不存在.")
     eff_user = update.effective_user.id
