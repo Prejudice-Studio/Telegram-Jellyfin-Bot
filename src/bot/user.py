@@ -4,6 +4,7 @@ import string
 from asyncio import sleep
 from datetime import datetime
 
+import pytz
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import ContextTypes
 
@@ -197,12 +198,14 @@ async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
         score_info = ScoreModel(telegram_id=update.effective_user.id)
         score_info = await ScoreOperate.add_score(score_info)
         score_info.checkin_time = 0
-    last_sign_date = datetime.fromtimestamp(score_info.checkin_time).date()
-    if last_sign_date == datetime.now().date():
+    tz = pytz.timezone('Asia/Shanghai')
+    now = datetime.now(tz).date()
+    last_sign_date = datetime.fromtimestamp(score_info.checkin_time, tz).date()
+    if last_sign_date == now:
         return await update.message.reply_text("今天已经签到过了。")
     points = random.randint(BotConfig.CHECKIN_POINT_MIN, BotConfig.CHECKIN_POINT_MAX)
     score_info.score += points
-    score_info.checkin_time = int(datetime.now().timestamp())
+    score_info.checkin_time = int(datetime.now(tz).timestamp())
     await ScoreOperate.update_score(score_info)
     await update.message.reply_text(f"签到成功! 你获得了 {points} 积分。当前积分: {score_info.score}")
 
