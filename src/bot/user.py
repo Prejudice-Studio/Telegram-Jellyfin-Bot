@@ -34,8 +34,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/rank</code> 查看排行\n"
                 f"<code>/require BangumiID/链接/番剧名字</code> 申请增加番剧\n"
                 f"<code>/checkrequire 请求ID</code> 查看番剧申请状态\n"
-                f"<code>/transfer [目标ID/Name] [金额]</code> 转账\n")
-
+                f"<code>/transfer [目标ID/Name] [金额]</code> 转账 或者 回复目标用户消息 /transfer [金额]\n")
+    
     # await update.message.reply_text(rep_text, parse_mode="HTML")
     # 菜单
     all_keyboard = [["/reg 注册账户", "/info 信息", "/bind 绑定账户", "/unbind 解绑"],
@@ -66,7 +66,7 @@ async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if score_data is None or score_data.score < BotConfig.USER_GEN_CDK_POINT:
         return await update.message.reply_text(f"积分不足 (至少需要{BotConfig.USER_GEN_CDK_POINT}积分).")
     quantity = 1
-    if len(context.args) == 1:
+    if len(context.args) == 1 and context.args[0].isdigit():
         quantity = int(context.args[0])
     if quantity * BotConfig.USER_GEN_CDK_POINT > score_data.score:
         return await update.message.reply_text(f"积分不足，当前积分: {score_data.score}")
@@ -384,9 +384,17 @@ async def score_rank(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @check_banned
 async def transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if len(context.args) != 2:
-        return await update.message.reply_text("使用方法: /transfer <目标ID/Name> <金额>")
-    target, amount = context.args
+    if len(context.args) == 1:
+        if update.message.reply_to_message:
+            target, amount = update.message.reply_to_message.from_user.id, context.args[0]
+        else:
+            return await update.message.reply_text("使用方法: /transfer <目标ID/Name> <金额>或者回复目标用户消息")
+    elif len(context.args) == 2:
+        target, amount = context.args
+        if not amount.isdigit():
+            return await update.message.reply_text("请确保金额为正整数.")
+    else:
+        return await update.message.reply_text("使用方法: /transfer <目标ID/Name> <金额>或者回复目标用户消息")
     if not amount.isdigit():
         return await update.message.reply_text("请确保金额为正整数.")
     _, target_info = await get_user_info(target, only_tg_info=True)

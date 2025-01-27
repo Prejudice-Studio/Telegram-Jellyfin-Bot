@@ -81,7 +81,7 @@ async def get_user_info(username: str | int, only_tg_info: Optional[bool] = Fals
             bot_logger.info(f"fetch_user_id: {scalars}")
             return scalars.scalar_one_or_none()
     
-    if username.isdigit():
+    if isinstance(username, int) or username.isdigit():
         user_info = await UsersOperate.get_user(int(username))
         je_id = user_info.bind_id if user_info else None
     else:
