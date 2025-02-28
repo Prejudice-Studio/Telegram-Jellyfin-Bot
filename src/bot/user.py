@@ -16,7 +16,7 @@ from src.database.user import Role, UserModel, UsersOperate
 from src.emby.api import EmbyAPI
 from src.logger import bot_logger
 from src.utils import convert_to_china_timezone, generate_red_packets, get_password_hash, get_user_info, \
-    is_password_strong, EmbyClient, check_server_connectivity
+    is_password_strong, EmbyClient, check_server_connectivity, get_latest_commit_info
 
 
 # noinspection PyUnusedLocal
@@ -60,7 +60,10 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     server = await check_server_connectivity()
     server_address = json.loads(EmbyConfig.ADDRESS)
-    s_text = "当前服务器状态: " + ("正常" if server else "异常") + "\n"
+    git_info = get_latest_commit_info()
+    s_text = (("===========状态详情===========\n"
+               "当前版本信息: " + git_info + "\n当前服务器状态: ") +
+              ("正常" if server else "异常") + "\n")
     if not server_address:
         server_address = [{"address": EmbyConfig.BASE_URL, "description": "默认地址"}]
     for address in server_address:

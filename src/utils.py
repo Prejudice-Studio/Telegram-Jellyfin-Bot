@@ -2,6 +2,7 @@ import base64
 import hashlib
 import logging
 import re
+import subprocess
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -181,3 +182,18 @@ def is_integer(s):
         return True
     except ValueError:
         return False
+
+
+def get_latest_commit_info() -> str:
+    try:
+        # 执行 git log -1 --oneline 命令
+        result = subprocess.run(
+            ["git", "log", "-1", "--oneline"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error executing Git command: {e}")
+        return ""
