@@ -2,7 +2,7 @@
 start = "UserCommand.start"
 help = "UserCommand.start"
 reg = "UserCommand.reg" # 注册
-info = "UserCommand.info" #显 示个人信息
+info = "UserCommand.info" # 显示个人信息
 delete = "UserCommand.delete_account" # 删除账户
 sign = "UserCommand.sign" # 签到
 bind = "UserCommand.bind" # 绑定
@@ -33,7 +33,7 @@ setCdkTime = "AdminCommand.set_cdk_time" # 设置某个cdk有效时间
 requireList = "Require.require_list" # 查看番剧申请列表
 resetpw = "AdminCommand.resetpw" # 重置用户密码
 clearUser = "AdminCommand.clear_user" # 清除用户数据
-move =  "AdminCommand.move" # 移动用户数据
+move = "AdminCommand.move" # 移动用户数据
 getconfig = "AdminCommand.get_config" # 获取配置
 setconfig = "AdminCommand.set_config" # 设置配置
 

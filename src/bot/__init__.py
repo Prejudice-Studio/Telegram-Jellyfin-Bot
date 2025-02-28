@@ -7,7 +7,7 @@ from telegram.ext import ContextTypes
 
 from src.config import BotConfig
 from src.database.user import Role, UserModel, UsersOperate
-from src.init_check import check_server_connectivity
+from src.utils import check_server_connectivity
 from src.logger import bot_logger
 
 last_check_time = 0

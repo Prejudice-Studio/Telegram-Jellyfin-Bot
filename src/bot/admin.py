@@ -16,8 +16,7 @@ from src.config import BotConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UserModel, UsersOperate
-from src.init_check import client
-from src.utils import convert_to_china_timezone, get_password_hash, get_user_info, is_integer
+from src.utils import convert_to_china_timezone, get_password_hash, get_user_info, is_integer, EmbyClient
 
 
 # noinspection PyUnusedLocal
@@ -402,7 +401,7 @@ async def resetpw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     new_pw = context.args[1]
     je_id = je_data["Id"]
     
-    if await client.Users.change_password(new_pw, je_id):
+    if await EmbyClient.Users.change_password(new_pw, je_id):
         if user_info:
             user_info.password = get_password_hash(new_pw)
             await UsersOperate.update_user(user_info)

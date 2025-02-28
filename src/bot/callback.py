@@ -8,9 +8,8 @@ from telegram.ext import ContextTypes
 from src.bot import command_warp
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UsersOperate
-from src.init_check import client
 from src.logger import bot_logger
-from src.utils import base64_decode, base64_encode, get_user_info
+from src.utils import base64_decode, base64_encode, get_user_info, EmbyClient
 
 
 # noinspection PyUnusedLocal
@@ -28,7 +27,7 @@ async def admin_delete_je(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await UsersOperate.update_user(user_info)
         await UsersOperate.clear_bind(user_info.telegram_id)
     try:
-        if not await client.Users.delete_user(je_id):
+        if not await EmbyClient.Users.delete_user(je_id):
             return await update.message.reply_text("[Server]删除用户失败[2]")
     except Exception as e:
         bot_logger.error(f"Error: {e}")
@@ -45,7 +44,7 @@ async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if user_info and user_info.bind_id:
         try:
-            ret = await client.Users.delete_user(user_info.bind_id)
+            ret = await EmbyClient.Users.delete_user(user_info.bind_id)
             bot_logger.info(f"[Server]Delete user: {ret}")
         except Exception as e:
             bot_logger.error(e)
@@ -183,7 +182,7 @@ async def move_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await UsersOperate.delete(to_info.telegram_id)
     from_info.telegram_id = int(to_id)
     await UsersOperate.update_user(from_info)
-  
+
     # 处理score
     from_ore_data = await ScoreOperate.get_score(int(from_id))
     to_ore_data = await ScoreOperate.get_score(int(to_id))
@@ -196,5 +195,3 @@ async def move_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.delete_message()
     await query.answer("已经将用户移动到该ID")
     await query.delete_message()
-    
-    

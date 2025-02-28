@@ -10,8 +10,7 @@ from src.bot import check_admin, check_banned, check_private
 from src.config import BotConfig
 from src.database.bangumi import BangumiOperate, BangumiRequireModel, ReqStatue
 from src.database.user import Role, UsersOperate
-from src.init_check import Bangumi_client
-from src.utils import convert_to_china_timezone
+from src.utils import convert_to_china_timezone, Bangumi_client
 
 
 async def get_bgm_info(bgm_id: str) -> str | None:
@@ -47,12 +46,13 @@ async def check_require(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if req_info.telegram_id != update.effective_user.id and user_info.role != Role.ADMIN.value:
         return await update.message.reply_text("您没有权限查看此请求")
     other_info = json.loads(str(req_info.other_info))
-    rep_text = (f"来自 {'您' if req_info.telegram_id != update.effective_user.id else '用户 ' + str(req_info.telegram_id)} 的请求:\n"
-                f"番剧名: {other_info['name_cn']}\n"
-                f"上映日期: {other_info['date']}\n"
-                f"集数: {other_info['total_episodes']}\n"
-                f"Bgm链接: https://bgm.tv/subject/{req_info.bangumi_id}\n"
-                f"当前状态: {str(ReqStatue(req_info.status)).replace('ReqStatue.', '')}")
+    rep_text = (
+        f"来自 {'您' if req_info.telegram_id != update.effective_user.id else '用户 ' + str(req_info.telegram_id)} 的请求:\n"
+        f"番剧名: {other_info['name_cn']}\n"
+        f"上映日期: {other_info['date']}\n"
+        f"集数: {other_info['total_episodes']}\n"
+        f"Bgm链接: https://bgm.tv/subject/{req_info.bangumi_id}\n"
+        f"当前状态: {str(ReqStatue(req_info.status)).replace('ReqStatue.', '')}")
     if user_info.role == Role.ADMIN.value:
         keyboard = [
             [InlineKeyboardButton("接受", callback_data=f'reqa_accepted_{req_info.id}'),
@@ -129,15 +129,16 @@ async def require_submit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await query.answer("您没有权限使用此功能")
     bgm_id = query.data.split("_")[1]
     if bgm_info := await BangumiOperate.is_bgm_exist(int(bgm_id)):
-        await query.edit_message_text(f"已经有人请求过此番剧, 请求状态: {str(ReqStatue(bgm_info.status)).replace('ReqStatue.', '')}")
+        await query.edit_message_text(
+            f"已经有人请求过此番剧, 请求状态: {str(ReqStatue(bgm_info.status)).replace('ReqStatue.', '')}")
         return await query.answer()
     id_info = await Bangumi_client.Subject.get_subject(bgm_id)
     req_info = BangumiRequireModel(
-            telegram_id=query.from_user.id,
-            bangumi_id=int(bgm_id),
-            status=ReqStatue.UNHANDLED.value,
-            timestamp=int(datetime.now().timestamp()),
-            other_info=json.dumps(id_info)
+        telegram_id=query.from_user.id,
+        bangumi_id=int(bgm_id),
+        status=ReqStatue.UNHANDLED.value,
+        timestamp=int(datetime.now().timestamp()),
+        other_info=json.dumps(id_info)
     )
     await BangumiOperate.add_req_bgm(req_info)
     rep_text = (f"来自 {query.from_user.full_name} 的请求:\n"

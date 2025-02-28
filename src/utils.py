@@ -9,10 +9,30 @@ import numpy as np
 import pytz
 from sqlalchemy import or_, select
 
-from src.config import Config
+from src.bangumi import BangumiAPI
+from src.config import Config, EmbyConfig
 from src.database.user import UserModel, UsersOperate, UsersSessionFactory
-from src.init_check import client
+from src.emby.api import EmbyAPI
 from src.logger import bot_logger
+
+Bangumi_client = BangumiAPI(Config.BANGUMI_TOKEN)
+EmbyClient = EmbyAPI(EmbyConfig.BASE_URL, 1, EmbyConfig.API_KEY)
+
+
+# noinspection PyBroadException
+async def check_server_connectivity() -> bool:
+    """
+    检查服务器连接性
+    :return: bool
+    """
+    try:
+        info = await EmbyClient.System.info()
+        if info:
+            return True
+        else:
+            return False
+    except Exception:
+        return False
 
 
 def convert_to_china_timezone(time_data: Optional[int | str] = None) -> str:
@@ -25,7 +45,7 @@ def convert_to_china_timezone(time_data: Optional[int | str] = None) -> str:
             utc_time = datetime.fromisoformat(time_data.replace("Z", "+00:00"))
         else:
             utc_time = datetime.now().astimezone(timezone.utc)
-        
+
         china_timezone = pytz.timezone('Asia/Shanghai')
         china_time = utc_time.astimezone(china_timezone)
         return china_time.strftime('%Y-%m-%d %H:%M:%S')
@@ -59,7 +79,8 @@ def is_password_strong(password):
     return True
 
 
-async def get_user_info(username: str | int, only_tg_info: Optional[bool] = False) -> tuple[None, UserModel | None] | tuple[None, None] | \
+async def get_user_info(username: str | int, only_tg_info: Optional[bool] = False) -> tuple[None, UserModel | None] | \
+                                                                                      tuple[None, None] | \
                                                                                       tuple[None, UserModel]:
     """
     获取用户信息
@@ -69,18 +90,18 @@ async def get_user_info(username: str | int, only_tg_info: Optional[bool] = Fals
     """
     je_id = None
     jellyfin_user, user_info = None, None
-    
+
     async def fetch_user_id(f_username: str):
         async with UsersSessionFactory() as f_session:
             scalars = await f_session.execute(select(UserModel).filter(
-                    or_(
-                            UserModel.fullname.like(f"%{f_username}%"),
-                            UserModel.username.like(f"%{f_username}%")
-                    )
+                or_(
+                    UserModel.fullname.like(f"%{f_username}%"),
+                    UserModel.username.like(f"%{f_username}%")
+                )
             ).limit(1))
             bot_logger.info(f"fetch_user_id: {scalars}")
             return scalars.scalar_one_or_none()
-    
+
     if isinstance(username, int) or username.isdigit():
         user_info = await UsersOperate.get_user(int(username))
         je_id = user_info.bind_id if user_info else None
@@ -92,7 +113,7 @@ async def get_user_info(username: str | int, only_tg_info: Optional[bool] = Fals
         return None, user_info
     if not je_id:
         try:
-            all_user = await client.Users.get_users()
+            all_user = await EmbyClient.Users.get_users()
             je_data = next((u for u in all_user if u["Name"] == username), None)
             je_id = je_data["Id"] if je_data else None
         except Exception as e:
@@ -100,7 +121,7 @@ async def get_user_info(username: str | int, only_tg_info: Optional[bool] = Fals
             return None, user_info
     if je_id is not None:
         try:
-            jellyfin_user = await client.Users.get_user(je_id)
+            jellyfin_user = await EmbyClient.Users.get_user(je_id)
             async with UsersSessionFactory() as session:
                 user_scalars = await session.execute(select(UserModel).filter_by(bind_id=je_id).limit(1))
                 user_info = user_scalars.scalar_one_or_none()
@@ -135,13 +156,13 @@ def generate_red_packets(max_amount: int, count: int, mean_v: int = 2, std_dev_v
     total_amount = sum(amounts)
     if total_amount > max_amount:
         amounts *= (max_amount / total_amount)
-    
+
     amounts = np.round(amounts).astype(int)
     amounts = np.maximum(amounts, 1)
     # 负值纠正
     if np.any(amounts < 0):
         amounts = np.maximum(amounts, 1)
-    
+
     final_total = sum(amounts)
     # 金额纠正
     if final_total < max_amount:

@@ -14,9 +14,9 @@ from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import RedPacketModel, ScoreModel, ScoreOperate
 from src.database.user import Role, UserModel, UsersOperate
 from src.emby.api import EmbyAPI
-from src.init_check import client
 from src.logger import bot_logger
-from src.utils import convert_to_china_timezone, generate_red_packets, get_password_hash, get_user_info, is_password_strong
+from src.utils import convert_to_china_timezone, generate_red_packets, get_password_hash, get_user_info, \
+    is_password_strong, EmbyClient
 
 
 # noinspection PyUnusedLocal
@@ -110,8 +110,8 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if cdk_info.expired_time != 0 and cdk_info.expired_time < datetime.now().timestamp():
             return await update.message.reply_text("注册码已过期")
     try:
-        ret_user = await client.Users.new_user(username)
-        await client.Users.change_password(password, ret_user["Id"])
+        ret_user = await EmbyClient.Users.new_user(username)
+        await EmbyClient.Users.change_password(password, ret_user["Id"])
     except Exception as e:
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]创建用户失败(服务器故障或已经存在相同用户)。")
@@ -144,7 +144,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user_info or not user_info.bind_id:
         return await update.message.reply_text("无Emby账号与该Telegram账号绑定.")
     try:
-        emby_user = await client.Users.get_user(user_info.bind_id)
+        emby_user = await EmbyClient.Users.get_user(user_info.bind_id)
     except Exception as e:
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]服务器发生错误，请检查日志")
@@ -274,7 +274,7 @@ async def reset_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_password_strong(new_password):
         return await update.message.reply_text("密码强度不够(需要至少8位字符，且包含至少一个小写字母和大写字母).")
     try:
-        await client.Users.change_password(new_password, user_info.bind_id)
+        await EmbyClient.Users.change_password(new_password, user_info.bind_id)
         user_info.password = get_password_hash(new_password)
         await UsersOperate.update_user(user_info)
         return await update.message.reply_text("密码修改成功.")
@@ -357,9 +357,9 @@ async def emby_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("使用方法: /emby 用户名 密码")
     username, password = context.args
     try:
-        ret = await client.Users.new_user(username)
+        ret = await EmbyClient.Users.new_user(username)
         user_id = ret["Id"]
-        await client.Users.change_password(password, user_id)
+        await EmbyClient.Users.change_password(password, user_id)
         u_d["emby_reg"] = True
         user_info.data = json.dumps(u_d)
         password_hash = get_password_hash(password)
