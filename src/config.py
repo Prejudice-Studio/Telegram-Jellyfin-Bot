@@ -102,6 +102,7 @@ class EmbyConfig(BaseConfig):
     """
     BASE_URL: str = ""  # Emby URL
     API_KEY: str = ""  # Emby API Key
+    ADDRESS: str = "[]"  # Emby地址 json数组
 
 
 Config.update_from_toml()

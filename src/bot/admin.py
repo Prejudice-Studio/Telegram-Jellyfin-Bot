@@ -41,12 +41,12 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/requireList</code> 查看番剧请求列表\n"
                 f"<code>/getconfig</code> 获取配置\n"
                 f"<code>/setconfig [key] [value]</code> 设置配置\n")
-    all_keyboard = [["/summon", "/checkinfo", "/deleteAccount"],
-                    ["/clearUser", "/move", "/requireList"],
-                    ["/setGroup", "/cdks", "/update"],
-                    ["/resetpw", "/setScore", "/setCDKgen"],
-                    ["/deleteCDK", "/setCdkLimit", "/setCdkTime"],
-                    ["/getconfig", "/setconfig", "/cancel 取消"]]
+    all_key = ["/summon", "/checkinfo", "/deleteAccount", "/clearUser", "/move", "/requireList", "/setGroup",
+               "/cdks", "/update", "/resetpw", "/setScore", "/setCDKgen", "/deleteCDK", "/setCdkLimit", "/setCdkTime",
+               "/getconfig", "/setconfig", "/cancel 取消"]
+    all_keyboard = []
+    for i in range(0, len(all_key), 4):
+        all_keyboard.append(all_key[i:i + 4])
     reply_markup = ReplyKeyboardMarkup(all_keyboard, resize_keyboard=True)
     if update.effective_chat.type == "private":
         await update.message.reply_text(rep_text, parse_mode="HTML", reply_markup=reply_markup)
@@ -66,6 +66,11 @@ async def set_cdk_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cdk_info.limit += limit
     await CdkOperate.update_cdk(cdk_info)
     await update.message.reply_text(f"成功设置 {cdk} 的 limit 为 {cdk_info.limit}.")
+
+
+@check_admin
+async def address(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    pass
 
 
 @check_admin
@@ -94,8 +99,10 @@ async def move(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if n_info:
         # await UsersOperate.delete(int(new_id))
         keyboard = InlineKeyboardMarkup(
-                [[InlineKeyboardButton("确认", callback_data=f"move_{old_id}_{new_id}"), InlineKeyboardButton("取消", callback_data="cancel")]])
-        await update.message.reply_text(f"新账户 {n_info.fullname} {n_info.telegram_id}已存在，将会覆盖,是否确认?", reply_markup=keyboard)
+            [[InlineKeyboardButton("确认", callback_data=f"move_{old_id}_{new_id}"),
+              InlineKeyboardButton("取消", callback_data="cancel")]])
+        await update.message.reply_text(f"新账户 {n_info.fullname} {n_info.telegram_id}已存在，将会覆盖,是否确认?",
+                                        reply_markup=keyboard)
         return
     user_info.telegram_id = int(new_id)
     await UsersOperate.update_user(user_info)
@@ -144,8 +151,9 @@ async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("Usage: /setcdkgen <true/false>")
     BotConfig.USER_GEN_CDK = context.args[0] == "true"
     BotConfig.save_to_toml()
-    await update.message.reply_text(f"当前用户生成注册码权限 <code>{'允许' if context.args[0] == 'true' else '禁止'}</code>",
-                                    parse_mode="HTML")
+    await update.message.reply_text(
+        f"当前用户生成注册码权限 <code>{'允许' if context.args[0] == 'true' else '禁止'}</code>",
+        parse_mode="HTML")
 
 
 # noinspection PyUnusedLocal
@@ -171,11 +179,12 @@ async def set_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif len(context.args) == 3:
         section, key, value = context.args
     else:
-        return await update.message.reply_text("Usage: /set_config <key> <value> or /set_config <section> <key> <value>")
+        return await update.message.reply_text(
+            "Usage: /set_config <key> <value> or /set_config <section> <key> <value>")
     ROOT_PATH: Path = Path(__file__ + '/../../..').resolve()
     toml_file_path = os.path.join(ROOT_PATH, 'config.toml')
     config = toml.load(toml_file_path)
-    
+
     def get_origin_type(ori_v, value):
         if value.isdigit():
             return int(value)
@@ -184,7 +193,7 @@ async def set_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif ori_v in ["true", "false"]:
             return value == "true"
         return value
-    
+
     try:
         if section:
             if section not in config:
@@ -236,9 +245,9 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user_info and emby_user:
         last_login = convert_to_china_timezone(emby_user.get("LastLoginDate", "N/A"))
         await update.message.reply_text(
-                f"找到Emby用户，但未绑定Telegram.\n"
-                f"用户名: {emby_user['Name']}\n"
-                f"上次登录: {last_login}\n")
+            f"找到Emby用户，但未绑定Telegram.\n"
+            f"用户名: {emby_user['Name']}\n"
+            f"上次登录: {last_login}\n")
     elif not emby_user and user_info:
         score_data = await ScoreOperate.get_score(user_info.telegram_id)
         if score_data:
@@ -248,13 +257,13 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             checkin_time_v = "N/A"
             score = 0
         await update.message.reply_text(
-                f"找到Telegram用户，但未绑定Emby或服务器已关闭.\n"
-                f"Telegram ID: {user_info.telegram_id}\n"
-                f"Telegram NAME: {user_info.username}\n"
-                f"Telegram昵称: {user_info.fullname}\n"
-                f"用户组: {Role(user_info.role).name}\n"
-                f"积分: {score}\n"
-                f"上次签到时间: {convert_to_china_timezone(checkin_time_v)}\n")
+            f"找到Telegram用户，但未绑定Emby或服务器已关闭.\n"
+            f"Telegram ID: {user_info.telegram_id}\n"
+            f"Telegram NAME: {user_info.username}\n"
+            f"Telegram昵称: {user_info.fullname}\n"
+            f"用户组: {Role(user_info.role).name}\n"
+            f"积分: {score}\n"
+            f"上次签到时间: {convert_to_china_timezone(checkin_time_v)}\n")
     elif not emby_user and not user_info:
         return await update.message.reply_text("未找到用户信息（没有注册Emby且未给Bot发送过信息）")
     else:
@@ -283,13 +292,13 @@ async def checkinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"积分: {score}\n"
             f"上次签到时间: {convert_to_china_timezone(checkin_time_v)}"
         )
-        
+
         if update.effective_chat.type == "private":
             message = message.replace(
-                    f"Username: {emby_user['Name']}",
-                    f"Username: {emby_user['Name']}\n"
+                f"Username: {emby_user['Name']}",
+                f"Username: {emby_user['Name']}\n"
             )
-        
+
         await update.message.reply_text(message)
 
 
@@ -304,7 +313,8 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("User not found.")
     je_id = emby_user["Id"]
     keyboard = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("确认删除", callback_data=f"admdelje_{je_id}"), InlineKeyboardButton("取消", callback_data="cancel")]])
+        [[InlineKeyboardButton("确认删除", callback_data=f"admdelje_{je_id}"),
+          InlineKeyboardButton("取消", callback_data="cancel")]])
     if user_info:
         return await update.message.reply_text(f"确认删除用户? \n"
                                                f"Je账户: {emby_user['Name']}\n"
@@ -347,7 +357,7 @@ async def get_all_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if (code.expired_time == 0 or code.expired_time > datetime.now().timestamp()) and code.limit > 0:
             ret_text += (f"注册码<code>{code.cdk}</code> 使用次数: {code.limit} 到期时间: "
                          f"{convert_to_china_timezone(code.expired_time) if code.expired_time is not None else '永久'}\n")
-    
+
     text = "全部注册码:\n\n" + ret_text
     if len(text) > 4096:
         file_buffer = BytesIO()
@@ -400,7 +410,7 @@ async def resetpw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("用户未找到")
     new_pw = context.args[1]
     je_id = je_data["Id"]
-    
+
     if await EmbyClient.Users.change_password(new_pw, je_id):
         if user_info:
             user_info.password = get_password_hash(new_pw)

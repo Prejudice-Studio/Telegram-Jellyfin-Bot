@@ -16,13 +16,14 @@ from src.database.user import Role, UserModel, UsersOperate
 from src.emby.api import EmbyAPI
 from src.logger import bot_logger
 from src.utils import convert_to_china_timezone, generate_red_packets, get_password_hash, get_user_info, \
-    is_password_strong, EmbyClient
+    is_password_strong, EmbyClient, check_server_connectivity
 
 
 # noinspection PyUnusedLocal
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rep_text = (f"欢迎使用Telegram-Emby-Bot，使用 <code>/help </code> 查看帮助\n"
                 f"基本命令:\n"
+                f"<code>/status</code> 查看服务器状态\n"
                 f"<code>/reg 账户 密码 注册码</code> 注册Emby账号\n"
                 f"<code>/info</code> 查看账号信息\n"
                 f"<code>/bind 账户 密码</code> 绑定账户 <code>/unbind</code> 解绑\n"
@@ -35,13 +36,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/require BangumiID/链接/番剧名字</code> 申请增加番剧\n"
                 f"<code>/checkrequire 请求ID</code> 查看番剧申请状态\n"
                 f"<code>/transfer [目标ID/Name] [金额]</code> 转账 或者 回复目标用户消息 /transfer [金额]\n")
-    
-    # await update.message.reply_text(rep_text, parse_mode="HTML")
-    # 菜单
-    all_keyboard = [["/reg 注册账户", "/info 信息", "/bind 绑定账户", "/unbind 解绑"],
-                    ["/delete 删除账户", "/sign 签到", "/red  红包", "/password 重置密码"],
-                    ["/gencdk 生成cdk", "/require 番剧申请", "/checkrequire 申请查询"],
-                    ["/rank 查看排行", "/transfer", "/cancel 取消"]]
+    all_key = ["/status", "/reg", "/info", "/bind", "/unbind", "/delete",
+               "/sign 签到", "/red", "/password 重置密码", "/gencdk", "/require", "/checkrequire",
+               "/rank", "/transfer", "/cancel"]
+    all_keyboard = []
+    for i in range(0, len(all_key), 4):
+        all_keyboard.append(all_key[i:i + 4])
     reply_markup = ReplyKeyboardMarkup(all_keyboard, resize_keyboard=True)
     if update.effective_chat.type == "private":
         await update.message.reply_text(rep_text, parse_mode="HTML", reply_markup=reply_markup)
@@ -54,6 +54,18 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = await update.message.reply_text("操作取消.", reply_markup=ReplyKeyboardRemove())
     await sleep(2)
     await msg.delete()
+
+
+@check_banned
+async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    server = await check_server_connectivity()
+    server_address = json.loads(EmbyConfig.ADDRESS)
+    s_text = "当前服务器状态: " + ("正常" if server else "异常") + "\n"
+    if not server_address:
+        server_address = [{"address": EmbyConfig.BASE_URL, "description": "默认地址"}]
+    for address in server_address:
+        s_text += f"{address['description']}: {address['address']}\n"
+    await update.message.reply_text(s_text)
 
 
 @check_banned
@@ -119,9 +131,9 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         cdk_info.limit -= 1
         cdk_info.used_history += f"{str(eff_user.id)},"
         await CdkOperate.update_cdk(cdk_info)
-    
+
     # 绑定 Telegram 和 Emby 账号
-    
+
     password_hash = get_password_hash(password)
     if user_info:
         user_info.account, user_info.password, user_info.bind_id = username, password_hash, ret_user[
@@ -131,7 +143,8 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await UsersOperate.update_user(user_info)
     else:
         user_info = UserModel(telegram_id=eff_user.id, username=eff_user.username, fullname=eff_user.full_name,
-                              account=username, password=password_hash, bind_id=ret_user["Id"], role=Role.ORDINARY.value)
+                              account=username, password=password_hash, bind_id=ret_user["Id"],
+                              role=Role.ORDINARY.value)
         await UsersOperate.add_user(user_info)
     return await update.message.reply_text(f"注册成功，自动与Telegram绑定. 用户名: {username}")
 
@@ -151,7 +164,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_logger.info(f"Emby user: {emby_user}")
     if not emby_user:
         return await update.message.reply_text("用户未找到.")
-    
+
     last_login = convert_to_china_timezone(emby_user.get("LastLoginDate", "N/A"))
     score_data = await ScoreOperate.get_score(update.effective_user.id)
     if not score_data:
@@ -162,16 +175,16 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     checkin_time_v = checkin_time if checkin_time is not None else 0
     limits = Role(user_info.role).name
     await update.message.reply_text(
-            f"----------Telegram----------\n"
-            f"TelegramID: {user_info.telegram_id}\n"
-            f"Telegram昵称: {user_info.fullname}\n"
-            f"用户组: {limits}\n"
-            f"----------Emby----------\n"
-            f"用户名: {emby_user['Name']}\n"
-            f"上次登录: {last_login}\n"
-            f"----------Score----------\n"
-            f"积分: {score}\n"
-            f"上次签到: {convert_to_china_timezone(checkin_time_v)}")
+        f"----------Telegram----------\n"
+        f"TelegramID: {user_info.telegram_id}\n"
+        f"Telegram昵称: {user_info.fullname}\n"
+        f"用户组: {limits}\n"
+        f"----------Emby----------\n"
+        f"用户名: {emby_user['Name']}\n"
+        f"上次登录: {last_login}\n"
+        f"----------Score----------\n"
+        f"积分: {score}\n"
+        f"上次签到: {convert_to_china_timezone(checkin_time_v)}")
 
 
 # noinspection PyUnusedLocal
@@ -240,7 +253,8 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"成功与Emby用户 {username} 绑定.")
     else:
         user_info = UserModel(telegram_id=eff_user.id, username=eff_user.username, fullname=eff_user.full_name,
-                              account=username, password=password_hash, bind_id=emby_user["User"]["Id"], role=Role.ORDINARY.value)
+                              account=username, password=password_hash, bind_id=emby_user["User"]["Id"],
+                              role=Role.ORDINARY.value)
         await UsersOperate.add_user(user_info)
         await update.message.reply_text(f"成功与Emby用户 {username} 绑定.")
 
@@ -299,7 +313,7 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(context.args) == 5:
             mean = int(context.args[3])
             std_dev = int(context.args[4])
-    
+
     if not total.isdigit() or not count.isdigit() or not mode.isdigit():
         return await update.message.reply_text("请确保输入数字.")
     total, count, mode = int(total), int(count), int(mode)
@@ -317,7 +331,8 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
         red_data = [total // count for _ in range(count)]
     else:
         return await update.message.reply_text("模式错误.")
-    new_packet = RedPacketModel(telegram_id=update.effective_user.id, amount=total, count=count, type=mode, current_amount=total,
+    new_packet = RedPacketModel(telegram_id=update.effective_user.id, amount=total, count=count, type=mode,
+                                current_amount=total,
                                 create_time=int(datetime.now().timestamp()), data=json.dumps(red_data))
     await ScoreOperate.add_red_packet(new_packet)
     score_data.score -= total
@@ -339,8 +354,8 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ProgramConfig.REDPACKET_FILEID = msg.photo[-1].file_id
     else:
         await update.effective_chat.send_message(
-                f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
-                reply_markup=reply_markup)
+            f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
+            reply_markup=reply_markup)
 
 
 # noinspection PyShadowingNames
@@ -421,8 +436,8 @@ async def transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await ScoreOperate.update_score(score_data)
     username = target_user.fullname if target_user.fullname else target_user.telegram_id
     await update.message.reply_text(
-            f'成功转账 {amount} 积分给 <a href="tg://user?id={target_user.telegram_id}">{username}</a>',
-            parse_mode='HTML'
+        f'成功转账 {amount} 积分给 <a href="tg://user?id={target_user.telegram_id}">{username}</a>',
+        parse_mode='HTML'
     )
     await context.bot.send_message(target_user.telegram_id, f"您收到了来自 <a href='tg://user?id={eff_user}'>"
                                                             f"{update.effective_user.full_name}</a> 的转账 {amount} 积分",

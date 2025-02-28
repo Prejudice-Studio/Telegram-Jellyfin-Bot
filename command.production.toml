@@ -16,6 +16,7 @@ cancel = "UserCommand.cancel" # 取消操作
 emby = "UserCommand.emby_reg"
 rank = "UserCommand.score_rank" # 积分排行榜
 transfer = "UserCommand.transfer" # 转账
+status = "UserCommand.status" # 查看状态
 
 [admin_commands]
 shelp = "AdminCommand.shelp"
