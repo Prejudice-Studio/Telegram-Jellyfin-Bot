@@ -9,6 +9,7 @@ ROOT_PATH: Path = Path(__file__ + '/../..').resolve()
 
 emby_logger = logging.getLogger('emby')
 bot_logger = logging.getLogger('bot')
+scheduler_logger = logging.getLogger('scheduler')
 
 logging.basicConfig(level=Config.LOG_LEVE, stream=sys.stdout, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
