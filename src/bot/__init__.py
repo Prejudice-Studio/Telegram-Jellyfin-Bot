@@ -26,10 +26,12 @@ def check_admin(func):
             q_id = update.effective_user.id
         if not q_id:
             return
+        if q_id == BotConfig.ADMIN:
+            return await func(update, context, *args, **kwargs)
         user_data = await UsersOperate.get_user(q_id)
         if not user_data:
             return
-        if user_data.role != 2 and update.effective_user.id != BotConfig.ADMIN:
+        if user_data.role != 2:
             return
         return await func(update, context, *args, **kwargs)
     
