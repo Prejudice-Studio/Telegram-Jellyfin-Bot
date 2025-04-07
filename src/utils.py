@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import json
 import logging
 import re
 import subprocess
@@ -12,6 +13,7 @@ from sqlalchemy import or_, select
 
 from src.bangumi import BangumiAPI
 from src.config import Config, EmbyConfig
+from src.database.cdk import CdkModel
 from src.database.user import UserModel, UsersOperate, UsersSessionFactory
 from src.emby.api import EmbyAPI
 from src.logger import bot_logger
@@ -197,3 +199,16 @@ def get_latest_commit_info() -> str:
     except subprocess.CalledProcessError as e:
         logging.error(f"Error executing Git command: {e}")
         return ""
+
+
+def check_cdk(cdk: CdkModel, tg_id) -> bool:
+    if cdk.limit <= 0:
+        return False
+    if cdk.expired_time != 0 and cdk.expired_time < datetime.now().timestamp():
+        return False
+    if cdk.used_history:
+        history = json.loads(cdk.used_history)
+        if tg_id in [h["tg_id"] for h in history]:
+            return False
+
+    return True

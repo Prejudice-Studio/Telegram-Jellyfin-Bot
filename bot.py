@@ -3,7 +3,8 @@ import os
 
 import toml
 from telegram import Update
-from telegram.ext import Application, CallbackQueryHandler, CommandHandler
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, InlineQueryHandler, ConversationHandler, \
+    MessageHandler, filters
 
 # noinspection PyUnresolvedReferences
 import src.bot.admin as AdminCommand
@@ -13,6 +14,8 @@ import src.bot.require as Require
 import src.bot.user as UserCommand
 # noinspection PyUnresolvedReferences
 from src.bot import callback
+from src.bot.callback import user_reg_cb, user_reg_username, user_reg_pw, cancel
+from src.bot.inline import inline_query
 from src.config import BotConfig, Config
 from src.logger import bot_logger
 from src.webhook.api import run_flask
@@ -34,7 +37,7 @@ def run_bot():
                    .write_timeout(60)
                    .base_url(BotConfig.BASE_URL)
                    .build())
-    
+
     # noinspection PyShadowingNames
     def load_handlers(application):
         if os.path.exists('command.toml'):
@@ -50,9 +53,23 @@ def run_bot():
         # 回调
         for pattern, handler in data['callback_queries'].items():
             application.add_handler(CallbackQueryHandler(eval(handler), pattern=pattern))
-    
+
     load_handlers(application)
-    
+    # 内联查询
+    application.add_handler(InlineQueryHandler(inline_query))
+
+    # 对话
+    conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(user_reg_cb, pattern="user_reg_")
+        ],
+        states={
+            1: [MessageHandler(filters=~filters.UpdateType.EDITED_MESSAGE, callback=user_reg_username)],
+            2: [MessageHandler(filters=~filters.UpdateType.EDITED_MESSAGE, callback=user_reg_pw)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+    )
+    application.add_handler(conv_handler)
     bot_logger.info("Bot started")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
@@ -60,9 +77,9 @@ def run_bot():
 if __name__ == "__main__":
     bot_process = multiprocessing.Process(target=run_bot)
     api_process = multiprocessing.Process(target=run_flask)
-    
+
     bot_process.start()
     api_process.start()
-    
+
     bot_process.join()
     api_process.join()

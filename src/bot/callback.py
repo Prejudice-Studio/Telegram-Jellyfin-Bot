@@ -1,15 +1,18 @@
 import json
+import logging
 import random
 from asyncio import sleep
+from datetime import datetime
 
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, ConversationHandler
 
 from src.bot import command_warp
+from src.database.cdk import CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UsersOperate
 from src.logger import bot_logger
-from src.utils import base64_decode, base64_encode, get_user_info, EmbyClient
+from src.utils import base64_decode, base64_encode, get_user_info, EmbyClient, check_cdk, is_password_strong
 
 
 # noinspection PyUnusedLocal
@@ -195,3 +198,72 @@ async def move_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.delete_message()
     await query.answer("已经将用户移动到该ID")
     await query.delete_message()
+
+
+async def user_reg_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    cdk = query.data.replace("user_","")
+    cdk_info = await CdkOperate.get_cdk(cdk)
+    await query.answer()
+    logging.info(2313423)
+    if not cdk_info:
+        await update.effective_user.send_message("注册码不存在")
+        return ConversationHandler.END
+    if not check_cdk(cdk_info,update.effective_user.id):
+        await update.effective_user.send_message("注册码已经失效")
+        return ConversationHandler.END
+    context.user_data["cdk"] = cdk
+    await update.effective_user.send_message("请输入你的账户（仅包含字母和数字）：")
+    return 1
+
+async def user_reg_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    username = update.message.text
+    if not username.isalnum():
+        await update.effective_user.send_message("账户不合法，请仅使用字母和数字。")
+        return 1
+
+    context.user_data["username"] = username
+    await update.effective_user.send_message("请输入你的密码（仅包含字母和数字）：")
+    return 2
+
+async def user_reg_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    password = update.message.text
+
+    if not password.isalnum():
+        await update.effective_user.send_message("密码不合法，请仅使用字母和数字。")
+        return 2
+
+    if not is_password_strong(password):
+        await update.effective_user.send_message("密码强度不够(需要至少8位字符，且包含至少一个小写字母和大写字母)。")
+        return 2
+
+    context.user_data["password"] = password
+
+    user_info = await UsersOperate.get_user(update.effective_user.id)
+    try:
+        return await complete_registration(update, context)
+    except Exception:
+        await update.effective_user.send_message("注册失败，请稍后再试。")
+        return 2
+
+
+async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    username = context.user_data["username"]
+    password = context.user_data["password"]
+    cdk_info = context.user_data["cdk"]
+
+    try:
+        ret_user = await EmbyClient.Users.new_user(username)
+        await EmbyClient.Users.change_password(password, ret_user["Id"])
+        if cdk_info:
+            cdk_info.limit -= 1
+            history = json.loads(cdk_info.used_history) if cdk_info.used_history else []
+            history.append({"tg_id": update.effective_user.id, "time": datetime.now().timestamp()})
+            cdk_info.used_history = json.dumps(history)
+            await CdkOperate.update_cdk(cdk_info)
+        await update.effective_user.send_message("注册成功！")
+    except Exception as e:
+        bot_logger.error(f"Error: {e}")
+        await update.effective_user.send_message("[Server]创建用户失败(服务器故障或已经存在相同用户)。")
+    finally:
+        return ConversationHandler.END

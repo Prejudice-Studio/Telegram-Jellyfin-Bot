@@ -226,6 +226,13 @@ async def summon(update: Update, context: ContextTypes.DEFAULT_TYPE):
             code_data.expired_time = int(datetime.now().timestamp()) + validity_hours * 3600
         await CdkOperate.add_cdk(code_data)
     text = f"总共生成了 {quantity} 个激活码 \n\n" + "".join(f"{code}\n" for code in code_list)
+    if quantity == 1:
+        button = InlineKeyboardMarkup([[InlineKeyboardButton(text="发送至群组/频道",
+                                                             switch_inline_query=f"cdk_{code_list[0]}\nEmby服务器注册码\n"
+                                                                                 f"{code_list[0]}\n\n"
+                                                                                 f"可点击按钮实现一键注册哦")]])
+        await update.message.reply_text(text, reply_markup=button)
+        return
     if len(text) > 4096:
         file_buffer = BytesIO()
         file_buffer.write(text.encode('utf-8'))

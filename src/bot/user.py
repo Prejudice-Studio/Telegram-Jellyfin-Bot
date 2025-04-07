@@ -2,6 +2,7 @@ import json
 import random
 import string
 from asyncio import sleep
+from bdb import effective
 from datetime import datetime
 
 import pytz
@@ -16,11 +17,39 @@ from src.database.user import Role, UserModel, UsersOperate
 from src.emby.api import EmbyAPI
 from src.logger import bot_logger
 from src.utils import convert_to_china_timezone, generate_red_packets, get_password_hash, get_user_info, \
-    is_password_strong, EmbyClient, check_server_connectivity, get_latest_commit_info
+    is_password_strong, EmbyClient, check_server_connectivity, get_latest_commit_info, check_cdk
 
 
 # noinspection PyUnusedLocal
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(context.args)
+    if context.args:
+        if len(context.args) == 1 and "cdk_reg_" in context.args[0]:
+            ori_cdk = context.args[0].replace("cdk_", "")
+            cdk_info = await CdkOperate.get_cdk(ori_cdk)
+            if cdk_info:
+                if not check_cdk(cdk_info, update.effective_user.id):
+                    return await update.message.reply_text("注册码已经被抢光了")
+                cdk_info.limit -= 1
+                history = json.loads(cdk_info.used_history) if cdk_info.used_history else []
+                history.append({"tg_id": update.effective_user.id, "time": datetime.now().timestamp()})
+                cdk_info.used_history = json.dumps(history)
+                await CdkOperate.update_cdk(cdk_info)
+            else:
+                return await update.message.reply_text("注册码无效")
+
+            user_info = await UsersOperate.get_user(update.effective_user.id)
+            if user_info and user_info.bind_id:
+                return await update.message.reply_text("你已绑定一个Emby账号，无法注册。")
+
+            new_cdk = f"reg_{''.join(random.choices(string.ascii_letters + string.digits, k=16))}_prej"
+            code_data = CdkModel(cdk=new_cdk, limit=1, expired_time=int(datetime.now().timestamp()) + 24 * 3600)
+            await CdkOperate.add_cdk(code_data)
+            cb = "user_" + new_cdk
+            button = InlineKeyboardMarkup([[InlineKeyboardButton(text="点此开始注册流程,请注意，您必须在24h内完成注册",
+                                                                 callback_data=cb)]])
+            await update.message.reply_text("您获得了一次注册机会，请点击下面的按钮进行注册", reply_markup=button)
+            return
     rep_text = (f"欢迎使用Telegram-Emby-Bot，使用 <code>/help </code> 查看帮助\n"
                 f"基本命令:\n"
                 f"<code>/status</code> 查看服务器状态\n"
@@ -37,7 +66,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/checkrequire 请求ID</code> 查看番剧申请状态\n"
                 f"<code>/transfer [目标ID/Name] [金额]</code> 转账 或者 回复目标用户消息 /transfer [金额]\n")
     all_key = ["/status", "/reg", "/info", "/bind", "/unbind", "/delete",
-               "/sign 签到", "/red", "/password 重置密码", "/gencdk", "/require", "/checkrequire",
+               "/sign 签到", "/red", "/password", "/gencdk", "/require", "/checkrequire",
                "/rank", "/transfer", "/cancel"]
     all_keyboard = []
     for i in range(0, len(all_key), 4):
@@ -120,10 +149,8 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         cdk_info = await CdkOperate.get_cdk(reg_code)
         if not cdk_info:
             return await update.message.reply_text("注册码不可用")
-        if cdk_info.limit <= 0:
-            return await update.message.reply_text("注册码已被使用")
-        if cdk_info.expired_time != 0 and cdk_info.expired_time < datetime.now().timestamp():
-            return await update.message.reply_text("注册码已过期")
+        if not check_cdk(cdk_info, eff_user.id):
+            return "注册码无法使用（无效/已经过期/已使用）"
     try:
         ret_user = await EmbyClient.Users.new_user(username)
         await EmbyClient.Users.change_password(password, ret_user["Id"])
@@ -132,7 +159,9 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("[Server]创建用户失败(服务器故障或已经存在相同用户)。")
     if cdk_info:
         cdk_info.limit -= 1
-        cdk_info.used_history += f"{str(eff_user.id)},"
+        history = json.loads(cdk_info.used_history) if cdk_info.used_history else []
+        history.append({"tg_id": eff_user.id, "time": datetime.now().timestamp()})
+        cdk_info.used_history = json.dumps(history)
         await CdkOperate.update_cdk(cdk_info)
 
     # 绑定 Telegram 和 Emby 账号
