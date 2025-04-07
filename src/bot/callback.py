@@ -133,7 +133,6 @@ async def red_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         history = packet_data.history.split(",") if packet_data.history else []
         his_t = ""
         for i in range(len(history) - 1):
-            print(history[i].split('#'))
             his_t += f"{base64_decode(history[i].split('#')[1])}: {history[i].split('#')[2]}\n"
         ret_message = f"红包信息\n" \
                       f"总金额: {packet_data.amount}\n" \
@@ -205,7 +204,6 @@ async def user_reg_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cdk = query.data.replace("user_","")
     cdk_info = await CdkOperate.get_cdk(cdk)
     await query.answer()
-    logging.info(2313423)
     if not cdk_info:
         await update.effective_user.send_message("注册码不存在")
         return ConversationHandler.END

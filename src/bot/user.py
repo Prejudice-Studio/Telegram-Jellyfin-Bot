@@ -22,7 +22,6 @@ from src.utils import convert_to_china_timezone, generate_red_packets, get_passw
 
 # noinspection PyUnusedLocal
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print(context.args)
     if context.args:
         if len(context.args) == 1 and "cdk_reg_" in context.args[0]:
             ori_cdk = context.args[0].replace("cdk_", "")
