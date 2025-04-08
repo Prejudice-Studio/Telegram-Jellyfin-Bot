@@ -24,7 +24,7 @@ CHECKIN_POINT_MIN = 1  # 签到积分最小值
 GROUP_CHAT_ID = ""  # 群组ID @channelusername
 CHANNEL_CHAT_ID = " " # 频道ID @channelusername
 MUST_JOIN_CHANNEL = false  # 是否必须加入频道
-MUST_JOIN_GROU = false  # 是否必须加入群组
+MUST_JOIN_GROUP = false  # 是否必须加入群组
 
 [Emby]
 BASE_URL = ""  # Emby URL 必要
