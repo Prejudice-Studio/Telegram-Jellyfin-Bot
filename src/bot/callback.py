@@ -10,9 +10,10 @@ from telegram.ext import ContextTypes, ConversationHandler
 from src.bot import command_warp
 from src.database.cdk import CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
-from src.database.user import Role, UsersOperate
+from src.database.user import Role, UsersOperate, UserModel
 from src.logger import bot_logger
-from src.utils import base64_decode, base64_encode, get_user_info, EmbyClient, check_cdk, is_password_strong
+from src.utils import base64_decode, base64_encode, get_user_info, EmbyClient, check_cdk, is_password_strong, \
+    get_password_hash
 
 
 # noinspection PyUnusedLocal
@@ -201,18 +202,19 @@ async def move_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def user_reg_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    cdk = query.data.replace("user_","")
+    cdk = query.data.replace("user_", "")
     cdk_info = await CdkOperate.get_cdk(cdk)
     await query.answer()
     if not cdk_info:
         await update.effective_user.send_message("注册码不存在")
         return ConversationHandler.END
-    if not check_cdk(cdk_info,update.effective_user.id):
+    if not check_cdk(cdk_info, update.effective_user.id):
         await update.effective_user.send_message("注册码已经失效")
         return ConversationHandler.END
     context.user_data["cdk"] = cdk
     await update.effective_user.send_message("请输入你的账户（仅包含字母和数字）：")
     return 1
+
 
 async def user_reg_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.message.text
@@ -223,6 +225,7 @@ async def user_reg_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["username"] = username
     await update.effective_user.send_message("请输入你的密码（仅包含字母和数字）：")
     return 2
+
 
 async def user_reg_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     password = update.message.text
@@ -237,7 +240,6 @@ async def user_reg_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data["password"] = password
 
-    user_info = await UsersOperate.get_user(update.effective_user.id)
     try:
         return await complete_registration(update, context)
     except Exception:
@@ -248,11 +250,18 @@ async def user_reg_pw(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     username = context.user_data["username"]
     password = context.user_data["password"]
-    cdk_info = context.user_data["cdk"]
-
+    cdk = context.user_data["cdk"]
+    emby_id = ""
     try:
         ret_user = await EmbyClient.Users.new_user(username)
-        await EmbyClient.Users.change_password(password, ret_user["Id"])
+        emby_id = ret_user["Id"]
+        await EmbyClient.Users.change_password(password, emby_id)
+    except Exception as e:
+        bot_logger.error(f"Error: {e}")
+        await update.effective_user.send_message("[Server]创建用户失败(服务器故障或已经存在相同用户)。")
+    finally:
+
+        cdk_info = await CdkOperate.get_cdk(cdk)
         if cdk_info:
             cdk_info.limit -= 1
             history = json.loads(cdk_info.used_history) if cdk_info.used_history else []
@@ -260,8 +269,18 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
             cdk_info.used_history = json.dumps(history)
             await CdkOperate.update_cdk(cdk_info)
         await update.effective_user.send_message("注册成功！")
-    except Exception as e:
-        bot_logger.error(f"Error: {e}")
-        await update.effective_user.send_message("[Server]创建用户失败(服务器故障或已经存在相同用户)。")
-    finally:
+        password_hash = get_password_hash(password)
+        user_info = await UsersOperate.get_user(update.effective_user.id)
+        if user_info:
+            user_info.account, user_info.password, user_info.bind_id = username, password_hash, emby_id
+            if user_info.role == Role.SEA.value:
+                user_info.role = Role.ORDINARY.value
+            await UsersOperate.update_user(user_info)
+        else:
+            user_info = UserModel(telegram_id=update.effective_user.id, username=update.effective_user.username,
+                                  fullname=update.effective_user.full_name,
+                                  account=username, password=password_hash, bind_id=emby_id,
+                                  role=Role.ORDINARY.value)
+            await UsersOperate.add_user(user_info)
+
         return ConversationHandler.END

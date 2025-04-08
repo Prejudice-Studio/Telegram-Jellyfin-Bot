@@ -24,6 +24,9 @@ from src.utils import convert_to_china_timezone, generate_red_packets, get_passw
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.args:
         if len(context.args) == 1 and "cdk_reg_" in context.args[0]:
+            user_info = await UsersOperate.get_user(update.effective_user.id)
+            if user_info and user_info.bind_id:
+                return await update.message.reply_text("你已绑定一个Emby账号，无法注册。")
             ori_cdk = context.args[0].replace("cdk_", "")
             cdk_info = await CdkOperate.get_cdk(ori_cdk)
             if cdk_info:
@@ -36,10 +39,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await CdkOperate.update_cdk(cdk_info)
             else:
                 return await update.message.reply_text("注册码无效")
-
-            user_info = await UsersOperate.get_user(update.effective_user.id)
-            if user_info and user_info.bind_id:
-                return await update.message.reply_text("你已绑定一个Emby账号，无法注册。")
 
             new_cdk = f"reg_{''.join(random.choices(string.ascii_letters + string.digits, k=16))}_prej"
             code_data = CdkModel(cdk=new_cdk, limit=1, expired_time=int(datetime.now().timestamp()) + 24 * 3600)
