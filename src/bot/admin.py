@@ -43,7 +43,7 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/requireList</code> 查看番剧请求列表\n"
                 f"<code>/getconfig</code> 获取配置\n"
                 f"<code>/setconfig [key] [value]</code> 设置配置\n"
-                f"<code>/cdk_info [cdk] 获取某个CDK信息\n")
+                f"<code>/cdk_info [cdk]</code> 获取某个CDK信息\n")
     all_key = ["/summon", "/checkinfo", "/deleteAccount", "/clearUser", "/move", "/requireList", "/setGroup",
                "/cdks", "/update", "/resetpw", "/setScore", "/setCDKgen", "/deleteCDK", "/setCdkLimit", "/setCdkTime",
                "/getconfig", "/setconfig", "/cdk_info", "/cancel 取消"]
