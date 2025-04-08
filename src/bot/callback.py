@@ -251,7 +251,10 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
     username = context.user_data["username"]
     password = context.user_data["password"]
     cdk = context.user_data["cdk"]
-    emby_id = ""
+    cdk_info = await CdkOperate.get_cdk(cdk)
+    if not cdk_info:
+        await update.effective_user.send_message("注册码不存在")
+        return ConversationHandler.END
     try:
         ret_user = await EmbyClient.Users.new_user(username)
         emby_id = ret_user["Id"]
@@ -260,28 +263,24 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
         bot_logger.error(f"Error: {e}")
         await update.effective_user.send_message("[Server]创建用户失败(服务器故障或已经存在相同用户)。\n请稍后点击按钮重试。")
         return  ConversationHandler.END
-    finally:
+    cdk_info.limit -= 1
+    history = json.loads(cdk_info.used_history) if cdk_info.used_history else []
+    history.append({"tg_id": update.effective_user.id, "time": datetime.now().timestamp()})
+    cdk_info.used_history = json.dumps(history)
+    await CdkOperate.update_cdk(cdk_info)
+    await update.effective_user.send_message("注册成功！")
+    password_hash = get_password_hash(password)
+    user_info = await UsersOperate.get_user(update.effective_user.id)
+    if user_info:
+        user_info.account, user_info.password, user_info.bind_id = username, password_hash, emby_id
+        if user_info.role == Role.SEA.value:
+            user_info.role = Role.ORDINARY.value
+        await UsersOperate.update_user(user_info)
+    else:
+        user_info = UserModel(telegram_id=update.effective_user.id, username=update.effective_user.username,
+                              fullname=update.effective_user.full_name,
+                              account=username, password=password_hash, bind_id=emby_id,
+                              role=Role.ORDINARY.value)
+        await UsersOperate.add_user(user_info)
 
-        cdk_info = await CdkOperate.get_cdk(cdk)
-        if cdk_info:
-            cdk_info.limit -= 1
-            history = json.loads(cdk_info.used_history) if cdk_info.used_history else []
-            history.append({"tg_id": update.effective_user.id, "time": datetime.now().timestamp()})
-            cdk_info.used_history = json.dumps(history)
-            await CdkOperate.update_cdk(cdk_info)
-        await update.effective_user.send_message("注册成功！")
-        password_hash = get_password_hash(password)
-        user_info = await UsersOperate.get_user(update.effective_user.id)
-        if user_info:
-            user_info.account, user_info.password, user_info.bind_id = username, password_hash, emby_id
-            if user_info.role == Role.SEA.value:
-                user_info.role = Role.ORDINARY.value
-            await UsersOperate.update_user(user_info)
-        else:
-            user_info = UserModel(telegram_id=update.effective_user.id, username=update.effective_user.username,
-                                  fullname=update.effective_user.full_name,
-                                  account=username, password=password_hash, bind_id=emby_id,
-                                  role=Role.ORDINARY.value)
-            await UsersOperate.add_user(user_info)
-
-        return ConversationHandler.END
+    return ConversationHandler.END
