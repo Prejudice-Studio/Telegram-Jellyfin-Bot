@@ -2,13 +2,13 @@ import json
 import random
 import string
 from asyncio import sleep
-from bdb import effective
 from datetime import datetime
 
 import pytz
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import ContextTypes
 
+import src.bot
 from src.bot import check_banned, check_private, command_warp
 from src.config import BotConfig, EmbyConfig, ProgramConfig
 from src.database.cdk import CdkModel, CdkOperate
@@ -91,6 +91,7 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     s_text = (("===========状态详情===========\n"
                "当前版本信息: " + git_info + "\n当前服务器状态: ") +
               ("正常" if server else "异常") + "\n")
+    src.bot.server_close = not server
     if not server_address:
         server_address = [{"address": EmbyConfig.BASE_URL, "description": "默认地址"}]
     for address in server_address:
