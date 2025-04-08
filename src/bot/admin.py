@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import string
@@ -40,10 +41,11 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/setCdkTime [cdk] [hours]</code> 设置注册码有效时间\n"
                 f"<code>/requireList</code> 查看番剧请求列表\n"
                 f"<code>/getconfig</code> 获取配置\n"
-                f"<code>/setconfig [key] [value]</code> 设置配置\n")
+                f"<code>/setconfig [key] [value]</code> 设置配置\n"
+                f"<code>/cdk_info [cdk] 获取某个CDK信息\n")
     all_key = ["/summon", "/checkinfo", "/deleteAccount", "/clearUser", "/move", "/requireList", "/setGroup",
                "/cdks", "/update", "/resetpw", "/setScore", "/setCDKgen", "/deleteCDK", "/setCdkLimit", "/setCdkTime",
-               "/getconfig", "/setconfig", "/cancel 取消"]
+               "/getconfig", "/setconfig", "/cdk_info", "/cancel 取消"]
     all_keyboard = []
     for i in range(0, len(all_key), 4):
         all_keyboard.append(all_key[i:i + 4])
@@ -425,3 +427,28 @@ async def resetpw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("成功重置密码")
     else:
         return await update.message.reply_text("重置密码失败")
+
+
+@command_warp
+@check_admin
+async def get_cdk_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 1:
+        return await update.message.reply_text("Usage: /cdk_info <cdk>")
+    cdk = context.args[0]
+    cdk_info = await CdkOperate.get_cdk(cdk)
+    if not cdk_info:
+        return await update.message.reply_text("注册码未找到")
+    if cdk_info.expired_time == 0:
+        expired_time = "永久"
+    else:
+        expired_time = convert_to_china_timezone(cdk_info.expired_time)
+    history = json.loads(cdk_info.used_history) if cdk_info.used_history else []
+    use_h = ""
+    for h in history:
+        user_info = await UsersOperate.get_user(int(h['tg_id']))
+        use_h += f"使用者: {user_info.fullname}\nID: {user_info.telegram_id}\n使用时间: {convert_to_china_timezone(h['time'])}\n"
+    msg = "=================注册码信息=================\n"
+    msg += f"注册码: <code>{cdk_info.cdk}</code>\n"
+    msg += f"剩余使用次数: {cdk_info.limit}\n"
+    msg += f"到期时间: {expired_time}\n"
+    msg += f"=================使用历史=================\n{use_h}\n"
