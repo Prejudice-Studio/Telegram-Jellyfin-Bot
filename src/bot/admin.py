@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import random
 import string
@@ -429,7 +430,6 @@ async def resetpw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("重置密码失败")
 
 
-@command_warp
 @check_admin
 async def get_cdk_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
@@ -451,4 +451,6 @@ async def get_cdk_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg += f"注册码: <code>{cdk_info.cdk}</code>\n"
     msg += f"剩余使用次数: {cdk_info.limit}\n"
     msg += f"到期时间: {expired_time}\n"
-    msg += f"=================使用历史=================\n{use_h}\n"
+    msg += f"=================使用历史=================\n{use_h}"
+    msg += "========================================"
+    await update.message.reply_text(msg, parse_mode="HTML")
