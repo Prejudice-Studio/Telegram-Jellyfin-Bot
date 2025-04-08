@@ -13,7 +13,7 @@ class BaseConfig:
     """
     toml_file_path = os.path.join(ROOT_PATH, 'config.toml')
     section = None
-    
+
     @classmethod
     def update_from_toml(cls, section: str = None):
         try:
@@ -25,7 +25,7 @@ class BaseConfig:
                     setattr(cls, key.upper(), value)
         except Exception as err:
             logging.error(f'Error occurred while loading config file: {err}')
-    
+
     @classmethod
     def save_to_toml(cls):
         try:
@@ -94,6 +94,10 @@ class BotConfig(BaseConfig):
     USER_GEN_CDK_POINT: int = 200  # 用户生成CDK消耗的积分
     CHECKIN_POINT_MAX: int = 10  # 签到积分最大值
     CHECKIN_POINT_MIN: int = 1  # 签到积分最小值
+    GROUP_CHAT_ID: str = ""  # 群组ID @channelusername
+    CHANNEL_CHAT_ID: str = " " # 频道ID @channelusername
+    MUST_JOIN_CHANNEL: bool = False  # 是否必须加入频道
+    MUST_JOIN_GROUP: bool = False  # 是否必须加入群组
 
 
 class EmbyConfig(BaseConfig):

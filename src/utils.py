@@ -212,3 +212,19 @@ def check_cdk(cdk: CdkModel, tg_id) -> bool:
             return False
 
     return True
+
+
+async def is_user_in_group(bot_context, chat_id: str, user_id: int):
+    """
+    判断用户是否在群组中
+    :param bot_context: 你的机器人 Token
+    :param chat_id: 群组的 ID 或用户名
+    :param user_id: 用户的 ID
+    :return: True 如果用户在群组中，否则 False
+    """
+    try:
+        chat_member = await bot_context.get_chat_member(chat_id, user_id)
+        return chat_member.status in ['member', 'administrator', 'creator']
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        return False

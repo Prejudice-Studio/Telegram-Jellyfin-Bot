@@ -19,8 +19,14 @@ BASE_URL = ""  # 自定义TG URL 示例：http://127.0.0.1:8081/bot 一般用不
 TIMEOUT = 10  # bot请求/读取超时时间
 REDPACKET_IMG = "" #红包图片，留空发红包时候不带图
 USER_GEN_CDK = false # 是否允许用户生成cdk（也可以通过命令开关）
-
+CHECKIN_POINT_MAX = 10  # 签到积分最大值
+CHECKIN_POINT_MIN = 1  # 签到积分最小值
+GROUP_CHAT_ID = ""  # 群组ID @channelusername
+CHANNEL_CHAT_ID = " " # 频道ID @channelusername
+MUST_JOIN_CHANNEL = false  # 是否必须加入频道
+MUST_JOIN_GROU = false  # 是否必须加入群组
 
 [Emby]
 BASE_URL = ""  # Emby URL 必要
 API_KEY = ""  # Emby API Key 必要
+ADDRESS = "[]"  # Emby地址 json数组

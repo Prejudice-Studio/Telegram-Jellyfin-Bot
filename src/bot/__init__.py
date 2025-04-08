@@ -1,13 +1,14 @@
+import json
 from asyncio import sleep
 from datetime import datetime
 from functools import wraps
 
-from telegram import Update
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
 from src.config import BotConfig
 from src.database.user import Role, UserModel, UsersOperate
-from src.utils import check_server_connectivity
+from src.utils import check_server_connectivity, is_user_in_group
 from src.logger import bot_logger
 
 last_check_time = 0
@@ -58,6 +59,21 @@ def check_banned(func):
             user_data.username = eff_user.username
             user_data.fullname = eff_user.full_name
             await UsersOperate.update_user(user_data)
+
+        user_ex_data = json.loads(user_data.data) if user_data.data else {}
+        keyboard = []
+        if user_ex_data.get("check_pass", False):
+            if BotConfig.MUST_JOIN_CHANNEL and (not await is_user_in_group(context.bot, BotConfig.CHANNEL_CHAT_ID, update.effective_user.id)):
+                keyboard.append([InlineKeyboardButton(text="点击加入频道", url=f"https://t.me/{BotConfig.CHANNEL_CHAT_ID}")])
+            if BotConfig.MUST_JOIN_GROUP and (not await is_user_in_group(context.bot, BotConfig.GROUP_CHAT_ID, update.effective_user.id)):
+                keyboard.append([InlineKeyboardButton(text="点击加入频道", url=f"https://t.me/{BotConfig.GROUP_CHAT_ID}")])
+            if keyboard:
+                await update.message.reply_text("请先加入频道和群组", reply_markup=InlineKeyboardMarkup(keyboard))
+                return
+            else:
+                user_ex_data["check_pass"] = False
+                user_data.data = json.dumps(user_ex_data)
+                await UsersOperate.update_user(user_data)
         return await func(update, context, *args, **kwargs)
     
     return wrapper
