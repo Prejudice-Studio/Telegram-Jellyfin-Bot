@@ -258,7 +258,8 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
         await EmbyClient.Users.change_password(password, emby_id)
     except Exception as e:
         bot_logger.error(f"Error: {e}")
-        await update.effective_user.send_message("[Server]创建用户失败(服务器故障或已经存在相同用户)。")
+        await update.effective_user.send_message("[Server]创建用户失败(服务器故障或已经存在相同用户)。\n请稍后再试。")
+        return 2
     finally:
 
         cdk_info = await CdkOperate.get_cdk(cdk)
