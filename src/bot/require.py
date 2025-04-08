@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 from urllib.parse import urlparse
 
+from httpx import HTTPError
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
@@ -16,7 +17,7 @@ from src.utils import convert_to_china_timezone, Bangumi_client
 async def get_bgm_info(bgm_id: str) -> str | None:
     try:
         id_info = await Bangumi_client.Subject.get_subject(bgm_id)
-    except Exception:
+    except HTTPError:
         return None
     if not id_info:
         return None

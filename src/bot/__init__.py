@@ -60,7 +60,7 @@ def check_banned(func):
             user_data.username = eff_user.username
             user_data.fullname = eff_user.full_name
             await UsersOperate.update_user(user_data)
-        user_ex_data = json.loads(user_data.data) if user_data.data else {}
+        user_ex_data = json.loads(str(user_data.data)) if user_data.data else {}
         keyboard = []
         if not user_ex_data.get("check_pass", False):
             if BotConfig.MUST_JOIN_CHANNEL and (not await is_user_in_group(context.bot, BotConfig.CHANNEL_CHAT_ID, update.effective_user.id)):

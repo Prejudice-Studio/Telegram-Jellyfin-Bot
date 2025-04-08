@@ -83,6 +83,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await msg.delete()
 
 
+# noinspection PyUnusedLocal
 @check_banned
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     server = await check_server_connectivity()
@@ -417,6 +418,7 @@ async def emby_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("注册失败")
 
 
+# noinspection PyUnusedLocal
 @check_banned
 async def score_rank(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rank_list = await ScoreOperate.rank()

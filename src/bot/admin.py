@@ -72,11 +72,6 @@ async def set_cdk_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 @check_admin
-async def address(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    pass
-
-
-@check_admin
 async def clear_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
         return await update.message.reply_text("Usage: /clear_user <id/name>")
@@ -128,7 +123,7 @@ async def set_cdk_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("此注册码永久有效")
     cdk_info.expired_time = cdk_info.expired_time + hours * 3600
     await CdkOperate.update_cdk(cdk_info)
-    await update.message.reply_text(f"成功设置 {cdk} 为 {convert_to_china_timezone(cdk_info.expired_time)} 小时.")
+    await update.message.reply_text(f"成功设置 {cdk} 为 {convert_to_china_timezone(str(cdk_info.expired_time))} 小时.")
 
 
 @check_admin
@@ -163,8 +158,7 @@ async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def get_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != BotConfig.ADMIN:
         return await update.message.reply_text("无权限")
-    ROOT_PATH: Path = Path(__file__ + '/../../..').resolve()
-    toml_file_path = os.path.join(ROOT_PATH, 'config.toml')
+    toml_file_path = os.path.join(Path(__file__ + '/../../..').resolve(), 'config.toml')
     with open(toml_file_path, 'r') as f:
         text = f.read()
     if len(text) > 4096:
@@ -184,8 +178,7 @@ async def set_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         return await update.message.reply_text(
             "Usage: /set_config <key> <value> or /set_config <section> <key> <value>")
-    ROOT_PATH: Path = Path(__file__ + '/../../..').resolve()
-    toml_file_path = os.path.join(ROOT_PATH, 'config.toml')
+    toml_file_path = os.path.join(Path(__file__ + '/../../..').resolve(), 'config.toml')
     config = toml.load(toml_file_path)
 
     def get_origin_type(ori_v, value):

@@ -1,5 +1,4 @@
 import json
-import logging
 import random
 from asyncio import sleep
 from datetime import datetime
@@ -21,10 +20,10 @@ from src.utils import base64_decode, base64_encode, get_user_info, EmbyClient, c
 async def admin_delete_je(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     je_id = int(query.data.split("_")[1])
-    Emby_user, user_info = await get_user_info(je_id)
-    if not Emby_user:
+    emby_user, user_info = await get_user_info(je_id)
+    if not emby_user:
         return await query.answer("用户不存在")
-    je_id = Emby_user["Id"]
+    je_id = emby_user["Id"]
     if user_info:
         if user_info.role != Role.ADMIN.value:
             user_info.role = Role.SEA.value
@@ -36,7 +35,7 @@ async def admin_delete_je(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]删除用户失败[1]")
-    await query.answer(f"成功删除JE用户{Emby_user['Name']}")
+    await query.answer(f"成功删除JE用户{emby_user['Name']}")
     await query.delete_message()
 
 
