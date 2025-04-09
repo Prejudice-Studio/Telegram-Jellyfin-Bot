@@ -33,10 +33,10 @@ def check_admin(func):
         user_data = await UsersOperate.get_user(q_id)
         if not user_data:
             return
-        if user_data.role != 2:
+        if user_data.role != Role.ADMIN.value:
             return
         return await func(update, context, *args, **kwargs)
-    
+
     return wrapper
 
 
@@ -56,6 +56,8 @@ def check_banned(func):
             user_data = await UsersOperate.get_user(eff_user.id)
         if user_data.role == Role.BANNED.value:
             return
+        if eff_user.id == BotConfig.ADMIN or user_data.role == Role.ADMIN.value:
+            return await func(update, context, *args, **kwargs)
         if user_data.fullname != eff_user.full_name or user_data.username != eff_user.username:
             user_data.username = eff_user.username
             user_data.fullname = eff_user.full_name
@@ -63,10 +65,14 @@ def check_banned(func):
         user_ex_data = json.loads(str(user_data.data)) if user_data.data else {}
         keyboard = []
         if not user_ex_data.get("check_pass", False):
-            if BotConfig.MUST_JOIN_CHANNEL and (not await is_user_in_group(context.bot, BotConfig.CHANNEL_CHAT_ID, update.effective_user.id)):
-                keyboard.append([InlineKeyboardButton(text="点击加入频道", url=f"https://t.me/{BotConfig.CHANNEL_CHAT_ID[1:]}")])
-            if BotConfig.MUST_JOIN_GROUP and (not await is_user_in_group(context.bot, BotConfig.GROUP_CHAT_ID, update.effective_user.id)):
-                keyboard.append([InlineKeyboardButton(text="点击加入群组", url=f"https://t.me/{BotConfig.GROUP_CHAT_ID[1:]}")])
+            if BotConfig.MUST_JOIN_CHANNEL and (
+            not await is_user_in_group(context.bot, BotConfig.CHANNEL_CHAT_ID, update.effective_user.id)):
+                keyboard.append(
+                    [InlineKeyboardButton(text="点击加入频道", url=f"https://t.me/{BotConfig.CHANNEL_CHAT_ID[1:]}")])
+            if BotConfig.MUST_JOIN_GROUP and (
+            not await is_user_in_group(context.bot, BotConfig.GROUP_CHAT_ID, update.effective_user.id)):
+                keyboard.append(
+                    [InlineKeyboardButton(text="点击加入群组", url=f"https://t.me/{BotConfig.GROUP_CHAT_ID[1:]}")])
             if keyboard:
                 await update.message.reply_text("请先加入频道和群组", reply_markup=InlineKeyboardMarkup(keyboard))
                 return
@@ -75,7 +81,7 @@ def check_banned(func):
                 user_data.data = json.dumps(user_ex_data)
                 await UsersOperate.update_user(user_data)
         return await func(update, context, *args, **kwargs)
-    
+
     return wrapper
 
 
@@ -96,7 +102,7 @@ def command_warp(func):
         if server_close:
             return await update.message.reply_text("服务器已经关闭，请稍后再试。")
         return await func(update, context, *args, **kwargs)
-    
+
     return wrapper
 
 
@@ -112,5 +118,5 @@ def check_private(func):
             await rep.delete()
             return
         return await func(update, context, *args, **kwargs)
-    
+
     return wrapper
