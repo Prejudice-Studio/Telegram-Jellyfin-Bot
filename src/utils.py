@@ -16,7 +16,7 @@ from src.config import Config, EmbyConfig
 from src.database.cdk import CdkModel
 from src.database.user import UserModel, UsersOperate, UsersSessionFactory
 from src.emby.api import EmbyAPI
-from src.logger import bot_logger
+from src.logger import bot_logger, emby_logger
 
 Bangumi_client = BangumiAPI(Config.BANGUMI_TOKEN)
 EmbyClient = EmbyAPI(EmbyConfig.BASE_URL, 1, EmbyConfig.API_KEY)
@@ -34,7 +34,8 @@ async def check_server_connectivity() -> bool:
             return True
         else:
             return False
-    except Exception:
+    except Exception as e:
+        emby_logger.error("check_server error: %s", e)
         return False
 
 
