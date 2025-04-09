@@ -192,7 +192,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         emby_user = await EmbyClient.Users.get_user(user_info.bind_id)
     except Exception as e:
         bot_logger.error(f"Error: {e}")
-        return await update.message.reply_text("[Server]服务器发生错误，请检查日志")
+        return await update.message.reply_text("[Server]服务器发生错误，请求失败，请重试")
     bot_logger.info(f"Emby user: {emby_user}")
     if not emby_user:
         return await update.message.reply_text("用户未找到.")

@@ -16,7 +16,7 @@ def json_response(func):
             return response.json()
         else:
             raise ValueError(f"Request failed, status code: {response.status_code}, response: {response.text}")
-    
+
     return wrapper
 
 
@@ -28,7 +28,7 @@ def bool_response(func):
             return True
         else:
             return False
-    
+
     return wrapper
 
 
@@ -40,7 +40,7 @@ def http_warp(func):
                 raise ValueError("No user_id")
             path = path.format(UserID=self.user_id)
         return await func(self, path, *args, **kwargs)
-    
+
     return wrapper
 
 
@@ -50,7 +50,7 @@ def gen_device_id():
 
 
 class EmbyRequest:
-    
+
     def __init__(self, url: str, auth: int, api_key: Optional[str] = None):
         if not (url.endswith("emby") or url.endswith("emby/")):
             url += "/emby"
@@ -58,7 +58,7 @@ class EmbyRequest:
         self.api_key = api_key
         self.user_data = None
         self.user_id = None
-        
+
         self.client.headers = {
             'X-Emby-Client': 'Telegram Bot',
             'X-Emby-Device-Name': 'Telegram Bot',
@@ -66,10 +66,10 @@ class EmbyRequest:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 '
                           'Safari/537.36 Edg/114.0.1823.82'
         }
-        
+
         if auth == 1:  # API key
             self.client.headers['X-Emby-Token'] = api_key
-    
+
     async def login(self, account: str, password: str):
         login_url = '/Users/authenticatebyname'
         login_data = {
@@ -88,37 +88,38 @@ class EmbyRequest:
                 raise ValueError("Login failed, no token")
         else:
             raise ValueError(f"Login failed, status code: {response.status_code}, response: {response.text}")
-    
+
     @http_warp
-    async def get(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None, **kwargs) -> Response:
-        response = await self.client.get(path, params=params, headers=headers, **kwargs)
+    async def get(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
+                  **kwargs) -> Response:
+        response = await self.client.get(path, params=params, headers=headers, timeout=10, **kwargs)
         response.raise_for_status()
         emby_logger.info(f"GET {path} {response.status_code}")
         return response
-    
+
     @http_warp
     async def post(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
                    json: Optional[Dict[str, Any]] = None, **kwargs) -> Response:
-        response = await self.client.post(path, params=params, headers=headers, data=json, **kwargs)
+        response = await self.client.post(path, params=params, headers=headers, data=json, timeout=10, **kwargs)
         response.raise_for_status()
         emby_logger.info(f"POST {path} {response.status_code}")
         return response
-    
+
     @http_warp
     async def put(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
                   json: Optional[Dict[str, Any]] = None, **kwargs) -> Response:
-        response = await self.client.put(path, params=params, headers=headers, data=json, **kwargs)
+        response = await self.client.put(path, params=params, headers=headers, data=json, timeout=10, **kwargs)
         response.raise_for_status()
         emby_logger.info(f"PUT {path} {response.status_code}")
         return response
-    
+
     @http_warp
     async def delete(self, path: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None,
                      **kwargs) -> Response:
-        response = await self.client.delete(path, params=params, headers=headers, **kwargs)
+        response = await self.client.delete(path, params=params, headers=headers, timeout=10, **kwargs)
         response.raise_for_status()
         emby_logger.info(f"DELETE {path} {response.status_code}")
         return response
-    
+
     async def close(self):
         await self.client.aclose()

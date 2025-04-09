@@ -260,7 +260,8 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
         await EmbyClient.Users.change_password(password, emby_id)
     except Exception as e:
         bot_logger.error(f"Error: {e}")
-        await update.effective_user.send_message("[Server]创建用户失败(服务器故障或已经存在相同用户)。\n请稍后点击按钮重试。")
+        await update.effective_user.send_message("[Server]创建用户失败(服务器故障或已经存在相同用户)。\n"
+                                                 "请稍后点击按钮重试。\n此次注册流程已经结束")
         return  ConversationHandler.END
     cdk_info.limit -= 1
     history = json.loads(cdk_info.used_history) if cdk_info.used_history else []
