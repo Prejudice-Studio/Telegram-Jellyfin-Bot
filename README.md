@@ -36,6 +36,15 @@ Other Language Introduction: [English](README_EN.md)
 # 使用方法
 
 ## 如果你的运行环境无法连接至Telegram,请在config.toml中配置代理，或者使用自定义Telegram base url，或将运行环境切换至可以连接至Telegram的网络环境。
+
+## （推荐）使用Docker Compose 构建部署
+```
+wget -O docker-compose.yml https://raw.githubusercontent.com/Prejudice-Studio/Telegram-Jellyfin-Bot/refs/heads/emby/docker-compose.yml && \
+wget -O Dockerfile https://raw.githubusercontent.com/Prejudice-Studio/Telegram-Jellyfin-Bot/refs/heads/emby/Dockerfile && \
+docker-compose build && \
+docker-compose up -d
+```
+
 ## 一、Docker 一键部署
     
 #### 1.确保安装了Docker
