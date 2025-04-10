@@ -43,24 +43,34 @@ def check_admin(func):
 def check_banned(func):
     @wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        if not (update and update.effective_user):
-            return await func(update, context, *args, **kwargs)
         eff_user = update.effective_user
-        user_data = await UsersOperate.get_user(eff_user.id)
+        chat_info = {
+            'id': eff_user.id,
+            'name': eff_user.full_name,
+            'username': eff_user.username
+        }
+        if eff_user.username == "Channel_Bot":
+            sender_chat = update.message.sender_chat
+            chat_info.update({
+                'id': sender_chat.id,
+                'name': sender_chat.title,
+                'username': sender_chat.username
+            })
+        user_data = await UsersOperate.get_user(chat_info['id'])
         if not user_data:
-            await UsersOperate.add_user(UserModel(telegram_id=eff_user.id,
-                                                  username=eff_user.username,
-                                                  role=1,
-                                                  fullname=eff_user.full_name,
-                                                  ))
-            user_data = await UsersOperate.get_user(eff_user.id)
+            user_data = await UsersOperate.add_user(UserModel(
+                telegram_id=chat_info['id'],
+                username=chat_info['username'],
+                role=1,
+                fullname=chat_info['name']
+            ))
         if user_data.role == Role.BANNED.value:
             return
-        if eff_user.id == BotConfig.ADMIN or user_data.role == Role.ADMIN.value:
+        if chat_info['username'] == BotConfig.ADMIN or user_data.role == Role.ADMIN.value:
             return await func(update, context, *args, **kwargs)
-        if user_data.fullname != eff_user.full_name or user_data.username != eff_user.username:
-            user_data.username = eff_user.username
-            user_data.fullname = eff_user.full_name
+        if user_data.fullname != chat_info['name'] or user_data.username != chat_info['username']:
+            user_data.username = chat_info['username']
+            user_data.fullname = chat_info['name']
             await UsersOperate.update_user(user_data)
         user_ex_data = json.loads(str(user_data.data)) if user_data.data else {}
         keyboard = []
