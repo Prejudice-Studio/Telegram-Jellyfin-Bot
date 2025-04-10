@@ -332,11 +332,11 @@ async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("无权限")
     if len(context.args) != 2:
         return await update.message.reply_text("Usage: /setGroup <id/name> <group>")
-    tg_id, group = context.args[0], context.args[1].upper()
-    _, user_info = await get_user_info(context.args[0], only_tg_info=True)
+    tg_id, group = int(context.args[0]), context.args[1].upper()
+    _, user_info = await get_user_info(tg_id, only_tg_info=True)
     if not user_info:
         if is_integer(tg_id):
-            user_info = UserModel(telegram_id=int(context.args[0]), username="Unknown", fullname="Unknown")
+            user_info = UserModel(telegram_id=tg_id, username="Unknown", fullname="Unknown")
             try:
                 await UsersOperate.add_user(user_info)
             except Exception as e:
