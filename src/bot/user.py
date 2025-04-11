@@ -185,6 +185,8 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @check_banned
 @command_warp
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id == 136817688 :
+        return await update.message.reply_text("Channel禁止此操作.")
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info or not user_info.bind_id:
         return await update.message.reply_text("无Emby账号与该Telegram账号绑定.")
@@ -238,6 +240,8 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @check_banned
 @check_private
 async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id == 136817688 :
+        return await update.message.reply_text("Channel禁止此操作.")
     score_info = await ScoreOperate.get_score(update.effective_user.id)
     if not score_info:
         score_info = ScoreModel(telegram_id=update.effective_user.id)
