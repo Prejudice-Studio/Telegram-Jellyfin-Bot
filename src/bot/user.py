@@ -451,6 +451,8 @@ async def transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     eff_user = update.effective_user.id
     if target_info.telegram_id == eff_user:
         return await update.message.reply_text("无法给自己转账.")
+    if target_info.telegram_id == 136817688 :
+        return await update.message.reply_text("无法给Channel转账.")
     amount = int(amount)
     score_data = await ScoreOperate.get_score(eff_user)
     if not score_data or score_data.score < amount:
