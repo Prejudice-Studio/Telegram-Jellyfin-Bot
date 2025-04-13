@@ -5,6 +5,7 @@ from telegram import Update, InlineQueryResultArticle, InputTextMessageContent, 
 from telegram.ext import ContextTypes
 
 from src.bot import check_banned
+from src.database.cdk import CdkOperate
 
 
 @check_banned
@@ -27,6 +28,18 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     if "cdk_" in query:
         split_result = query.split("\n", 1)
         cdk = split_result[0]
+        cdk_info = await CdkOperate.get_cdk(cdk.replace("cdk_", ""))
+        if not cdk_info:
+            await update.inline_query.answer(
+                [
+                    InlineQueryResultArticle(
+                        id=str(uuid4()),
+                        title="注册码无效",
+                        input_message_content=InputTextMessageContent("注册码无效"),
+                    )
+                ]
+            )
+            return
         send_text = split_result[1] if len(split_result) > 1 else ""
         bot = context.bot
         url = helpers.create_deep_linked_url(bot.username, cdk)
