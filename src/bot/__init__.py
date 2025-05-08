@@ -64,6 +64,8 @@ def check_banned(func):
                 role=1,
                 fullname=chat_info['name']
             ))
+        if user_data is None:
+            return
         if user_data.role == Role.BANNED.value:
             return
         if chat_info['username'] == BotConfig.ADMIN or user_data.role == Role.ADMIN.value:
