@@ -188,18 +188,25 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id == 136817688 :
         return await update.message.reply_text("Channel禁止此操作.")
     user_info = await UsersOperate.get_user(update.effective_user.id)
-    if not user_info or not user_info.bind_id:
-        return await update.message.reply_text("无Emby账号与该Telegram账号绑定.")
-    try:
-        emby_user = await EmbyClient.Users.get_user(user_info.bind_id)
-    except Exception as e:
-        bot_logger.error(f"Error: {e}")
-        return await update.message.reply_text("[Server]服务器发生错误，请求失败，请重试")
-    bot_logger.info(f"Emby user: {emby_user}")
-    if not emby_user:
-        return await update.message.reply_text("用户未找到.")
-
-    last_login = convert_to_china_timezone(emby_user.get("LastLoginDate", "N/A"))
+    r_msg = (f"----------Telegram----------\n"
+        f"TelegramID: {user_info.telegram_id}\n"
+        f"Telegram昵称: {user_info.fullname}\n"
+        f"用户组: {Role(user_info.role).name}\n")
+    if not user_info:
+        return await update.message.reply_text("无账号信息.")
+    if user_info.bind_id:
+        try:
+            emby_user = await EmbyClient.Users.get_user(user_info.bind_id)
+        except Exception as e:
+            bot_logger.error(f"Error: {e}")
+            return await update.message.reply_text("[Server]服务器发生错误，请求失败，请重试")
+        bot_logger.info(f"Emby user: {emby_user}")
+        if not emby_user:
+            return await update.message.reply_text("Emby用户未找到.")
+        last_login = convert_to_china_timezone(emby_user.get("LastLoginDate", "N/A"))
+        r_msg += (f"----------Emby----------\n"
+        f"用户名: {emby_user['Name']}\n"
+        f"上次登录: {last_login}\n")
     score_data = await ScoreOperate.get_score(update.effective_user.id)
     if not score_data:
         score = 0
@@ -207,18 +214,10 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         score, checkin_time = score_data.score, score_data.checkin_time
     checkin_time_v = checkin_time if checkin_time is not None else 0
-    limits = Role(user_info.role).name
-    await update.message.reply_text(
-        f"----------Telegram----------\n"
-        f"TelegramID: {user_info.telegram_id}\n"
-        f"Telegram昵称: {user_info.fullname}\n"
-        f"用户组: {limits}\n"
-        f"----------Emby----------\n"
-        f"用户名: {emby_user['Name']}\n"
-        f"上次登录: {last_login}\n"
-        f"----------Score----------\n"
+    r_msg +=(f"----------Score----------\n"
         f"积分: {score}\n"
         f"上次签到: {convert_to_china_timezone(checkin_time_v)}")
+    await update.message.reply_text(r_msg)
 
 
 # noinspection PyUnusedLocal
