@@ -28,7 +28,7 @@ def check_admin(func):
             q_id = update.effective_user.id
         if not q_id:
             return
-        if q_id == BotConfig.ADMIN:
+        if q_id in BotConfig.ADMIN:
             return await func(update, context, *args, **kwargs)
         user_data = await UsersOperate.get_user(q_id)
         if not user_data:
@@ -68,7 +68,7 @@ def check_banned(func):
             return
         if user_data.role == Role.BANNED.value:
             return
-        if chat_info['username'] == BotConfig.ADMIN or user_data.role == Role.ADMIN.value:
+        if chat_info['id'] in BotConfig.ADMIN or user_data.role == Role.ADMIN.value:
             return await func(update, context, *args, **kwargs)
         if user_data.fullname != chat_info['name'] or user_data.username != chat_info['username']:
             user_data.username = chat_info['username']

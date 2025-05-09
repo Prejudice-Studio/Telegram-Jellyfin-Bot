@@ -156,7 +156,7 @@ async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # noinspection PyUnusedLocal
 async def get_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != BotConfig.ADMIN:
+    if update.effective_user.id not in BotConfig.ADMIN:
         return await update.message.reply_text("无权限")
     toml_file_path = os.path.join(Path(__file__ + '/../../..').resolve(), 'config.toml')
     with open(toml_file_path, 'r') as f:
@@ -168,7 +168,7 @@ async def get_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def set_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != BotConfig.ADMIN:
+    if update.effective_user.id not in BotConfig.ADMIN:
         return await update.message.reply_text("无权限")
     if len(context.args) == 2:
         key, value = context.args
@@ -328,7 +328,7 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def set_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != BotConfig.ADMIN:
+    if update.effective_user.id not in BotConfig.ADMIN:
         return await update.message.reply_text("无权限")
     if len(context.args) != 2:
         return await update.message.reply_text("Usage: /setGroup <id/name> <group>")
