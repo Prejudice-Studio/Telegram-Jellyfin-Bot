@@ -379,17 +379,17 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     if BotConfig.REDPACKET_IMG != "":
         if ProgramConfig.REDPACKET_FILEID:
-            await update.effective_chat.send_photo(ProgramConfig.REDPACKET_FILEID,
+            await update.message.reply_photo(ProgramConfig.REDPACKET_FILEID,
                                                    caption=f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
                                                    reply_markup=reply_markup)
         else:
-            msg = await update.effective_chat.send_photo(open(BotConfig.REDPACKET_IMG, "rb"),
+            msg = await update.message.reply_photo(open(BotConfig.REDPACKET_IMG, "rb"),
                                                          caption=f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count},"
                                                                  f" 模式{mode}",
                                                          reply_markup=reply_markup)
             ProgramConfig.REDPACKET_FILEID = msg.photo[-1].file_id
     else:
-        await update.effective_chat.send_message(
+        await update.message.reply_text(
             f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
             reply_markup=reply_markup)
 
