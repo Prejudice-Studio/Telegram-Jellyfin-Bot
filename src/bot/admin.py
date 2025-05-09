@@ -155,6 +155,7 @@ async def set_gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # noinspection PyUnusedLocal
+@check_private
 async def get_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in BotConfig.ADMIN:
         return await update.message.reply_text("无权限")
