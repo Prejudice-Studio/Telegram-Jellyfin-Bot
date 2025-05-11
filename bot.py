@@ -16,6 +16,7 @@ import src.bot.user as UserCommand
 from src.bot import callback
 from src.bot.callback import user_reg_cb, user_reg_username, user_reg_pw, cancel
 from src.bot.inline import inline_query
+from src.bot.msg import forward_message
 from src.config import BotConfig, Config
 from src.logger import bot_logger
 from src.webhook.api import run_flask
@@ -57,6 +58,7 @@ def run_bot():
     load_handlers(application)
     # 内联查询
     application.add_handler(InlineQueryHandler(inline_query))
+    application.add_handler(MessageHandler(filters.UpdateType.CHANNEL_POST, forward_message))
 
     # 对话
     conv_handler = ConversationHandler(
