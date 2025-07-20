@@ -88,6 +88,19 @@ class ScoreOperate:
             async with session.begin():
                 await session.execute(update(ScoreModel).filter(ScoreModel.telegram_id == telegram_id).values(
                         score=ScoreModel.score + change_score))
+                
+    @staticmethod
+    async def reduce_score(telegram_id: int, reduce_score: int) -> bool:
+        """
+        减少积分
+        :param telegram_id: Telegram ID
+        :param reduce_score: 待减少的积分
+        """
+        async with ScoreSessionFactory() as session:
+            async with session.begin():
+                await session.execute(update(ScoreModel).filter(ScoreModel.telegram_id == telegram_id).values(
+                        score=ScoreModel.score - reduce_score))
+                return True
     
     @staticmethod
     async def update_score(score_data: ScoreModel):

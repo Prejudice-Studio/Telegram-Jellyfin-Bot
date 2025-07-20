@@ -98,7 +98,8 @@ class BotConfig(BaseConfig):
     CHANNEL_CHAT_ID: str = " " # 频道ID @channelusername
     MUST_JOIN_CHANNEL: bool = False  # 是否必须加入频道
     MUST_JOIN_GROUP: bool = False  # 是否必须加入群组
-
+    UNLIMITED_REGISTER: bool = False  # 是否开放注册
+    REGISTER_POINT: int = 0  # 注册所需积分
 
 class EmbyConfig(BaseConfig):
     """
