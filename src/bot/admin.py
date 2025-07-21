@@ -181,6 +181,7 @@ async def set_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Usage: /set_config <key> <value> or /set_config <section> <key> <value>")
     toml_file_path = os.path.join(Path(__file__ + '/../../..').resolve(), 'config.toml')
     config = toml.load(toml_file_path)
+    key = str(key).upper()
 
     def get_origin_type(ori_v, value):
         if value.isdigit():
