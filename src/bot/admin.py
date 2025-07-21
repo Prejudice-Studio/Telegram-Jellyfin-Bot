@@ -185,10 +185,20 @@ async def set_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     def get_origin_type(ori_v, value):
         if value.isdigit():
             return int(value)
+        if value in ["true", "false"]:
+            return value == "true"
         if not ori_v:
             return value
-        elif ori_v in ["true", "false"]:
-            return value == "true"
+        else:
+            if isinstance(ori_v, str):
+                return value
+            if isinstance(ori_v, list):
+                return value.split(",") if value else []
+            if isinstance(ori_v, dict):
+                try:
+                    return json.loads(value)
+                except json.JSONDecodeError:
+                    return value
         return value
 
     try:
