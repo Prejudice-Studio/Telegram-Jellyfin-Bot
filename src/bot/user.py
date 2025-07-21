@@ -146,8 +146,9 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cdk_info = None
     if BotConfig.UNLIMITED_REGISTER == True:
         # 直接允许注册 , 无需注册码和身份验证
-        score = await ScoreOperate.get_score(eff_user.id)
-        if score is None or score < BotConfig.REGISTER_POINT:
+        score = await int(ScoreOperate.get_score(eff_user.id))
+        allowScoreReg = (score < BotConfig.REGISTER_POINT)
+        if allowScoreReg == False:
             return await update.message.reply_text(f"积分不足 (至少需要{BotConfig.REGISTER_POINT}积分).")
         else:
             await ScoreOperate.reduce_score(eff_user.id, BotConfig.REGISTER_POINT)
