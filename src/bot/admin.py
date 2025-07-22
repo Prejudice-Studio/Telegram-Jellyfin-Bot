@@ -18,6 +18,7 @@ from src.config import BotConfig
 from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UserModel, UsersOperate
+from src.emby.api.user import Users
 from src.utils import convert_to_china_timezone, get_password_hash, get_user_info, is_integer, EmbyClient
 
 
@@ -28,6 +29,7 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"基本命令:\n"
                 f"<code>/summon [limit] [quantity] [validity_hours]</code> 生成注册码 (limit：限制数，quantity：数量，validity_hours：有效小时数)\n"
                 f"<code>/checkinfo [Emby用户名/Telegram用户ID/Fullname]</code> 查看用户信息\n"
+                f"<code>/getUserCount</code> 查看当前用户数量\n"
                 f"<code>/deleteAccount [ID/名字/TG昵称]</code> 删除用户\n"
                 f"<code>/clearUser [id/name]</code> 清除某个用户全部数据\n"
                 f"<code>/move [id/name] [new_tg_id]</code> 迁移用户数据到新的tg账户\n"
@@ -44,7 +46,7 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/getconfig</code> 获取配置\n"
                 f"<code>/setconfig [key] [value]</code> 设置配置\n"
                 f"<code>/cdk_info [cdk]</code> 获取某个CDK信息\n")
-    all_key = ["/summon", "/checkinfo", "/deleteAccount", "/clearUser", "/move", "/requireList", "/setGroup",
+    all_key = ["/summon", "/checkinfo", "/getUserCount" , "/deleteAccount", "/clearUser", "/move", "/requireList", "/setGroup",
                "/cdks", "/update", "/resetpw", "/setScore", "/setCDKgen", "/deleteCDK", "/setCdkLimit", "/setCdkTime",
                "/getconfig", "/setconfig", "/cdk_info", "/cancel 取消"]
     all_keyboard = []
@@ -82,6 +84,11 @@ async def clear_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await UsersOperate.delete(tg_id)
     await ScoreOperate.delete(tg_id)
     await update.message.reply_text(f"成功清除用户 {user_info.fullname} 的所有数据.")
+    
+@check_admin
+async def getUSerCount(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    count = await Users.get_total_users()
+    await update.message.reply_text(f"当前用户数量为 {count}.")
 
 
 @check_admin

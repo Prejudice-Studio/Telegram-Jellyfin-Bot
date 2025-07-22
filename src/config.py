@@ -100,6 +100,11 @@ class BotConfig(BaseConfig):
     MUST_JOIN_GROUP: bool = False  # 是否必须加入群组
     UNLIMITED_REGISTER: bool = False  # 是否开放注册
     REGISTER_POINT: int = 0  # 注册所需积分
+    LIMIT_USER_COUNT: int = 2000  # 限制总用户数量
+    NEW_USER_NOTICE_CHAT_ID: int = 0  # 新用户通知群组ID
+    NEW_USER_NOTICE_THREAD_ID: int = 0  # 新用户通知线程ID
+    NEW_USER_NOTICE_STATUS: bool = False  # 新用户通知开关
+
 
 class EmbyConfig(BaseConfig):
     """

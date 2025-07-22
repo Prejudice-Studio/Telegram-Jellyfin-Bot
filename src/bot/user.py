@@ -15,6 +15,7 @@ from src.database.cdk import CdkModel, CdkOperate
 from src.database.score import RedPacketModel, ScoreModel, ScoreOperate
 from src.database.user import Role, UserModel, UsersOperate
 from src.emby.api import EmbyAPI
+from src.emby.api.user import Users
 from src.logger import bot_logger
 from src.utils import convert_to_china_timezone, generate_red_packets, get_password_hash, get_user_info, \
     is_password_strong, EmbyClient, check_server_connectivity, get_latest_commit_info, check_cdk
@@ -130,6 +131,12 @@ async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @command_warp
 @check_private
 async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    USer_Limited_Count = BotConfig.LIMIT_USER_COUNT
+    User_Count = await Users.get_total_users()
+    if User_Count >= USer_Limited_Count:
+        return await update.message.reply_text(f"用户数量已达到上限({USer_Limited_Count})，无法注册。")
+    else:
+        pass
     if len(context.args) < 2:
         return await update.message.reply_text("Usage: /reg <username> <password> <cdk>")
     username, password, reg_code = context.args[0], context.args[1], None
@@ -163,9 +170,45 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         ret_user = await EmbyClient.Users.new_user(username)
         await EmbyClient.Users.change_password(password, ret_user["Id"])
+        if BotConfig.NEW_USER_NOTICE_STATUS == True:
+            CHAT_ID = BotConfig.NEW_USER_NOTICE_CHAT_ID
+            THREAD_ID = BotConfig.NEW_USER_NOTICE_THREAD_ID
+            
+            # 构建用户链接（优先使用@username，否则使用user_id链接）
+            user_link = (
+                f'<a href="https://t.me/{eff_user.username}">{eff_user.full_name}</a>'
+                if eff_user.username
+                else f'<a href="tg://user?id={eff_user.id}">{eff_user.full_name}</a>'
+            )
+            # 构建通知消息（HTML格式）
+            notice_text = (
+                f"🎉 <b>新用户注册</b> 🎉\n\n"
+                f"• <b>Telegram 用户</b>: {user_link}\n"
+                f"• <b>注册时间</b>: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            )
+            
+            # 发送通知消息
+            try:
+                if THREAD_ID and THREAD_ID != 0:
+                    await context.bot.send_message(
+                        chat_id=CHAT_ID,
+                        text=notice_text,
+                        parse_mode="HTML",  # 允许HTML格式
+                        message_thread_id=THREAD_ID,
+                    )
+                else:
+                    await context.bot.send_message(
+                        chat_id=CHAT_ID,
+                        text=notice_text,
+                        parse_mode="HTML",  # 允许HTML格式
+                    )
+            except Exception as e:
+                bot_logger.error(f"发送新用户通知失败: {e}")
     except Exception as e:
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]创建用户失败(服务器故障或已经存在相同用户)。")
+
+
     if cdk_info:
         cdk_info.limit -= 1
         history = json.loads(cdk_info.used_history) if cdk_info.used_history else []

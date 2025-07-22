@@ -36,6 +36,14 @@ class Users:
         """
         return await self.client.get("Users")
     
+    async def get_total_users(self) -> int:
+        """
+        获取Emby用户总数
+        :return: 用户总数(int)
+        """
+        users = await self.get_users()
+        return len(users) if users else None
+        
     @json_response
     async def get_public_users(self):
         return await self.client.get("Users/Public")
