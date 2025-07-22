@@ -151,15 +151,14 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_info.bind_id:
         return await update.message.reply_text("你已绑定一个Emby账号，无法注册。")
     cdk_info = None
-    if BotConfig.UNLIMITED_REGISTER == True:
+    if BotConfig.UNLIMITED_REGISTER:
         # 直接允许注册 , 无需注册码和身份验证
-        score = await int(ScoreOperate.get_score(eff_user.id))
-        allowScoreReg = (score < BotConfig.REGISTER_POINT)
-        if allowScoreReg == False:
+        score = await ScoreOperate.get_score(eff_user.id)
+        score = score.score if score else 0
+        if score < BotConfig.REGISTER_POINT:
             return await update.message.reply_text(f"积分不足 (至少需要{BotConfig.REGISTER_POINT}积分).")
         else:
             await ScoreOperate.reduce_score(eff_user.id, BotConfig.REGISTER_POINT)
-            pass
     elif not (user_info and user_info.role == Role.ORDINARY.value):
         # 非ORDINARY用户需要验证注册码
         cdk_info = await CdkOperate.get_cdk(reg_code)
