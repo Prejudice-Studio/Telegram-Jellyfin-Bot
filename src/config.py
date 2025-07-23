@@ -101,6 +101,7 @@ class BotConfig(BaseConfig):
     UNLIMITED_REGISTER: bool = False  # 是否开放注册
     REGISTER_POINT: int = 0  # 注册所需积分
     LIMIT_USER_COUNT: int = 2000  # 限制总用户数量
+    LIMIT_USER_COUNT_ENABLED: bool = False  # 是否启用用户数量限制
     NEW_USER_NOTICE_CHAT_ID: int = 0  # 新用户通知群组ID
     NEW_USER_NOTICE_THREAD_ID: int = 0  # 新用户通知线程ID
     NEW_USER_NOTICE_STATUS: bool = False  # 新用户通知开关
