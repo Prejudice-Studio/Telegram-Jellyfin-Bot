@@ -2,6 +2,7 @@ from typing import Optional
 
 from src.emby.api import EmbyRequest
 from src.emby.api.req import bool_response, json_response
+from src.utils import EmbyClient
 
 
 def info():
@@ -41,10 +42,9 @@ class Users:
         获取用户总数
         :return: 用户数量（int）
         """
-        users = await self.client.get("Users")
+        users = await EmbyClient.Users.get_users()
         return len(users)
 
-        
     @json_response
     async def get_public_users(self):
         return await self.client.get("Users/Public")
