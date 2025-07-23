@@ -1,37 +1,11 @@
 # Telegram-Jellyfin-Bot
-一个简单的Telegram Jellyfin Bot
+一个简单的Telegram Jellyfin/Emby Bot
 
-Use Docker Python Jellyfin-ApiClient-Python Python-Telegram-Bot
-
-Other Language Introduction: [English](README_EN.md)
+Use Docker Python Jellyfin-ApiClient-Python Python-Telegram-Bot EmbyAPI
 
 开发者: 
 - [MoYuanCN](https://github.com/MoYuanCN/)
-- [Enlysure](https://github.com/Rovniced/)
-
-# 功能如下
-# 用户指令
-
-| 指令                                               | 描述                                      |
-|--------------------------------------------------|-----------------------------------------|
-| `/reg JellyfinUsername JellyfinPassword RegCode` | 注册新的Jellyfin账号并自动与当前Telegram账号绑定        |
-| `/info`                                          | 查看当前账号的基本信息                             |
-| `/bind JellyfinUsername JellyfinPassword`        | 将当前Telegram账号绑定至已有的Jellyfin账号           |
-| `/unbind JellyfinUsername JellyfinPassword`      | 将Telegram账号与当前绑定的Jellyfin账号解绑           |
-| `/sign`                                          | 签到，随机获取1-10积分(分数范围可根据源码修改)，积分暂无用处，可自行添加 |
-| `/delete`                                        | 删除当前Telegram账号绑定的Jellyfin账号             |
-| `/changepassword JellyfinOldPassword JellyfinNewPassword`      | 修改当前Telegram账号绑定的Jellyfin账号的密码             |
-| `/checkpassword`                                        | 查看当前Telegram账号绑定的Jellyfin账号的密码             |
-
-# 管理员指令
-
-| 指令                                                   | 描述                                                         |
-|------------------------------------------------------|------------------------------------------------------------|
-| `/checkinfo [TelegramUserID/JellyfinUsername]`       | 查询对应TelegramUserID/JellyfinUsername的相关信息(包含密码)             |
-| `/deleteAccountBy [TelegramUserID/JellyfinUsername]` | 删除对应TelegramUserID/JellyfinUsername的Jellyfin账号             |
-| `/regcodes`                                          | 查看当前所有注册码                                                  |
-| `/summon use_limit count`                            | 生成注册码，包含可使用次数与注册码数量，可选参数：validity_hours 到期时间，留空默认为永久，单位为小时 |
-| `/op TelegramUserID`                                 | 添加Bot管理员，!!!!仅Bot Owner可用                                  |
+- [Enlysure](https://github.com/Rovniced/)                                |
 
 # 使用方法
 
