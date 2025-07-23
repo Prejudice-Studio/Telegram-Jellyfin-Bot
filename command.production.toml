@@ -38,6 +38,7 @@ move = "AdminCommand.move" # 移动用户数据
 getconfig = "AdminCommand.get_config" # 获取配置
 setconfig = "AdminCommand.set_config" # 设置配置
 cdk_info = "AdminCommand.get_cdk_info" # 查看CDK信息
+getUserCount = "AdminCommand.get_user_count" # 获取用户数量
 
 [callback_queries] # 回调函数，基本不用改
 confirm_delete = "callback.confirm_delete"

@@ -2,7 +2,6 @@ from typing import Optional
 
 from src.emby.api import EmbyRequest
 from src.emby.api.req import bool_response, json_response
-from src.utils import EmbyClient
 
 
 def info():
@@ -19,7 +18,7 @@ def info():
 class Users:
     def __init__(self, client: EmbyRequest):
         self.client = client
-    
+
     @json_response
     async def get_user(self, user_id: Optional[str] = "{UserID}"):
         """
@@ -28,7 +27,7 @@ class Users:
         :return:
         """
         return await self.client.get(f'Users/{user_id}')
-    
+
     @json_response
     async def get_users(self):
         """
@@ -36,19 +35,11 @@ class Users:
         :return:
         """
         return await self.client.get("Users")
-    
-    async def get_total_users(self) -> int:
-        """
-        获取用户总数
-        :return: 用户数量（int）
-        """
-        users = await EmbyClient.Users.get_users()
-        return len(users)
 
     @json_response
     async def get_public_users(self):
         return await self.client.get("Users/Public")
-    
+
     @json_response
     async def get_user_settings(self, user_id: Optional[str] = "{UserID}", client="emby"):
         """
@@ -61,7 +52,7 @@ class Users:
             "userId": f"{user_id}",
             "client": client
         })
-    
+
     @bool_response
     async def delete_user(self, user_id: Optional[str] = "{UserID}"):
         """
@@ -70,7 +61,7 @@ class Users:
         :return: bool
         """
         return await self.client.delete(f'Users/{user_id}')
-    
+
     @json_response
     async def get_user_views(self, user_id: Optional[str] = "{UserID}"):
         """
@@ -79,7 +70,7 @@ class Users:
         :return:
         """
         return await self.client.get(f'Users/{user_id}/Views')
-    
+
     @json_response
     async def get_user_media_folders(self, user_id: Optional[str] = "{UserID}", fields=None):
         """
@@ -91,7 +82,7 @@ class Users:
         return await self.client.get(f'Users/{user_id}/Items', params={
             "fields": fields
         })
-    
+
     @json_response
     async def new_user(self, name: str):
         """
@@ -102,7 +93,7 @@ class Users:
         return await self.client.post("Users/New", json={
             "Name": name,
         })
-    
+
     @json_response
     async def get_item(self, item_id: str, user_id: Optional[str] = "{UserID}"):
         """
@@ -114,14 +105,14 @@ class Users:
         return await self.client.get(f'Users/{user_id}/Items/{item_id}', params={
             'Fields': info()
         })
-    
+
     @json_response
     async def get_items(self, item_ids: list, user_id: Optional[str] = "{UserID}"):
         return await self.client.get(f"Users/{user_id}/Items", params={
             'Ids': ','.join(str(x) for x in item_ids),
             'Fields': info()
         })
-    
+
     # noinspection PyUnusedLocal
     @bool_response
     async def change_password(self, new_pw: str = "", user_id: Optional[str] = "{UserID}"):

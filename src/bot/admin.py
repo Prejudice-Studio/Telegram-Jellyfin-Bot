@@ -46,7 +46,8 @@ async def shelp(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/getconfig</code> 获取配置\n"
                 f"<code>/setconfig [key] [value]</code> 设置配置\n"
                 f"<code>/cdk_info [cdk]</code> 获取某个CDK信息\n")
-    all_key = ["/summon", "/checkinfo", "/getUserCount" , "/deleteAccount", "/clearUser", "/move", "/requireList", "/setGroup",
+    all_key = ["/summon", "/checkinfo", "/getUserCount", "/deleteAccount", "/clearUser", "/move", "/requireList",
+               "/setGroup",
                "/cdks", "/update", "/resetpw", "/setScore", "/setCDKgen", "/deleteCDK", "/setCdkLimit", "/setCdkTime",
                "/getconfig", "/setconfig", "/cdk_info", "/cancel 取消"]
     all_keyboard = []
@@ -84,11 +85,17 @@ async def clear_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await UsersOperate.delete(tg_id)
     await ScoreOperate.delete(tg_id)
     await update.message.reply_text(f"成功清除用户 {user_info.fullname} 的所有数据.")
-    
+
+
 @check_admin
-async def getUSerCount(update: Update):
-    count = await Users.get_total_users()
-    await update.message.reply_text(f"当前用户数量为 {count}.")
+async def get_user_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        ret = await EmbyClient.Users.get_users()
+    except Exception:
+        return await update.message.reply_text("获取用户列表失败，请检查日志")
+    user_count = len(ret)
+    await update.message.reply_text(f"当前用户数量为 {user_count}.")
+
 
 @check_admin
 async def move(update: Update, context: ContextTypes.DEFAULT_TYPE):
