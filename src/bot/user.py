@@ -131,6 +131,11 @@ async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @command_warp
 @check_private
 async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) < 2:
+        return await update.message.reply_text("Usage: /reg <username> <password> <cdk>")
+    username, password, reg_code = context.args[0], context.args[1], None
+    if len(context.args) == 3:
+        reg_code = context.args[2]
     if BotConfig.LIMIT_USER_COUNT_ENABLED:
         try:
             user_count = len(await EmbyClient.Users.get_users())
@@ -138,11 +143,6 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(f"用户数量已达到上限({BotConfig.LIMIT_USER_COUNT})，无法注册。")
         except Exception:
             return await update.message.reply_text("[Server]获取用户数量失败，请稍后再试。")
-    if len(context.args) < 2:
-        return await update.message.reply_text("Usage: /reg <username> <password> <cdk>")
-    username, password, reg_code = context.args[0], context.args[1], None
-    if len(context.args) == 3:
-        reg_code = context.args[2]
     eff_user = update.effective_user
     if not username.isalnum() or not password.isalnum():
         return await update.message.reply_text("用户名与密码不合法.")
