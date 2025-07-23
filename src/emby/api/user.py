@@ -36,16 +36,14 @@ class Users:
         """
         return await self.client.get("Users")
     
-    @json_response
     async def get_total_users(self) -> int:
         """
-        获取Emby用户总数（通过System/Info端点直接获取计数）
-        :return: 用户总数(int)
+        获取用户总数
+        :return: 用户数量（int）
         """
-        system_info = await self.client.get("System/Info")
-        if system_info and isinstance(system_info, dict):
-            return system_info.get("UserCount", 0)
-        return 0
+        users = await self.client.get("Users")
+        return len(users)
+
         
     @json_response
     async def get_public_users(self):

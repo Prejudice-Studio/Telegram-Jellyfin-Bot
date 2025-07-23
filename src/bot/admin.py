@@ -86,10 +86,9 @@ async def clear_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"成功清除用户 {user_info.fullname} 的所有数据.")
     
 @check_admin
-async def getUSerCount(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def getUSerCount(update: Update):
     count = await Users.get_total_users()
     await update.message.reply_text(f"当前用户数量为 {count}.")
-
 
 @check_admin
 async def move(update: Update, context: ContextTypes.DEFAULT_TYPE):
