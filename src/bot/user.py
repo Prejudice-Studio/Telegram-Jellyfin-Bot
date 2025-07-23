@@ -152,62 +152,27 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_info.bind_id:
         return await update.message.reply_text("你已绑定一个Emby账号，无法注册。")
     cdk_info = None
-    if BotConfig.UNLIMITED_REGISTER:
-        # 直接允许注册 , 无需注册码和身份验证
-        score = await ScoreOperate.get_score(eff_user.id)
-        score = score.score if score else 0
-        if score < BotConfig.REGISTER_POINT:
-            return await update.message.reply_text(f"积分不足 (至少需要{BotConfig.REGISTER_POINT}积分).")
+    score = await ScoreOperate.get_score(eff_user.id)
+    change_score = 0
+    if not (user_info and user_info.role == Role.ORDINARY.value):
+        if BotConfig.UNLIMITED_REGISTER:
+            score = score.score if score else 0
+            if score < BotConfig.REGISTER_POINT:
+                return await update.message.reply_text(f"积分不足 (至少需要{BotConfig.REGISTER_POINT}积分).")
+            else:
+                change_score = BotConfig.REGISTER_POINT
         else:
-            await ScoreOperate.reduce_score(eff_user.id, BotConfig.REGISTER_POINT)
-    elif not (user_info and user_info.role == Role.ORDINARY.value):
-        # 非ORDINARY用户需要验证注册码
-        cdk_info = await CdkOperate.get_cdk(reg_code)
-        if not cdk_info:
-            return await update.message.reply_text("注册码不可用")
-        if not check_cdk(cdk_info, eff_user.id):
-            return "注册码无法使用（无效/已经过期/已使用）"
+            cdk_info = await CdkOperate.get_cdk(reg_code)
+            if not cdk_info:
+                return await update.message.reply_text("注册码不可用")
+            if not check_cdk(cdk_info, eff_user.id):
+                return "注册码无法使用（无效/已经过期/已使用）"
     try:
         ret_user = await EmbyClient.Users.new_user(username)
         await EmbyClient.Users.change_password(password, ret_user["Id"])
-        if BotConfig.NEW_USER_NOTICE_STATUS == True:
-            CHAT_ID = BotConfig.NEW_USER_NOTICE_CHAT_ID
-            THREAD_ID = BotConfig.NEW_USER_NOTICE_THREAD_ID
-            
-            # 构建用户链接（优先使用@username，否则使用user_id链接）
-            user_link = (
-                f'<a href="https://t.me/{eff_user.username}">{eff_user.full_name}</a>'
-                if eff_user.username
-                else f'<a href="tg://user?id={eff_user.id}">{eff_user.full_name}</a>'
-            )
-            # 构建通知消息（HTML格式）
-            notice_text = (
-                f"🎉 <b>新用户注册</b> 🎉\n\n"
-                f"• <b>Telegram 用户</b>: {user_link}\n"
-                f"• <b>注册时间</b>: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-            )
-            
-            # 发送通知消息
-            try:
-                if THREAD_ID and THREAD_ID != 0:
-                    await context.bot.send_message(
-                        chat_id=CHAT_ID,
-                        text=notice_text,
-                        parse_mode="HTML",  # 允许HTML格式
-                        message_thread_id=THREAD_ID,
-                    )
-                else:
-                    await context.bot.send_message(
-                        chat_id=CHAT_ID,
-                        text=notice_text,
-                        parse_mode="HTML",  # 允许HTML格式
-                    )
-            except Exception as e:
-                bot_logger.error(f"发送新用户通知失败: {e}")
     except Exception as e:
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]创建用户失败(服务器故障或已经存在相同用户)。")
-
 
     if cdk_info:
         cdk_info.limit -= 1
@@ -217,7 +182,6 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await CdkOperate.update_cdk(cdk_info)
 
     # 绑定 Telegram 和 Emby 账号
-
     password_hash = get_password_hash(password)
     if user_info:
         user_info.account, user_info.password, user_info.bind_id = username, password_hash, ret_user[
@@ -230,20 +194,52 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
                               account=username, password=password_hash, bind_id=ret_user["Id"],
                               role=Role.ORDINARY.value)
         await UsersOperate.add_user(user_info)
-    return await update.message.reply_text(f"注册成功，自动与Telegram绑定. 用户名: {username}")
+    await ScoreOperate.reduce_score(eff_user.id, change_score)
+    await update.message.reply_text(f"注册成功，自动与Telegram绑定. 用户名: {username}")
+    # 通知
+    if BotConfig.NEW_USER_NOTICE_STATUS:
+        CHAT_ID = BotConfig.NEW_USER_NOTICE_CHAT_ID
+        THREAD_ID = BotConfig.NEW_USER_NOTICE_THREAD_ID
+        user_link = (
+            f'<a href="https://t.me/{eff_user.username}">{eff_user.full_name}</a>'
+            if eff_user.username
+            else f'<a href="tg://user?id={eff_user.id}">{eff_user.full_name}</a>'
+        )
+        notice_text = (
+            f"🎉 <b>新用户注册</b> 🎉\n\n"
+            f"• <b>Telegram 用户</b>: {user_link}\n"
+            f"• <b>注册时间</b>: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        )
+
+        try:
+            if THREAD_ID and THREAD_ID != 0:
+                await context.bot.send_message(
+                    chat_id=CHAT_ID,
+                    text=notice_text,
+                    parse_mode="HTML",
+                    message_thread_id=THREAD_ID,
+                )
+            else:
+                await context.bot.send_message(
+                    chat_id=CHAT_ID,
+                    text=notice_text,
+                    parse_mode="HTML",
+                )
+        except Exception as e:
+            bot_logger.error(f"发送新用户通知失败: {e}")
 
 
 # noinspection PyUnusedLocal
 @check_banned
 @command_warp
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id == 136817688 :
+    if update.effective_user.id == 136817688:
         return await update.message.reply_text("Channel禁止此操作.")
     user_info = await UsersOperate.get_user(update.effective_user.id)
     r_msg = (f"----------Telegram----------\n"
-        f"TelegramID: {user_info.telegram_id}\n"
-        f"Telegram昵称: {user_info.fullname}\n"
-        f"用户组: {Role(user_info.role).name}\n")
+             f"TelegramID: {user_info.telegram_id}\n"
+             f"Telegram昵称: {user_info.fullname}\n"
+             f"用户组: {Role(user_info.role).name}\n")
     if not user_info:
         return await update.message.reply_text("无账号信息.")
     if user_info.bind_id:
@@ -257,8 +253,8 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return await update.message.reply_text("Emby用户未找到.")
         last_login = convert_to_china_timezone(emby_user.get("LastLoginDate", "N/A"))
         r_msg += (f"----------Emby----------\n"
-        f"用户名: {emby_user['Name']}\n"
-        f"上次登录: {last_login}\n")
+                  f"用户名: {emby_user['Name']}\n"
+                  f"上次登录: {last_login}\n")
     score_data = await ScoreOperate.get_score(update.effective_user.id)
     if not score_data:
         score = 0
@@ -266,9 +262,9 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         score, checkin_time = score_data.score, score_data.checkin_time
     checkin_time_v = checkin_time if checkin_time is not None else 0
-    r_msg +=(f"----------Score----------\n"
-        f"积分: {score}\n"
-        f"上次签到: {convert_to_china_timezone(checkin_time_v)}")
+    r_msg += (f"----------Score----------\n"
+              f"积分: {score}\n"
+              f"上次签到: {convert_to_china_timezone(checkin_time_v)}")
     await update.message.reply_text(r_msg)
 
 
@@ -291,7 +287,7 @@ async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @check_banned
 @check_private
 async def sign(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id == 136817688 :
+    if update.effective_user.id == 136817688:
         return await update.message.reply_text("Channel禁止此操作.")
     score_info = await ScoreOperate.get_score(update.effective_user.id)
     if not score_info:
@@ -431,13 +427,13 @@ async def red_packet(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if BotConfig.REDPACKET_IMG != "":
         if ProgramConfig.REDPACKET_FILEID:
             await update.message.reply_photo(ProgramConfig.REDPACKET_FILEID,
-                                                   caption=f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
-                                                   reply_markup=reply_markup)
+                                             caption=f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count}, 模式{mode}",
+                                             reply_markup=reply_markup)
         else:
             msg = await update.message.reply_photo(open(BotConfig.REDPACKET_IMG, "rb"),
-                                                         caption=f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count},"
-                                                                 f" 模式{mode}",
-                                                         reply_markup=reply_markup)
+                                                   caption=f"用户{update.effective_user.full_name}发出了一个红包，总积分{total}, 数量{count},"
+                                                           f" 模式{mode}",
+                                                   reply_markup=reply_markup)
             ProgramConfig.REDPACKET_FILEID = msg.photo[-1].file_id
     else:
         await update.message.reply_text(
@@ -506,7 +502,7 @@ async def transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     eff_user = update.effective_user.id
     if target_info.telegram_id == eff_user:
         return await update.message.reply_text("无法给自己转账.")
-    if target_info.telegram_id == 136817688 :
+    if target_info.telegram_id == 136817688:
         return await update.message.reply_text("无法给Channel转账.")
     amount = int(amount)
     score_data = await ScoreOperate.get_score(eff_user)
