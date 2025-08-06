@@ -7,6 +7,7 @@ from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 from src.bot import command_warp
+from src.config import BotConfig
 from src.database.cdk import CdkOperate
 from src.database.score import ScoreModel, ScoreOperate
 from src.database.user import Role, UsersOperate, UserModel
@@ -269,6 +270,46 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
     cdk_info.used_history = json.dumps(history)
     await CdkOperate.update_cdk(cdk_info)
     await update.effective_user.send_message("注册成功！")
+        # 通知
+    if BotConfig.NEW_USER_NOTICE_STATUS:
+        CHAT_ID = BotConfig.NEW_USER_NOTICE_CHAT_ID
+        THREAD_ID = BotConfig.NEW_USER_NOTICE_THREAD_ID
+        LINK_STATUS = BotConfig.NEW_USER_NOTICE_LINK
+        if LINK_STATUS:
+            user_link = (
+                f'<a href="https://t.me/{update.effective_user.username}">{update.effective_user.full_name}</a>'
+                if update.effective_user.username
+                else f'<a href="tg://user?id={update.effective_user.id}">{update.effective_user.full_name}</a>'
+            )
+            notice_text = (
+                f"🎉 <b>新用户注册</b> 🎉\n\n"
+                f"• <b>Telegram 用户</b>: {user_link}\n"
+                f"• <b>注册时间</b>: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            )
+        else:
+            notice_text = (
+                f"🎉 <b>新用户注册</b> 🎉\n\n"
+                f"• <b>Telegram 用户</b>: {update.effective_user.full_name}\n"
+                f"• <b>注册时间</b>: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            )
+
+        try:
+            if THREAD_ID and THREAD_ID != 0:
+                await context.bot.send_message(
+                    chat_id=CHAT_ID,
+                    text=notice_text,
+                    parse_mode="HTML",
+                    message_thread_id=THREAD_ID,
+                )
+            else:
+                await context.bot.send_message(
+                    chat_id=CHAT_ID,
+                    text=notice_text,
+                    parse_mode="HTML",
+                )
+        except Exception as e:
+            bot_logger.error(f"发送新用户通知失败: {e}")
+
     password_hash = get_password_hash(password)
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if user_info:

@@ -105,6 +105,7 @@ class BotConfig(BaseConfig):
     NEW_USER_NOTICE_CHAT_ID: int = 0  # 新用户通知群组ID
     NEW_USER_NOTICE_THREAD_ID: int = 0  # 新用户通知线程ID
     NEW_USER_NOTICE_STATUS: bool = False  # 新用户通知开关
+    NEW_USER_NOTICE_LINK: bool = False  # 新用户通知是否指向个人简介
 
 
 class EmbyConfig(BaseConfig):

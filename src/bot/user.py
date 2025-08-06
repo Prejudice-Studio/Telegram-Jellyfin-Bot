@@ -193,16 +193,24 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if BotConfig.NEW_USER_NOTICE_STATUS:
         CHAT_ID = BotConfig.NEW_USER_NOTICE_CHAT_ID
         THREAD_ID = BotConfig.NEW_USER_NOTICE_THREAD_ID
-        user_link = (
-            f'<a href="https://t.me/{eff_user.username}">{eff_user.full_name}</a>'
-            if eff_user.username
-            else f'<a href="tg://user?id={eff_user.id}">{eff_user.full_name}</a>'
-        )
-        notice_text = (
-            f"🎉 <b>新用户注册</b> 🎉\n\n"
-            f"• <b>Telegram 用户</b>: {user_link}\n"
-            f"• <b>注册时间</b>: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-        )
+        LINK_STATUS = BotConfig.NEW_USER_NOTICE_LINK
+        if LINK_STATUS:
+            user_link = (
+                f'<a href="https://t.me/{eff_user.username}">{eff_user.full_name}</a>'
+                if eff_user.username
+                else f'<a href="tg://user?id={eff_user.id}">{eff_user.full_name}</a>'
+            )
+            notice_text = (
+                f"🎉 <b>新用户注册</b> 🎉\n\n"
+                f"• <b>Telegram 用户</b>: {user_link}\n"
+                f"• <b>注册时间</b>: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            )
+        else:
+            notice_text = (
+                f"🎉 <b>新用户注册</b> 🎉\n\n"
+                f"• <b>Telegram 用户</b>: {eff_user.full_name}\n"
+                f"• <b>注册时间</b>: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            )
 
         try:
             if THREAD_ID and THREAD_ID != 0:
