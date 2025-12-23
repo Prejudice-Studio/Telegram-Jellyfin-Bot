@@ -5,7 +5,7 @@ Use Docker Python Jellyfin-ApiClient-Python Python-Telegram-Bot EmbyAPI
 
 开发者: 
 - [MoYuanCN](https://github.com/MoYuanCN/)
-- [Enlysure](https://github.com/Rovniced/)                                |
+- [Enlysure](https://github.com/Rovniced/)
 
 # 使用方法
 
