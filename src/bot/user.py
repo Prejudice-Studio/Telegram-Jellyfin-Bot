@@ -59,6 +59,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/sign</code> 每日签到\n"
                 f"<code>/red</code> 发红包（仅限群聊内）\n"
                 f"<code>/password 新密码</code> 更改账户密码\n"
+                f"<code>/geturl</code> 获取Emby所有地址\n"
                 f"<code>/gencdk</code> 生成注册码\n"
                 f"<code>/rank</code> 查看排行\n"
                 f"<code>/require BangumiID/链接/番剧名字</code> 申请增加番剧\n"
@@ -66,7 +67,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"<code>/transfer [目标ID/Name] [金额]</code> 转账 或者 回复目标用户消息 /transfer [金额]\n")
     all_key = ["/status", "/reg", "/info", "/bind", "/unbind", "/delete",
                "/sign 签到", "/red", "/password", "/gencdk", "/require", "/checkrequire",
-               "/rank", "/transfer", "/cancel"]
+               "/rank", "/transfer", "/cancel" , "/geturl"]
     all_keyboard = []
     for i in range(0, len(all_key), 4):
         all_keyboard.append(all_key[i:i + 4])
@@ -90,9 +91,20 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     server = await check_server_connectivity()
     server_address = json.loads(EmbyConfig.ADDRESS)
     git_info = get_latest_commit_info()
+    
+    # 获取当前用户数量
+    current_user_count = await UsersOperate.get_emby_user_count()
+    
     s_text = (("===========状态详情===========\n"
                "当前版本信息: " + git_info + "\n当前服务器状态: ") +
               ("正常" if server else "异常") + "\n")
+    
+    # 添加用户数量信息
+    if BotConfig.LIMIT_USER_COUNT_ENABLED:
+        s_text += f"当前用户数量: {current_user_count}/{BotConfig.LIMIT_USER_COUNT}\n"
+    else:
+        s_text += f"当前用户数量: {current_user_count}\n"
+    
     src.bot.server_close = not server
     if not server_address:
         server_address = [{"address": EmbyConfig.BASE_URL, "description": "默认地址"}]
@@ -100,6 +112,17 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
         s_text += f"{address['description']}: {address['address']}\n"
     await update.message.reply_text(s_text)
 
+@check_banned
+@command_warp
+@check_private
+async def get_url(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    server_address = json.loads(EmbyConfig.ADDRESS)
+    if not server_address:
+        server_address = [{"address": EmbyConfig.BASE_URL, "description": "默认地址"}]
+    text = "Emby所有地址:\n"
+    for address in server_address:
+        text += f"{address['description']}: {address['address']}\n"
+    await update.message.reply_text(text)
 
 @check_banned
 @command_warp
@@ -133,6 +156,16 @@ async def gen_cdk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) < 2:
         return await update.message.reply_text("Usage: /reg <username> <password> <cdk>")
+    
+    # 添加用户数量限制检查
+    if BotConfig.LIMIT_USER_COUNT_ENABLED:
+        from src.database.user import UsersOperate
+        current_user_count = await UsersOperate.get_emby_user_count()
+        if current_user_count >= BotConfig.LIMIT_USER_COUNT:
+            return await update.message.reply_text(
+                f"用户数量已达上限 ({current_user_count}/{BotConfig.LIMIT_USER_COUNT})，暂时无法注册新用户。"
+            )
+    
     username, password, reg_code = context.args[0], context.args[1], None
     if len(context.args) == 3:
         reg_code = context.args[2]
@@ -166,6 +199,13 @@ async def reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         bot_logger.error(f"Error: {e}")
         return await update.message.reply_text("[Server]创建用户失败(服务器故障或已经存在相同用户名的用户,尝试重新注册或更换用户名)。")
+    
+    # 在本地数据库添加Emby用户记录
+    try:
+        await UsersOperate.add_Emby_database_user(username)
+    except Exception as e:
+        bot_logger.error(f"添加Emby用户到本地数据库失败: {e}")
+        # 这里可以选择是否继续执行，或者回滚操作
 
     if cdk_info:
         cdk_info.limit -= 1
@@ -322,6 +362,7 @@ async def bind(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text(f"[Server]Failed: {e}")
     if not emby_user:
         return await update.message.reply_text("用户名或密码错误.")
+    
     eff_user = update.effective_user
     # 绑定 Telegram 账号
     user_info = await UsersOperate.get_user(eff_user.id)
@@ -449,6 +490,15 @@ async def emby_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await UsersOperate.get_user(update.effective_user.id)
     if not user_info.bind_id:
         return await update.message.reply_text("请先绑定Emby账号")
+    
+    # 添加用户数量限制检查
+    if BotConfig.LIMIT_USER_COUNT_ENABLED:
+        current_user_count = await UsersOperate.get_emby_user_count()
+        if current_user_count >= BotConfig.LIMIT_USER_COUNT:
+            return await update.message.reply_text(
+                f"用户数量已达上限 ({current_user_count}/{BotConfig.LIMIT_USER_COUNT})，暂时无法注册新用户。"
+            )
+    
     u_d = json.loads(user_info.data if user_info.data else "{}")
     if u_d.get("emby_reg"):
         return await update.message.reply_text("已经注册过emby账户了")
@@ -459,6 +509,14 @@ async def emby_reg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ret = await EmbyClient.Users.new_user(username)
         user_id = ret["Id"]
         await EmbyClient.Users.change_password(password, user_id)
+        
+        # 在本地数据库添加Emby用户记录
+        try:
+            await UsersOperate.add_Emby_database_user(username)
+        except Exception as e:
+            bot_logger.error(f"添加Emby用户到本地数据库失败: {e}")
+            # 这里可以选择是否继续执行，或者回滚操作
+        
         u_d["emby_reg"] = True
         user_info.data = json.dumps(u_d)
         password_hash = get_password_hash(password)

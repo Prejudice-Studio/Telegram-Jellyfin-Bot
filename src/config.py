@@ -94,23 +94,24 @@ class BotConfig(BaseConfig):
     USER_GEN_CDK_POINT: int = 200  # 用户生成CDK消耗的积分
     CHECKIN_POINT_MAX: int = 10  # 签到积分最大值
     CHECKIN_POINT_MIN: int = 1  # 签到积分最小值
-    GROUP_CHAT_ID: str = ""  # 群组ID @channelusername
-    CHANNEL_CHAT_ID: str = " " # 频道ID @channelusername
+    GROUP_CHAT_ID: str = ""  # 群组ID
+    CHANNEL_CHAT_ID: str = " " # 频道ID
     MUST_JOIN_CHANNEL: bool = False  # 是否必须加入频道
     MUST_JOIN_GROUP: bool = False  # 是否必须加入群组
     UNLIMITED_REGISTER: bool = False  # 是否开放注册
     REGISTER_POINT: int = 0  # 注册所需积分
+    EMBY_USERS_SYNC_INTERVAL: int = 10  # Emby用户同步间隔 , 单位:分钟
     LIMIT_USER_COUNT: int = 2000  # 限制总用户数量
     LIMIT_USER_COUNT_ENABLED: bool = False  # 是否启用用户数量限制
     NEW_USER_NOTICE_CHAT_ID: int = 0  # 新用户通知群组ID
-    NEW_USER_NOTICE_THREAD_ID: int = 0  # 新用户通知线程ID
+    NEW_USER_NOTICE_THREAD_ID: int = 0  # 新用户通知群组话题ID , 为0则不是话题群组
     NEW_USER_NOTICE_STATUS: bool = False  # 新用户通知开关
     NEW_USER_NOTICE_LINK: bool = False  # 新用户通知是否指向个人简介
 
 
 class EmbyConfig(BaseConfig):
     """
-    Jellyfin配置
+    Jellyfin/Emby配置
     """
     BASE_URL: str = ""  # Emby URL
     API_KEY: str = ""  # Emby API Key

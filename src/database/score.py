@@ -20,7 +20,6 @@ class ScoreModel(ScoreDatabaseModel):
     checkin_time: Mapped[int] = mapped_column(default=0)  # 签到时间
     data: Mapped[str] = mapped_column(nullable=True)  # 预留的其他配置
 
-
 class RedPacketModel(ScoreDatabaseModel):
     """红包"""
     __tablename__ = 'red_packet'
