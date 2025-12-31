@@ -1,32 +1,44 @@
-PROXY = ""  # 代理地址 示例：http://127.0.0.1:7890 一般用不到
-MAX_RETRY = 3  # 重试次数
-LOG_LEVE = 30  # 日志等级
-LOGGING = true # 日志是否保存本地
-SQLALCHEMY_LOG = false # 是否打印sql日志
-DATABASES_DIR = 'database' # 数据库路径，一般不用指定
-SALT = "" # 密码盐，推荐更改
-BANGUMI_TOKEN = "" # bangumi api access token
+# config.toml
 
-[Flask]
-ENABLE = false # Flask api (用于Emby webhook)
-HOST = '0.0.0.0'
-PORT = 5000
+[Program]
+VERSION = "1.0.0"
+REDPACKET_FILEID = "your_redpacket_fileid_here"
+
+[Config]
+LOGGING = true
+LOG_LEVEL = 30
+SQLALCHEMY_LOG = true
+PROXY = "http://your_proxy_here:port"
+MAX_RETRY = 5
+DATABASES_DIR = "path_to_your_databases_dir"
+SALT = "your_salt_here"
+BANGUMI_TOKEN = "your_bangumi_token_here"
 
 [Bot]
-ADMIN = 0  # 管理员账号 Telegram ID
-BOT_TOKEN = ""  # 机器人 Token 必要
-BASE_URL = ""  # 自定义TG URL 示例：http://127.0.0.1:8081/bot 一般用不到
-TIMEOUT = 10  # bot请求/读取超时时间
-REDPACKET_IMG = "" #红包图片，留空发红包时候不带图
-USER_GEN_CDK = false # 是否允许用户生成cdk（也可以通过命令开关）
-CHECKIN_POINT_MAX = 10  # 签到积分最大值
-CHECKIN_POINT_MIN = 1  # 签到积分最小值
-GROUP_CHAT_ID = ""  # 群组ID @channelusername
-CHANNEL_CHAT_ID = " " # 频道ID @channelusername
-MUST_JOIN_CHANNEL = false  # 是否必须加入频道
-MUST_JOIN_GROUP = false  # 是否必须加入群组
+ADMIN = [0]
+BOT_TOKEN = "your_bot_token_here"
+BASE_URL = "https://api.telegram.org/bot"
+TIMEOUT = 20
+REDPACKET_IMG = "path_to_your_redpacket_img"
+USER_GEN_CDK = true
+USER_GEN_CDK_POINT = 300
+CHECKIN_POINT_MAX = 20
+CHECKIN_POINT_MIN = 2
+GROUP_CHAT_ID = "your_group_chat_id_here"
+CHANNEL_CHAT_ID = "your_channel_chat_id_here"
+MUST_JOIN_CHANNEL = true
+MUST_JOIN_GROUP = true
+UNLIMITED_REGISTER = false
+REGISTER_POINT = 500
+EMBY_USERS_SYNC_INTERVAL = 15
+LIMIT_USER_COUNT = 3000
+LIMIT_USER_COUNT_ENABLED = true
+NEW_USER_NOTICE_CHAT_ID = 123456789
+NEW_USER_NOTICE_THREAD_ID = 987654321
+NEW_USER_NOTICE_STATUS = true
+NEW_USER_NOTICE_LINK = true
 
 [Emby]
-BASE_URL = ""  # Emby URL 必要
-API_KEY = ""  # Emby API Key 必要
-ADDRESS = "[]"  # Emby地址 json数组
+BASE_URL = "your_emby_base_url_here"
+API_KEY = "your_emby_api_key_here"
+ADDRESS = '["address1", "address2"]'
