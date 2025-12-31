@@ -69,18 +69,6 @@ python bot.py
 
 ---
 
-## 📊 项目数据
-
-### Star History
-
-<a href="https://www.star-history.com/#Prejudice-Studio/Telegram-Jellyfin-Bot&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Prejudice-Studio/Telegram-Jellyfin-Bot&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Prejudice-Studio/Telegram-Jellyfin-Bot&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Prejudice-Studio/Telegram-Jellyfin-Bot&type=date&legend=top-left" />
- </picture>
-</a>
-
 ### 贡献者
 
 感谢所有贡献者！✨
